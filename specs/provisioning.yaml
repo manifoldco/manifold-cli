@@ -330,10 +330,6 @@ definitions:
     - type
     - version
     - body
-    x-go-type:
-      type: Operation
-      import:
-        package: github.com/manifoldco/marketplace/provisioning/primitives
   Error:
     type: object
     properties:

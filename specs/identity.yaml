@@ -517,10 +517,6 @@ definitions:
     - type
     - version
     - body
-    x-go-type:
-      type: Team
-      import:
-        package: github.com/manifoldco/marketplace/identity/primitives
   UpdateUser:
     type: object
     properties:

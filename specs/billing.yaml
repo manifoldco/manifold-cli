@@ -583,10 +583,6 @@ definitions:
             $ref: '#/definitions/Base64'
           endorsement:
             $ref: '#/definitions/Base64'
-    x-go-type:
-      type: SubscriptionEvent
-      import:
-        package: github.com/manifoldco/marketplace/billing/primitives
   SubscriptionEventBody:
     type: object
     discriminator: event_type

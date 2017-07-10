@@ -18,3 +18,7 @@ import:
 - package: github.com/go-swagger/go-swagger
   subpackages:
   - cmd/swagger
+- package: github.com/go-ini/ini
+  version: 1.28.0
+- package: github.com/manifoldco/go-manifold
+  version: 0.3.0
