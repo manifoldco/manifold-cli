@@ -1,0 +1,698 @@
+swagger: "2.0"
+info:
+  title: Catalog API
+  description: Access Regions, Providers, Products and Plans
+  version: 1.0.0
+host: api.catalog.manifold.co
+schemes:
+- https
+produces:
+- application/json
+consumes:
+- application/json
+basePath: /v1
+paths:
+  /regions/:
+    get:
+      summary: List all available regions
+      tags:
+      - Region
+      parameters:
+      - name: location
+        in: query
+        description: |
+          Filter results to only include the regions that have this location.
+        type: string
+        format: label
+        pattern: ^[a-z0-9][a-z0-9\-\_]{1,128}$
+      - name: platform
+        in: query
+        description: |
+          Filter results to only include the regions that are on this
+          platform.
+        type: string
+        format: label
+        pattern: ^[a-z0-9][a-z0-9\-\_]{1,128}$
+      responses:
+        200:
+          description: A list of regions.
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Region'
+        500:
+          description: Unexpected Error
+          schema:
+            $ref: '#/definitions/Error'
+  /regions/{id}:
+    get:
+      summary: Get a Region by ID
+      parameters:
+      - name: id
+        in: path
+        description: ID of the region to lookup, stored as a base32 encoded 18 byte
+          identifier.
+        required: true
+        type: string
+        pattern: ^[0-9abcdefghjkmnpqrtuvwxyz]{29}$
+        format: base32ID
+      tags:
+      - Region
+      responses:
+        200:
+          description: A region.
+          schema:
+            $ref: '#/definitions/Region'
+        400:
+          description: Provided Region ID is Invalid
+          schema:
+            $ref: '#/definitions/Error'
+        404:
+          description: Region could not be found
+          schema:
+            $ref: '#/definitions/Error'
+        500:
+          description: Unexpected Error
+          schema:
+            $ref: '#/definitions/Error'
+  /providers/:
+    get:
+      summary: List all available providers
+      tags:
+      - Provider
+      parameters:
+      - $ref: '#/parameters/LabelFilter'
+      responses:
+        200:
+          description: A list of providers.
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Provider'
+        500:
+          description: Unexpected Error
+          schema:
+            $ref: '#/definitions/Error'
+  /providers/{id}:
+    get:
+      summary: Get a provider by ID
+      parameters:
+      - name: id
+        in: path
+        description: ID of the provider to lookup, stored as a base32 encoded 18 byte
+          identifier.
+        required: true
+        type: string
+        pattern: ^[0-9abcdefghjkmnpqrtuvwxyz]{29}$
+        format: base32ID
+      tags:
+      - Provider
+      responses:
+        200:
+          description: A provider.
+          schema:
+            $ref: '#/definitions/Provider'
+        404:
+          description: Unknown provider error
+          schema:
+            $ref: '#/definitions/Error'
+        500:
+          description: Unexpected Error
+          schema:
+            $ref: '#/definitions/Error'
+  /products/:
+    get:
+      summary: List all available products
+      parameters:
+      - $ref: '#/parameters/Authorization'
+      - name: provider_id
+        in: query
+        description: |
+          Base32 encoded 18 byte identifier of the provider that these
+          products must belong to.
+        type: string
+        pattern: ^[0-9abcdefghjkmnpqrtuvwxyz]{29}$
+        format: base32ID
+      - $ref: '#/parameters/LabelFilter'
+      tags:
+      - Product
+      responses:
+        200:
+          description: A product.
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Product'
+        400:
+          description: Invalid provider_id supplied
+          schema:
+            $ref: '#/definitions/Error'
+        500:
+          description: Unexpected Error
+          schema:
+            $ref: '#/definitions/Error'
+  /products/{id}:
+    get:
+      summary: Get a product by ID
+      parameters:
+      - $ref: '#/parameters/Authorization'
+      - name: id
+        in: path
+        description: |
+          ID of the product to lookup, stored as a base32 encoded 18 byte
+          identifier.
+        required: true
+        type: string
+        pattern: ^[0-9abcdefghjkmnpqrtuvwxyz]{29}$
+        format: base32ID
+      tags:
+      - Product
+      responses:
+        200:
+          description: A product.
+          schema:
+            $ref: '#/definitions/Product'
+        400:
+          description: Invalid Product ID
+          schema:
+            $ref: '#/definitions/Error'
+        404:
+          description: Product not found error
+          schema:
+            $ref: '#/definitions/Error'
+        500:
+          description: Unexpected error
+          schema:
+            $ref: '#/definitions/Error'
+  /plans/{id}:
+    get:
+      summary: Get a plan by ID
+      parameters:
+      - $ref: '#/parameters/Authorization'
+      - name: id
+        in: path
+        description: |
+          ID of the plan to lookup, stored as a base32 encoded 18 byte
+          identifier.
+        required: true
+        type: string
+        pattern: ^[0-9abcdefghjkmnpqrtuvwxyz]{29}$
+        format: base32ID
+      tags:
+      - Plan
+      responses:
+        200:
+          description: A plan.
+          schema:
+            $ref: '#/definitions/Plan'
+        400:
+          description: Invalid Plan ID Provided
+          schema:
+            $ref: '#/definitions/Error'
+        404:
+          description: Unknown plan error
+          schema:
+            $ref: '#/definitions/Error'
+        default:
+          description: Unexpected error
+          schema:
+            $ref: '#/definitions/Error'
+  /plans/:
+    get:
+      summary: Get a list of plans.
+      parameters:
+      - $ref: '#/parameters/Authorization'
+      - name: product_id
+        in: query
+        description: Return the plans that are associated with this product.
+        required: true
+        type: array
+        collectionFormat: multi
+        items:
+          format: base32ID
+          type: string
+      - $ref: '#/parameters/LabelFilter'
+      tags:
+      - Plan
+      responses:
+        200:
+          description: A list of plans for the given product.
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Plan'
+        400:
+          description: Invalid Parameters Provided
+          schema:
+            $ref: '#/definitions/Error'
+        404:
+          description: Could not find product
+          schema:
+            $ref: '#/definitions/Error'
+        500:
+          description: Unexpected error
+          schema:
+            $ref: '#/definitions/Error'
+parameters:
+  Authorization:
+    name: Authorization
+    in: header
+    description: |
+      This header authenticates the request.
+    type: string
+  LabelFilter:
+    name: label
+    in: query
+    description: |
+      Filter results to only include those that have this label.
+    type: string
+    format: label
+    pattern: ^[a-z0-9][a-z0-9\-\_]{1,128}$
+definitions:
+  ID:
+    type: string
+    description: A base32 encoded 18 byte identifier.
+    pattern: ^[0-9abcdefghjkmnpqrtuvwxyz]{29}$
+    format: base32ID
+    x-go-type:
+      type: ID
+      import:
+        package: github.com/manifoldco/go-manifold
+        alias: manifold
+  Label:
+    type: string
+    description: A machine readable unique label, which is url safe.
+    pattern: ^[a-z0-9][a-z0-9\-\_]{1,128}$
+    x-go-type:
+      type: Label
+      import:
+        package: github.com/manifoldco/go-manifold
+        alias: manifold
+  Name:
+    type: string
+    description: A name of an entity which is displayed to a human.
+    pattern: ^[a-zA-Z][a-z0-9A-Z \-]{2,128}$
+    x-go-type:
+      type: Name
+      import:
+        package: github.com/manifoldco/go-manifold
+        alias: manifold
+  LogoURL:
+    type: string
+    description: |
+      Logo used for Provider and Product listings.
+
+      Must be square (same width and height) and minimum 400px. Maximum of 800px.
+    format: url
+    pattern: ^cdn\.(?:stage\.)?manifold.co
+  Region:
+    type: object
+    properties:
+      id:
+        $ref: '#/definitions/ID'
+      type:
+        type: string
+        enum:
+        - region
+      version:
+        type: integer
+        enum:
+        - 1
+      body:
+        type: object
+        properties:
+          platform:
+            type: string
+            enum:
+            - aws
+          location:
+            type: string
+            enum:
+            - us-east-1
+          name:
+            $ref: '#/definitions/Name'
+          priority:
+            type: number
+            multipleOf: 1
+            minimum: 0
+            maximum: 100
+            x-nullable: false
+        additionalProperties: false
+        required:
+        - platform
+        - location
+        - name
+        - priority
+    additionalProperties: false
+    required:
+    - id
+    - type
+    - version
+    - body
+  Provider:
+    type: object
+    properties:
+      id:
+        $ref: '#/definitions/ID'
+      version:
+        type: integer
+        enum:
+        - 1
+      type:
+        type: string
+        enum:
+        - provider
+      body:
+        type: object
+        properties:
+          label:
+            $ref: '#/definitions/Label'
+          name:
+            $ref: '#/definitions/Name'
+          logo_url:
+            $ref: '#/definitions/LogoURL'
+          support_email:
+            type: string
+            format: email
+            x-nullable: false
+          documentation_url:
+            type: string
+            format: url
+        additionalProperties: false
+        required:
+        - label
+        - name
+    additionalProperties: false
+    required:
+    - id
+    - version
+    - type
+    - body
+  FeatureType:
+    description: |
+      A feature type represents the different aspects of a product that are
+      offered, these features can manifest differently depending on the plan.
+    type: object
+    properties:
+      label:
+        $ref: '#/definitions/Label'
+      name:
+        $ref: '#/definitions/Name'
+      type:
+        type: string
+        enum:
+        - boolean
+        - string
+        - number
+    additionalProperties: false
+    required:
+    - label
+    - name
+    - type
+  FeatureValue:
+    type: object
+    properties:
+      feature:
+        $ref: '#/definitions/Label'
+      value:
+        type: string
+    additionalProperties: false
+    required:
+    - feature
+    - value
+  ValueProp:
+    type: object
+    properties:
+      header:
+        description: Heading of a value proposition.
+        type: string
+        minLength: 10
+        maxLength: 80
+        x-nullable: false
+      body:
+        description: Body of a value proposition.
+        type: string
+        minLength: 10
+        maxLength: 200
+        x-nullable: false
+    additionalProperties: false
+    required:
+    - header
+    - body
+  ProductImageURL:
+    type: string
+    description: |
+      Image URL used for Product listings.
+
+      Minimum 660px wide, 400px high.
+    format: url
+    pattern: ^cdn\.(?:stage\.)?manifold.co
+  Product:
+    type: object
+    properties:
+      id:
+        $ref: '#/definitions/ID'
+      version:
+        type: integer
+        enum:
+        - 1
+      type:
+        type: string
+        enum:
+        - product
+      body:
+        type: object
+        properties:
+          provider_id:
+            $ref: '#/definitions/ID'
+          label:
+            $ref: '#/definitions/Label'
+            description: |
+              Product labels are globally unique and contain the provider name.
+          name:
+            $ref: '#/definitions/Name'
+          state:
+            type: string
+            enum:
+            - available
+            - hidden
+            - grandfathered
+          logo_url:
+            $ref: '#/definitions/LogoURL'
+          tagline:
+            description: |
+              140 character sentence positioning the product.
+            type: string
+            maxLength: 140
+            x-nullable: false
+          value_props:
+            description: A list of value propositions of the product.
+            type: array
+            items:
+              $ref: '#/definitions/ValueProp'
+            maxItems: 8
+            x-nullable: false
+          images:
+            type: array
+            items:
+              $ref: '#/definitions/ProductImageURL'
+            maxItems: 8
+            x-nullable: false
+          support_email:
+            type: string
+            format: email
+            x-nullable: false
+          documentation_url:
+            type: string
+            format: url
+          terms:
+            description: |
+              URL to this Product's Terms of Service. If provided is true, then
+              a url must be set. Otherwise, provided is false.
+            type: object
+            properties:
+              url:
+                type: string
+                format: url
+              provided:
+                type: boolean
+                x-nullable: false
+            additionalProperties: false
+            required:
+            - url
+            - provided
+          feature_types:
+            type: array
+            items:
+              $ref: '#/definitions/FeatureType'
+          billing:
+            type: object
+            properties:
+              type:
+                type: string
+                enum:
+                - monthly-prorated
+              currency:
+                type: string
+                enum:
+                - usd
+            additionalProperties: false
+            required:
+            - type
+            - currency
+          integration:
+            type: object
+            properties:
+              base_url:
+                type: string
+                format: url
+              sso_url:
+                type: string
+                format: url
+              version:
+                type: string
+                enum:
+                - v1
+              features:
+                type: object
+                properties:
+                  sso:
+                    description: |
+                      Represents whether or not this product supports Single
+                      Sign On
+                    type: boolean
+                    x-nullable: false
+                  plan_change:
+                    description: |
+                      Represents whether or not this product supports changing
+                      the plan of a resource.
+                    type: boolean
+                    x-nullable: false
+                  region:
+                    description: |
+                      Describes how the region for a resource is specified, if
+                      unspecified, then regions have no impact on this
+                      resource.
+                    type: string
+                    enum:
+                    - user-specified
+                    - unspecified
+                additionalProperties: false
+                required:
+                - sso
+            additionalProperties: false
+            required:
+            - base_url
+            - version
+            - features
+            - sso_url
+        additionalProperties: false
+        required:
+        - provider_id
+        - label
+        - name
+        - state
+        - logo_url
+        - tagline
+        - value_props
+        - images
+        - support_email
+        - terms_url
+        - documentation_url
+        - feature_types
+        - billing
+        - integration
+    additionalProperties: false
+    required:
+    - id
+    - version
+    - type
+    - body
+  Plan:
+    type: object
+    properties:
+      id:
+        $ref: '#/definitions/ID'
+      version:
+        type: integer
+        enum:
+        - 1
+      type:
+        type: string
+        enum:
+        - plan
+      body:
+        type: object
+        properties:
+          provider_id:
+            $ref: '#/definitions/ID'
+          product_id:
+            $ref: '#/definitions/ID'
+          name:
+            $ref: '#/definitions/Name'
+          label:
+            $ref: '#/definitions/Label'
+          state:
+            type: string
+            enum:
+            - hidden
+            - available
+            - grandfathered
+          regions:
+            type: array
+            description: Array of Region IDs
+            items:
+              $ref: '#/definitions/ID'
+          features:
+            type: array
+            description: Array of Feature Values
+            items:
+              $ref: '#/definitions/FeatureValue'
+          trial_days:
+            type: integer
+            minimum: 0
+            description: |
+              The number of days a user gets as a free trial when subscribing to
+              this plan. Trials are valid only once per product; changing plans
+              or adding an additional subscription will not start a new trial.
+          cost:
+            type: integer
+            minimum: 0
+            description: Dollar value in cents
+        additionalProperties: false
+        required:
+        - provider_id
+        - product_id
+        - name
+        - label
+        - state
+        - regions
+        - features
+        - cost
+    additionalProperties: false
+    required:
+    - id
+    - version
+    - type
+    - body
+  Error:
+    type: object
+    description: Unexpected error
+    properties:
+      type:
+        type: string
+        description: The error type
+      message:
+        type: array
+        description: Explanation of the errors
+        items:
+          type: string
+    additionalProperties: false
+    required:
+    - type
+    - message
+    x-go-type:
+      type: Error
+      import:
+        package: github.com/manifoldco/go-manifold
+        alias: manifold

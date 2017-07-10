@@ -1,5 +1,6 @@
 vendor
 bin
 build
+generated/
 
 all-cover.txt
