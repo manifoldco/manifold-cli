@@ -1,0 +1,14 @@
+language: go
+go:
+- 1.8.x
+branches:
+  only:
+  - master
+before_install:
+- mkdir -p $HOME/gopath/bin
+install:
+- export PATH=$PATH:$TRAVIS_BUILD_DIR/vendor/bin:$GOPATH/bin
+- make bootstrap
+notifications:
+  slack:
+    secure: gFg1YHRMvvDjlOxG5LlwkR6FkKKdInt1CAKZV5+/K/1fz7nGmDjMdXWD5tZFMf85s8dQRcaNMEb43pPVgXTIgxP/ZG49GtKhHM26zCZY9nfBUd3drG80UCmg2oFKNzIGdWhU//d8Hvz+1Q/zfc6PvJbb8+RNsNBaUrWPywf48tJtcjjzSB2LOPPpnURuH0yhX90uHifrm4K5Z8qSfbiNgPLiAdOZKINjvY+Gk2WQ7730HZuJmYt6yK/93Snr9xIBntr1UryTugW4UVPO7OKOKTcBqVfeV9EPoacJEHqqJriMDMXJSpYJvXmcWBynY+7WZcctHM5qhlvs/onMQopEnX5cTtSJEGsWv+Cfu5CO8PC47JaXWY92VwzHi+Up317mZGRTdI1uiDiFaUvOE8p9S2CRlpNBDR8Zs1Ah1SZ3FroKHePzu3Q5QbPO/qA5a0EFRygLAJEPYt1c/OUJuMXfJSZrGNEkNYcfl9SDOjJVvCCziccgkzj+6Xm2WsNBXzjSFjGww6Te6iZqrkMkKPcrZ/b8X567Tc/1KmpNjWaHF5HbQ4KqTkhCfQzTbqHzBNy2DumZh5aDcZ3/JYBGRwtK++cGuLiuN5RXBvzFL+O2urP6I2wWZiPnfguo41k5ahcScFdZu1E16CJ58Cvjs5CVRpNcYvzwNir9npoeudqdJsE=
