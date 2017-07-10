@@ -1,0 +1,24 @@
+hash: ce00b3211bfa5352d77d82a4b8c899f3a5106a2eddfd530506d839362f7bb084
+updated: 2017-07-10T13:09:23.165775247-03:00
+imports:
+- name: github.com/alecthomas/gometalinter
+  version: bae2f1293d092fd8167939d5108d1b025eaef9de
+- name: github.com/client9/misspell
+  version: d06ddd376b273047dca6e16eeeb2a2a8f9791978
+  subpackages:
+  - cmd/misspell
+- name: github.com/golang/lint
+  version: cb00e5669539f047b2f4c53a421a01b0c8e172c6
+  subpackages:
+  - golint
+- name: github.com/gordonklaus/ineffassign
+  version: f0c5cfc1817d6dd6011c7e8b8d272f94aeeb12cb
+- name: github.com/tsenart/deadcode
+  version: 210d2dc333e90c7e3eedf4f2242507a8e83ed4ab
+- name: github.com/urfave/cli
+  version: 0bdeddeeb0f650497d603c4ad7b20cfe685682f6
+- name: golang.org/x/tools
+  version: cd6e398dae38fb8b0b57f221b13c4b75c0a53fb9
+  subpackages:
+  - go/gcexportdata
+testImports: []

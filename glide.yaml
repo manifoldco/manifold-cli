@@ -1,0 +1,17 @@
+package: github.com/manifoldco/manifold-cli
+import:
+- package: github.com/urfave/cli
+  version: ^1.19.1
+- package: github.com/client9/misspell
+  subpackages:
+  - cmd/misspell
+- package: github.com/golang/lint
+  subpackages:
+  - golint
+- package: github.com/gordonklaus/ineffassign
+- package: github.com/tsenart/deadcode
+- package: github.com/alecthomas/gometalinter
+  version: ^1.2.1
+- package: golang.org/x/tools
+  subpackages:
+  - go/gcexportdata
