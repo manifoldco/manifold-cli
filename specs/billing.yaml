@@ -1,0 +1,644 @@
+swagger: "2.0"
+info:
+  title: Billing API
+  description: |
+    # Introduction
+    The Billing API allows the Provisioning worker to construct
+    customer profiles, associate credit card information
+  version: 1.0.0
+host: api.billing.manifold.co
+schemes:
+- https
+produces:
+- application/json
+consumes:
+- application/json
+securityDefinitions:
+  jwtRequired:
+    type: apiKey
+    description: Authentication mechanism for dashboard users
+    name: Authorization
+    in: header
+responses:
+  BadRequest:
+    description: Request denied due to invalid request body, path, or headers.
+    schema:
+      $ref: '#/definitions/Error'
+    examples:
+      application/json:
+        type: bad_request
+        message:
+        - Invalid Profile ID Provided
+  Conflict:
+    description: Request denied due to conflict with existing data.
+    schema:
+      $ref: '#/definitions/Error'
+  Unauthorized:
+    description: Request denied as the provided credentials are no longer valid.
+    schema:
+      $ref: '#/definitions/Error'
+    examples:
+      application/json:
+        type: unauthorized
+        message:
+        - ""
+  NotFound:
+    description: Request denied as the requested profile does not exist.
+    schema:
+      $ref: '#/definitions/Error'
+    examples:
+      application/json:
+        type: not_found
+        message:
+        - Cannot modify billing for another user
+  Internal:
+    description: Request failed due to an internal server error.
+    schema:
+      $ref: '#/definitions/Error'
+    examples:
+      application/json:
+        type: internal
+        message:
+        - Internal Server Error
+security:
+- jwtRequired: []
+basePath: /v1
+paths:
+  /profiles:
+    x-manifold-audience: browser
+    post:
+      summary: Create Billing Profile
+      description: |
+        Creates a new billing profile for the authenticated user, under which
+        their credit card is associated.
+      tags:
+      - Profile
+      parameters:
+      - name: body
+        in: body
+        description: Billing Profile Create Request Body
+        required: true
+        schema:
+          $ref: '#/definitions/ProfileCreateRequest'
+      responses:
+        201:
+          description: A billing profile
+          schema:
+            $ref: '#/definitions/BillingProfile'
+        400:
+          $ref: '#/responses/BadRequest'
+        401:
+          $ref: '#/responses/Unauthorized'
+        500:
+          $ref: '#/responses/Internal'
+  /profiles/{id}:
+    x-manifold-audience: browser
+    get:
+      summary: Retrieve Billing Profile
+      description: |
+        Retrieves the billing profile and associated detail of the authenticated user
+      tags:
+      - Profile
+      parameters:
+      - name: id
+        in: path
+        description: |
+          ID of the user to retrieve, stored as a base32 encoded 18 byte
+          identifier.
+        required: true
+        type: string
+        pattern: ^[0-9abcdefghjkmnpqrtuvwxyz]{29}$
+        format: base32ID
+      responses:
+        200:
+          description: A billing profile
+          schema:
+            $ref: '#/definitions/BillingProfile'
+        400:
+          $ref: '#/responses/BadRequest'
+        401:
+          $ref: '#/responses/Unauthorized'
+        404:
+          $ref: '#/responses/NotFound'
+        500:
+          $ref: '#/responses/Internal'
+    patch:
+      summary: Update Billing Profile
+      description: |
+        Replaces the billing profile's source of funds with the credit card supplied
+      tags:
+      - Profile
+      parameters:
+      - name: id
+        in: path
+        description: |
+          ID of the user to update, stored as a base32 encoded 18 byte
+          identifier.
+        required: true
+        type: string
+        pattern: ^[0-9abcdefghjkmnpqrtuvwxyz]{29}$
+        format: base32ID
+      - name: body
+        in: body
+        description: Billing Profile Update Request Body
+        required: true
+        schema:
+          $ref: '#/definitions/ProfileUpdateRequest'
+      responses:
+        200:
+          description: Billing profile which has been updated
+          schema:
+            $ref: '#/definitions/BillingProfile'
+        400:
+          $ref: '#/responses/BadRequest'
+        401:
+          $ref: '#/responses/Unauthorized'
+        404:
+          $ref: '#/responses/NotFound'
+        500:
+          $ref: '#/responses/Internal'
+  /discounts:
+    x-manifold-audience: browser
+    post:
+      summary: Apply a coupon code to a user's account
+      description: |
+        Applies the provided coupon code to a user's account, converting it to
+        a discount/credit.
+      tags:
+      - Discount
+      parameters:
+      - name: body
+        in: body
+        description: Coupon details
+        required: true
+        schema:
+          $ref: '#/definitions/DiscountCreateRequest'
+      responses:
+        201:
+          description: The created subscription event for this discount
+          schema:
+            $ref: '#/definitions/SubscriptionEvent'
+        400:
+          $ref: '#/responses/BadRequest'
+        401:
+          $ref: '#/responses/Unauthorized'
+        500:
+          $ref: '#/responses/Internal'
+  /subscription-events:
+    x-manifold-audience: browser
+    get:
+      summary: List subscription events
+      description: |
+        List the historical subscription events for a user. Events are sorted by
+        `body.event_number`, in increasing order.
+
+        Subscription events are the authoratative log of all actions for an
+        account that affect billing. Each event references the event that
+        preceeded it, and all events are cryptographically signed by Manifold,
+        so that any tampering can be detected.
+
+        ## Calculating Coupon and Credit Balance
+
+        Subscription events with `body.event_type` of `credit` can be coupon
+        applications, or general credits applied by Manifold to an account.
+        Credits that came from a coupon will have both `body.coupon_id` and
+        `body.code` set. As coupon codes may be reused by Manifold,
+        `body.coupon_id` must be used for determining the remaining balance on
+        a coupon application in subsequent billing periods (see below).
+
+        When a coupon is first applied, `body.amount` holds the full value of
+        the coupon in cents. As subsequent billing periods occur, new
+        subscription events are added to the list with the updated remaining
+        credit balance. These events will have `body.rollover_id` set to the id
+        of the previous `credit` subscription event in the list that  maps to
+        the same coupon application.
+
+        If a credit balance is zero at the end of a billing period, no new
+        rollover subscription event is added. If the current time in UTC is the
+        second of the month (to allow for some processing delay), and there is
+        no new rollover subscription event in the list, a coupon application can
+        be considered to have a zero balance, and be fully used in the previous
+        billing period.
+      tags:
+      - Subscription
+      parameters:
+      - name: event_type
+        in: query
+        description: Filter returned events by type. Only `credit` is supported.
+        required: true
+        type: string
+        enum:
+        - credit
+      responses:
+        200:
+          description: The list of subscription events, ordered by event number.
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/SubscriptionEvent'
+        400:
+          $ref: '#/responses/BadRequest'
+        401:
+          $ref: '#/responses/Unauthorized'
+        500:
+          $ref: '#/responses/Internal'
+definitions:
+  ID:
+    type: string
+    description: A base32 encoded 18 byte identifier.
+    pattern: ^[0-9abcdefghjkmnpqrtuvwxyz]{29}$
+    format: base32ID
+    x-go-type:
+      type: ID
+      import:
+        package: github.com/manifoldco/go-manifold
+        alias: manifold
+  Base64:
+    type: string
+    description: A base64 encoded binary value.
+    pattern: ^[a-zA-Z0-9_-]*$
+    format: base64
+  Error:
+    type: object
+    properties:
+      type:
+        type: string
+        enum:
+        - bad_request
+        - unauthorized
+        - not_found
+        - internal
+        description: The error type
+      message:
+        type: array
+        description: Explanation of the errors
+        items:
+          type: string
+    x-go-type:
+      type: Error
+      import:
+        package: github.com/manifoldco/go-manifold
+        alias: manifold
+  BillingSubDelete:
+    description: |
+      Infomation necessary to cancel a subscription item
+    type: object
+    properties:
+      operation_id:
+        $ref: '#/definitions/ID'
+      occurred_at:
+        type: string
+        format: date-time
+    additionalProperties: false
+    required:
+    - operation_id
+    - occurred_at
+  BillingCreditCreate:
+    description: |
+      Information necessary to create a new credit
+    type: object
+    properties:
+      provider_id:
+        $ref: '#/definitions/ID'
+      resource_id:
+        $ref: '#/definitions/ID'
+      operation_id:
+        $ref: '#/definitions/ID'
+      occurred_at:
+        type: string
+        format: date-time
+      reason:
+        type: string
+        maxLength: 64
+      amount:
+        type: integer
+        minimum: 0
+        description: Dollar value in cents
+    additionalProperties: false
+    required:
+    - operation_id
+    - occurred_at
+  CouponCode:
+    description: Alphanumeric coupon code
+    type: string
+    minLength: 1
+    maxLength: 128
+    pattern: ^[0-9A-Z]{1,128}$
+  BillingCouponCreate:
+    description: Information necessary to create a new coupon
+    type: object
+    properties:
+      type:
+        type: string
+        enum:
+        - standard
+        - signup
+      provider_id:
+        $ref: '#/definitions/ID'
+      expires_at:
+        description: |
+          Expiry datetime for this coupon. If omitted, the coupon does not
+          expire.
+        type: string
+        format: date-time
+      total:
+        description: |
+          Total claimable codes for this coupon. If omitted, there are infinite
+          coupons.
+        type: integer
+        minimum: 1
+      code:
+        $ref: '#/definitions/CouponCode'
+      amount:
+        description: Dollar value in cents
+        type: integer
+        minimum: 0
+    additionalProperties: false
+    required:
+    - type
+    - code
+    - amount
+  BillingSubCreate:
+    description: |
+      Information necessary to create a new subscription item
+    type: object
+    properties:
+      plan_id:
+        $ref: '#/definitions/ID'
+      operation_id:
+        $ref: '#/definitions/ID'
+      occurred_at:
+        type: string
+        format: date-time
+    additionalProperties: false
+    required:
+    - operation_id
+    - occurred_at
+    - plan_id
+  PayoutProfile:
+    description: |
+      Association of a provider with a billing account
+    type: object
+    properties:
+      id:
+        $ref: '#/definitions/ID'
+      version:
+        type: integer
+        enum:
+        - 1
+      type:
+        type: string
+        enum:
+        - payout_profile
+      body:
+        type: object
+        properties:
+          provider_id:
+            $ref: '#/definitions/ID'
+          account_id:
+            type: string
+        additionalProperties: false
+        required:
+        - user_id
+        - account_id
+    additionalProperties: false
+    required:
+    - id
+    - type
+    - version
+    - body
+  PayoutProfileCreateRequest:
+    type: object
+    properties:
+      token:
+        type: string
+        minLength: 3
+        maxLength: 64
+        description: |
+          Tokenized destination of funds
+      provider_id:
+        $ref: '#/definitions/ID'
+      account:
+        $ref: '#/definitions/StripeAccount'
+      legal_entity:
+        $ref: '#/definitions/StripeLegalEntity'
+    required:
+    - provider_id
+    - account
+    - legal_entity
+    - token
+    additionalProperties: false
+  StripeLegalEntity:
+    type: object
+  StripeAccount:
+    type: object
+    properties:
+      email:
+        $ref: '#/definitions/Email'
+      business_name:
+        type: string
+        minLength: 1
+      country:
+        type: string
+        minLength: 2
+        maxLength: 2
+    required:
+    - email
+    - business_name
+    - country
+  BillingProfile:
+    description: |
+      Details of a billing profile
+    type: object
+    properties:
+      id:
+        $ref: '#/definitions/ID'
+      version:
+        type: integer
+        enum:
+        - 1
+      type:
+        type: string
+        enum:
+        - billing_profile
+      body:
+        type: object
+        properties:
+          user_id:
+            $ref: '#/definitions/ID'
+          sources:
+            type: array
+            items:
+              $ref: '#/definitions/Source'
+        required:
+        - user_id
+        - sources
+    additionalProperties: false
+    required:
+    - id
+    - type
+    - version
+    - body
+  ProfileCreateRequest:
+    type: object
+    properties:
+      user_id:
+        $ref: '#/definitions/ID'
+      token:
+        type: string
+        minLength: 3
+        maxLength: 64
+        description: |
+          Tokenized source of funds
+    required:
+    - user_id
+    - token
+    additionalProperties: false
+  ProfileUpdateRequest:
+    type: object
+    properties:
+      token:
+        type: string
+        minLength: 3
+        maxLength: 64
+        description: |
+          Tokenized source of funds
+    required:
+    - token
+    additionalProperties: false
+  Source:
+    type: object
+    properties:
+      name:
+        type: string
+      country:
+        type: string
+      zip:
+        type: string
+      last_four:
+        type: string
+      exp_month:
+        type: integer
+      exp_year:
+        type: integer
+      brand:
+        type: string
+        enum:
+        - Unknown
+        - Visa
+        - American Express
+        - MasterCard
+        - Discover
+        - JCB
+        - Diners Club
+    additionalProperties: false
+    required:
+    - name
+    - country
+    - last_four
+    - exp_month
+    - exp_year
+  Email:
+    type: string
+    format: email
+    x-nullable: true
+    x-go-type:
+      type: Email
+      import:
+        package: github.com/manifoldco/go-manifold
+        alias: manifold
+  DiscountCreateRequest:
+    type: object
+    properties:
+      code:
+        $ref: '#/definitions/CouponCode'
+    required:
+    - code
+    additionalProperties: false
+  SubscriptionEvent:
+    type: object
+    properties:
+      id:
+        $ref: '#/definitions/ID'
+      version:
+        type: integer
+        enum:
+        - 1
+      type:
+        type: string
+        enum:
+        - subscription_event
+      body:
+        $ref: '#/definitions/SubscriptionEventBody'
+      signature:
+        type: object
+        properties:
+          alg:
+            type: string
+            enum:
+            - eddsa
+          value:
+            $ref: '#/definitions/Base64'
+          public_key:
+            $ref: '#/definitions/Base64'
+          endorsement:
+            $ref: '#/definitions/Base64'
+    x-go-type:
+      type: SubscriptionEvent
+      import:
+        package: github.com/manifoldco/marketplace/billing/primitives
+  SubscriptionEventBody:
+    type: object
+    discriminator: event_type
+    properties:
+      event_type:
+        type: string
+      event_number:
+        type: integer
+        minimum: 0
+      parent_event:
+        $ref: '#/definitions/ID'
+      operation_id:
+        $ref: '#/definitions/ID'
+      occurred_at:
+        type: string
+        format: date-time
+      user_id:
+        $ref: '#/definitions/ID'
+      provider_id:
+        $ref: '#/definitions/ID'
+      resource_id:
+        $ref: '#/definitions/ID'
+      rollover_id:
+        $ref: '#/definitions/ID'
+    additionalProperties: false
+    required:
+    - event_type
+    - event_number
+    - user_id
+    - operation_id
+    - occurred_at
+  credit:
+    type: object
+    allOf:
+    - $ref: '#/definitions/SubscriptionEventBody'
+    - type: object
+      properties:
+        amount:
+          type: integer
+          minimum: 0
+          description: Dollar value of credit in cents
+        currency:
+          type: string
+          enum:
+          - usd
+        reason:
+          type: string
+        coupon_id:
+          $ref: '#/definitions/ID'
+        code:
+          $ref: '#/definitions/CouponCode'
+      required:
+      - amount
+      - currency
+      - reason

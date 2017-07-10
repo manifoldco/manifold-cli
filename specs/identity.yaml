@@ -1,0 +1,728 @@
+swagger: "2.0"
+info:
+  title: Identity API
+  description: Identity and authentication
+  version: 1.0.0
+host: api.identity.manifold.co
+schemes:
+- https
+produces:
+- application/json
+consumes:
+- application/json
+basePath: /v1
+securityDefinitions:
+  jwtRequired:
+    type: apiKey
+    name: Authorization
+    in: header
+  tokenSignatureRequired:
+    type: apiKey
+    name: Authorization
+    in: header
+security:
+- jwtRequired: []
+paths:
+  /tokens/auth:
+    post:
+      summary: Create a new auth token
+      parameters:
+      - name: body
+        in: body
+        description: |
+          Auth token create request
+        required: true
+        schema:
+          $ref: '#/definitions/AuthTokenRequest'
+      - name: authorization
+        in: header
+        description: Token used to authenticate a user against a specific service
+        required: true
+        type: string
+      tags:
+      - Authentication
+      responses:
+        201:
+          description: An authentication token.
+          schema:
+            $ref: '#/definitions/AuthToken'
+        400:
+          description: Invalid token request supplied
+          schema:
+            $ref: '#/definitions/Error'
+        401:
+          description: Expired token supplied
+          schema:
+            $ref: '#/definitions/Error'
+        500:
+          description: Request failed due to an internal server error.
+          schema:
+            $ref: '#/definitions/Error'
+        default:
+          description: Unexpected error
+          schema:
+            $ref: '#/definitions/Error'
+  /tokens/login:
+    post:
+      summary: Create a new auth or login token
+      security: []
+      parameters:
+      - name: body
+        in: body
+        description: |
+          Login token create request
+        required: true
+        schema:
+          $ref: '#/definitions/LoginTokenRequest'
+      tags:
+      - Authentication
+      responses:
+        201:
+          description: A login token.
+          schema:
+            $ref: '#/definitions/LoginTokenResponse'
+        400:
+          description: Invalid token request supplied
+          schema:
+            $ref: '#/definitions/Error'
+        500:
+          description: Request failed due to an internal server error.
+          schema:
+            $ref: '#/definitions/Error'
+        default:
+          description: Unexpected error
+          schema:
+            $ref: '#/definitions/Error'
+  /tokens/{token}:
+    delete:
+      summary: Revoke an auth token for log out
+      parameters:
+      - name: token
+        in: path
+        required: true
+        type: string
+        maxLength: 295
+      tags:
+      - Authentication
+      responses:
+        204:
+          description: Empty response
+        401:
+          description: Unknown token, or token not owned the the requester
+          schema:
+            $ref: '#/definitions/Error'
+        500:
+          description: Request failed due to an internal server error.
+          schema:
+            $ref: '#/definitions/Error'
+        default:
+          description: Unexpected error
+          schema:
+            $ref: '#/definitions/Error'
+  /self:
+    get:
+      summary: Retrieve the underlying user represented by a Token
+      parameters: []
+      tags:
+      - User
+      responses:
+        200:
+          description: A user object.
+          schema:
+            $ref: '#/definitions/User'
+        401:
+          description: Unknown token, or token not owned the the requester
+          schema:
+            $ref: '#/definitions/Error'
+        500:
+          description: Request failed due to an internal server error.
+          schema:
+            $ref: '#/definitions/Error'
+  /users:
+    post:
+      summary: Create a new user
+      security: []
+      tags:
+      - User
+      parameters:
+      - name: body
+        in: body
+        description: |
+          User create request
+        required: true
+        schema:
+          $ref: '#/definitions/CreateUser'
+      responses:
+        201:
+          description: Complete user object
+          schema:
+            $ref: '#/definitions/User'
+        400:
+          description: Validation failed for request
+          schema:
+            $ref: '#/definitions/Error'
+        500:
+          description: Request failed due to an internal server error.
+          schema:
+            $ref: '#/definitions/Error'
+        default:
+          description: Unexpected error
+          schema:
+            $ref: '#/definitions/Error'
+  /users/forgot-password:
+    post:
+      x-manifold-audience: browser
+      security: []
+      summary: Reset password with an emailed forgot password token
+      tags:
+      - User
+      parameters:
+      - name: body
+        in: body
+        description: |
+          Forgot password payload
+        required: true
+        schema:
+          $ref: '#/definitions/ForgotPassword'
+      responses:
+        204:
+          description: Forgot password complete
+        401:
+          description: Validation failed for request
+          schema:
+            $ref: '#/definitions/Error'
+        400:
+          description: Validation failed for request
+          schema:
+            $ref: '#/definitions/Error'
+        500:
+          description: Request failed due to an internal server error.
+          schema:
+            $ref: '#/definitions/Error'
+        default:
+          description: Unexpected error
+          schema:
+            $ref: '#/definitions/Error'
+  /users/forgot-password/token:
+    post:
+      x-manifold-audience: browser
+      security: []
+      summary: User has forgotten password, send a reset token
+      tags:
+      - User
+      parameters:
+      - name: body
+        in: body
+        description: |
+          Request to be issued a forgot password token
+        required: true
+        schema:
+          $ref: '#/definitions/ForgotPasswordCreate'
+      responses:
+        204:
+          description: Forgot password has either been sent, or ignored for unknown
+            user
+        401:
+          description: Validation failed for request
+          schema:
+            $ref: '#/definitions/Error'
+        400:
+          description: Validation failed for request
+          schema:
+            $ref: '#/definitions/Error'
+        500:
+          description: Request failed due to an internal server error.
+          schema:
+            $ref: '#/definitions/Error'
+        default:
+          description: Unexpected error
+          schema:
+            $ref: '#/definitions/Error'
+  /users/verify:
+    post:
+      summary: Verify email address
+      tags:
+      - User
+      parameters:
+      - name: body
+        in: body
+        description: |
+          Email verify request
+        required: true
+        schema:
+          $ref: '#/definitions/VerifyEmail'
+      responses:
+        204:
+          description: Verification complete
+        401:
+          description: Validation failed for request
+          schema:
+            $ref: '#/definitions/Error'
+        400:
+          description: Validation failed for request
+          schema:
+            $ref: '#/definitions/Error'
+        500:
+          description: Request failed due to an internal server error.
+          schema:
+            $ref: '#/definitions/Error'
+        default:
+          description: Unexpected error
+          schema:
+            $ref: '#/definitions/Error'
+  /users/{id}:
+    patch:
+      summary: Update user profile
+      security:
+      - tokenSignatureRequired: []
+      tags:
+      - User
+      parameters:
+      - name: id
+        in: path
+        description: |
+          ID of the user to update, stored as a base32 encoded 18 byte
+          identifier.
+        required: true
+        type: string
+        pattern: ^[0-9abcdefghjkmnpqrtuvwxyz]{29}$
+        format: base32ID
+      - name: body
+        in: body
+        description: |
+          User update request
+        required: true
+        schema:
+          $ref: '#/definitions/UpdateUser'
+      responses:
+        200:
+          description: Complete user object
+          schema:
+            $ref: '#/definitions/User'
+        400:
+          description: Validation failed for request
+          schema:
+            $ref: '#/definitions/Error'
+        500:
+          description: Request failed due to an internal server error.
+          schema:
+            $ref: '#/definitions/Error'
+        default:
+          description: Unexpected error
+          schema:
+            $ref: '#/definitions/Error'
+  /teams:
+    post:
+      summary: Create a new team
+      tags:
+      - Team
+      parameters:
+      - name: body
+        in: body
+        description: |
+          Team create request.
+        required: true
+        schema:
+          $ref: '#/definitions/CreateTeam'
+      responses:
+        201:
+          description: Complete team object
+          schema:
+            $ref: '#/definitions/Team'
+        400:
+          description: Validation failed for request.
+          schema:
+            $ref: '#/definitions/Error'
+        401:
+          description: Authentication failed for the request.
+          schema:
+            $ref: '#/definitions/Error'
+        403:
+          description: The user has already created (reserved) an team.
+          schema:
+            $ref: '#/definitions/Error'
+        409:
+          description: An team with this label already exists.
+          schema:
+            $ref: '#/definitions/Error'
+        500:
+          description: Request failed due to an internal server error.
+          schema:
+            $ref: '#/definitions/Error'
+        default:
+          description: Unexpected error
+          schema:
+            $ref: '#/definitions/Error'
+definitions:
+  ID:
+    type: string
+    description: A base32 encoded 18 byte identifier.
+    pattern: ^[0-9abcdefghjkmnpqrtuvwxyz]{29}$
+    format: base32ID
+    x-go-type:
+      type: ID
+      import:
+        package: github.com/manifoldco/go-manifold
+        alias: manifold
+  Label:
+    type: string
+    description: A machine readable unique label, which is url safe.
+    pattern: ^[a-z0-9][a-z0-9\-\_]{1,128}$
+    x-go-type:
+      type: Label
+      import:
+        package: github.com/manifoldco/go-manifold
+        alias: manifold
+  Name:
+    type: string
+    description: A name of an entity which is displayed to a human.
+    pattern: ^[a-zA-Z][a-z0-9A-Z \-]{2,128}$
+    x-go-type:
+      type: Name
+      import:
+        package: github.com/manifoldco/go-manifold
+        alias: manifold
+  Empty:
+    type: object
+    additionalProperties: false
+  Error:
+    type: object
+    properties:
+      type:
+        description: The error type
+        type: string
+        enum:
+        - bad_request
+        - not_found
+        - unauthorized
+        - conflict
+        - internal
+      message:
+        type: array
+        description: Explanation of the errors
+        items:
+          type: string
+    x-go-type:
+      type: Error
+      import:
+        package: github.com/manifoldco/go-manifold
+        alias: manifold
+  User:
+    type: object
+    properties:
+      id:
+        $ref: '#/definitions/ID'
+      version:
+        type: integer
+        enum:
+        - 1
+      type:
+        type: string
+        enum:
+        - user
+      body:
+        type: object
+        properties:
+          name:
+            $ref: '#/definitions/UserDisplayName'
+          email:
+            $ref: '#/definitions/Email'
+          public_key:
+            $ref: '#/definitions/LoginPublicKey'
+          verification_code:
+            type: string
+            pattern: ^[0-9abcdefghjkmnpqrtuvwxyz]{16}$
+            maxLength: 16
+          state:
+            type: string
+            enum:
+            - unverified
+            - verified
+        additionalProperties: false
+        required:
+        - name
+        - email
+        - public_key
+        - state
+    additionalProperties: false
+    required:
+    - id
+    - type
+    - version
+    - body
+  CreateUser:
+    type: object
+    properties:
+      body:
+        type: object
+        properties:
+          name:
+            $ref: '#/definitions/UserDisplayName'
+          email:
+            $ref: '#/definitions/Email'
+          public_key:
+            $ref: '#/definitions/LoginPublicKey'
+        additionalProperties: false
+        required:
+        - name
+        - email
+        - public_key
+    additionalProperties: false
+    required:
+    - body
+  CreateTeam:
+    type: object
+    properties:
+      body:
+        type: object
+        properties:
+          name:
+            $ref: '#/definitions/Name'
+          label:
+            $ref: '#/definitions/Label'
+        additionalProperties: false
+        required:
+        - name
+        - label
+    additionalProperties: false
+    required:
+    - body
+  Team:
+    type: object
+    properties:
+      id:
+        $ref: '#/definitions/ID'
+      type:
+        type: string
+        enum:
+        - team
+      version:
+        type: integer
+        enum:
+        - 1
+      body:
+        type: object
+        properties:
+          name:
+            $ref: '#/definitions/Name'
+          label:
+            $ref: '#/definitions/Label'
+        additionalProperties: false
+        required:
+        - name
+        - label
+    additionalProperties: false
+    required:
+    - id
+    - type
+    - version
+    - body
+    x-go-type:
+      type: Team
+      import:
+        package: github.com/manifoldco/marketplace/identity/primitives
+  UpdateUser:
+    type: object
+    properties:
+      body:
+        type: object
+        properties:
+          name:
+            $ref: '#/definitions/UserDisplayName'
+          email:
+            $ref: '#/definitions/Email'
+          public_key:
+            $ref: '#/definitions/LoginPublicKey'
+          auth_token_sig:
+            type: string
+            pattern: ^[a-zA-Z0-9_-]*$
+            minLength: 86
+            maxLength: 86
+        additionalProperties: false
+    additionalProperties: false
+  ForgotPassword:
+    type: object
+    properties:
+      email:
+        $ref: '#/definitions/Email'
+      token:
+        type: string
+        minLength: 43
+        maxLength: 43
+        pattern: ^[a-zA-Z0-9_-]{43}$
+      public_key:
+        $ref: '#/definitions/LoginPublicKey'
+    additionalProperties: false
+    required:
+    - email
+    - token
+    - public_key
+  ForgotPasswordCreate:
+    type: object
+    properties:
+      email:
+        $ref: '#/definitions/Email'
+    additionalProperties: false
+    required:
+    - email
+  VerifyEmail:
+    type: object
+    properties:
+      body:
+        type: object
+        properties:
+          verification_code:
+            type: string
+            pattern: ^[0-9abcdefghjkmnpqrtuvwxyz]{16}$
+            maxLength: 16
+        additionalProperties: false
+        required:
+        - verification_code
+  UserDisplayName:
+    type: string
+    pattern: ^[a-zA-Z\s\,\.\'\-\pL]+$
+    minLength: 3
+    maxLength: 64
+  Email:
+    type: string
+    format: email
+    x-go-type:
+      type: Email
+      import:
+        package: github.com/manifoldco/go-manifold
+        alias: manifold
+  LoginPublicKey:
+    type: object
+    properties:
+      salt:
+        type: string
+        pattern: ^[a-zA-Z0-9_-]*$
+        minLength: 22
+        maxLength: 22
+      value:
+        type: string
+        pattern: ^[a-zA-Z0-9_-]*$
+        minLength: 43
+        maxLength: 43
+      alg:
+        type: string
+        enum:
+        - eddsa
+    additionalProperties: false
+    required:
+    - salt
+    - value
+    - alg
+  AuthTokenRequest:
+    type: object
+    properties:
+      type:
+        type: string
+        enum:
+        - auth
+      login_token_sig:
+        type: string
+        pattern: ^[a-zA-Z0-9_-]*$
+        minLength: 86
+        maxLength: 86
+    additionalProperties: false
+    required:
+    - type
+    - login_token_sig
+  AuthToken:
+    type: object
+    properties:
+      id:
+        $ref: '#/definitions/ID'
+      version:
+        type: integer
+        enum:
+        - 1
+      type:
+        type: string
+        enum:
+        - auth_token
+      body:
+        type: object
+        properties:
+          token:
+            type: string
+            maxLength: 295
+          user_id:
+            $ref: '#/definitions/ID'
+          mechanism:
+            type: string
+            enum:
+            - eddsa
+            x-nullable: false
+        additionalProperties: false
+        required:
+        - token
+        - user_id
+        - type
+        - mechanism
+    additionalProperties: false
+    required:
+    - id
+    - version
+    - type
+    - body
+  LoginTokenRequest:
+    type: object
+    properties:
+      email:
+        type: string
+        format: email
+    required:
+    - email
+  LoginTokenResponse:
+    type: object
+    properties:
+      token:
+        type: string
+      salt:
+        type: string
+        pattern: ^[a-zA-Z0-9_-]*$
+        minLength: 22
+        maxLength: 22
+    required:
+    - token
+    - salt
+  LoginToken:
+    type: object
+    properties:
+      id:
+        $ref: '#/definitions/ID'
+      version:
+        type: integer
+        enum:
+        - 1
+      type:
+        type: string
+        enum:
+        - login_token
+      body:
+        type: object
+        properties:
+          token:
+            type: string
+            maxLength: 295
+          user_id:
+            $ref: '#/definitions/ID'
+          mechanism:
+            type: string
+            enum:
+            - eddsa
+            x-nullable: false
+        additionalProperties: false
+        required:
+        - token
+        - user_id
+        - type
+        - mechanism
+    additionalProperties: false
+    required:
+    - id
+    - version
+    - type
+    - body

@@ -1,0 +1,438 @@
+swagger: "2.0"
+info:
+  title: Marketplace API
+  description: |
+    Request and monitor resource provisioning, deprovisioning, and resizing
+    operations
+  version: 1.0.0
+host: api.marketplace.manifold.co
+schemes:
+- https
+produces:
+- application/json
+consumes:
+- application/json
+securityDefinitions:
+  jwtRequired:
+    type: apiKey
+    name: Authorization
+    in: header
+security:
+- jwtRequired: []
+basePath: /v1
+paths:
+  /resources/:
+    get:
+      summary: List all provisioned resources
+      tags:
+      - Resource
+      parameters:
+      - name: product_id
+        in: query
+        description: |
+          ID of the Product to filter Resources by, stored as a
+          base32encoded 18 byte identifier.
+        type: string
+        pattern: ^[0-9abcdefghjkmnpqrtuvwxyz]{29}$
+        format: base32ID
+        required: false
+      responses:
+        200:
+          description: List of provisioned resources
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Resource'
+        500:
+          description: Server Error
+          schema:
+            $ref: '#/definitions/Error'
+        401:
+          description: Invalid Auth Token
+          schema:
+            $ref: '#/definitions/Error'
+        default:
+          description: Unexpected Error
+  /resources/{id}:
+    get:
+      summary: Retrieve a resource
+      parameters:
+      - name: id
+        in: path
+        description: |
+          ID of the Resource to lookup, stored as a base32 encoded 18 byte
+          identifier.
+        required: true
+        type: string
+        pattern: ^[0-9abcdefghjkmnpqrtuvwxyz]{29}$
+        format: base32ID
+      tags:
+      - Resource
+      responses:
+        200:
+          description: A resource.
+          schema:
+            $ref: '#/definitions/Resource'
+        404:
+          description: No resource with the given ID exists.
+          schema:
+            $ref: '#/definitions/Error'
+        401:
+          description: Invalid Auth Token
+          schema:
+            $ref: '#/definitions/Error'
+        500:
+          description: Server Error
+          schema:
+            $ref: '#/definitions/Error'
+        default:
+          description: Unexpected Error
+          schema:
+            $ref: '#/definitions/Error'
+    patch:
+      summary: |
+        Update a resource name or other property that doesn't require
+        communication with the provider.
+      parameters:
+      - name: id
+        in: path
+        description: |
+          ID of the Resource to lookup, stored as a base32 encoded 18 byte
+          identifier.
+        required: true
+        type: string
+        pattern: ^[0-9abcdefghjkmnpqrtuvwxyz]{29}$
+        format: base32ID
+      - name: body
+        in: body
+        description: Resource update request
+        required: true
+        schema:
+          $ref: '#/definitions/PublicUpdateResource'
+      tags:
+      - Resource
+      responses:
+        200:
+          description: An updated resource object.
+          schema:
+            $ref: '#/definitions/Resource'
+        401:
+          description: Invalid Auth Token
+          schema:
+            $ref: '#/definitions/Error'
+        400:
+          description: Invalid Request
+          schema:
+            $ref: '#/definitions/Error'
+        500:
+          description: Server Error
+          schema:
+            $ref: '#/definitions/Error'
+        default:
+          description: Unexpected Error
+          schema:
+            $ref: '#/definitions/Error'
+  /credentials:
+    get:
+      summary: List credentials
+      parameters:
+      - name: resource_id
+        in: query
+        description: |
+          ID of the Resource to filter Credentials by, stored as a
+          base32encoded 18 byte identifier.
+        type: string
+        pattern: ^[0-9abcdefghjkmnpqrtuvwxyz]{29}$
+        format: base32ID
+        required: true
+      tags:
+      - Credential
+      responses:
+        200:
+          description: List of Credentials
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Credential'
+        401:
+          description: Invalid Auth Token
+          schema:
+            $ref: '#/definitions/Error'
+        400:
+          description: Invalid Request
+          schema:
+            $ref: '#/definitions/Error'
+        500:
+          description: Server Error
+          schema:
+            $ref: '#/definitions/Error'
+        default:
+          description: Unexpected Error
+          schema:
+            $ref: '#/definitions/Error'
+definitions:
+  ID:
+    type: string
+    description: A base32 encoded 18 byte identifier.
+    pattern: ^[0-9abcdefghjkmnpqrtuvwxyz]{29}$
+    format: base32ID
+    x-go-type:
+      type: ID
+      import:
+        package: github.com/manifoldco/go-manifold
+        alias: manifold
+  Label:
+    type: string
+    description: A machine readable unique label, which is url safe.
+    pattern: ^[a-z0-9][a-z0-9\-\_]{1,128}$
+    x-go-type:
+      type: Label
+      import:
+        package: github.com/manifoldco/go-manifold
+        alias: manifold
+  Name:
+    type: string
+    description: A name of an entity which is displayed to a human.
+    pattern: ^[a-zA-Z][a-z0-9A-Z \-]{2,128}$
+    x-go-type:
+      type: Name
+      import:
+        package: github.com/manifoldco/go-manifold
+        alias: manifold
+  Error:
+    type: object
+    properties:
+      type:
+        type: string
+        description: The error type
+        enum:
+        - bad_request
+        - not_found
+        - unauthorized
+        - conflict
+        - internal
+      message:
+        type: array
+        description: Explanation of the errors
+        items:
+          type: string
+    x-go-type:
+      type: Error
+      import:
+        package: github.com/manifoldco/go-manifold
+        alias: manifold
+  CreateResource:
+    type: object
+    properties:
+      id:
+        $ref: '#/definitions/ID'
+      type:
+        type: string
+        enum:
+        - resource
+      version:
+        type: integer
+        enum:
+        - 1
+      body:
+        type: object
+        properties:
+          name:
+            $ref: '#/definitions/Name'
+          label:
+            $ref: '#/definitions/Label'
+          app_name:
+            $ref: '#/definitions/Name'
+          user_id:
+            $ref: '#/definitions/ID'
+          product_id:
+            $ref: '#/definitions/ID'
+          plan_id:
+            $ref: '#/definitions/ID'
+          region_id:
+            $ref: '#/definitions/ID'
+          created_at:
+            type: string
+            format: datetime
+          updated_at:
+            type: string
+            format: datetime
+        additionalProperties: false
+        required:
+        - name
+        - label
+        - product_id
+        - plan_id
+        - region_id
+    additionalProperties: false
+    required:
+    - id
+    - type
+    - version
+    - body
+  Resource:
+    type: object
+    properties:
+      id:
+        $ref: '#/definitions/ID'
+      type:
+        type: string
+        enum:
+        - resource
+      version:
+        type: integer
+        enum:
+        - 1
+      body:
+        type: object
+        properties:
+          name:
+            $ref: '#/definitions/Name'
+          label:
+            $ref: '#/definitions/Label'
+          app_name:
+            $ref: '#/definitions/Name'
+          user_id:
+            $ref: '#/definitions/ID'
+          product_id:
+            $ref: '#/definitions/ID'
+          plan_id:
+            $ref: '#/definitions/ID'
+          region_id:
+            $ref: '#/definitions/ID'
+          created_at:
+            type: string
+            format: datetime
+          updated_at:
+            type: string
+            format: datetime
+        additionalProperties: false
+        required:
+        - name
+        - label
+        - user_id
+        - product_id
+        - plan_id
+        - region_id
+        - created_at
+        - updated_at
+    additionalProperties: false
+    required:
+    - id
+    - type
+    - version
+    - body
+  PublicUpdateResource:
+    type: object
+    description: Shape of request used to update a resource through a public api
+    properties:
+      body:
+        type: object
+        properties:
+          name:
+            $ref: '#/definitions/Name'
+          label:
+            $ref: '#/definitions/Label'
+          app_name:
+            x-nullable: true
+            type: string
+            pattern: ^[a-zA-Z][a-z0-9A-Z \-]{2,128}$
+        additionalProperties: false
+    additionalProperties: false
+    required:
+    - body
+  InternalUpdateResource:
+    type: object
+    description: Shape of request used to update a resource through an internal api
+    properties:
+      body:
+        type: object
+        properties:
+          plan_id:
+            $ref: '#/definitions/ID'
+        additionalProperties: false
+        required:
+        - plan_id
+    additionalProperties: false
+    required:
+    - body
+  CreateCredential:
+    type: object
+    properties:
+      id:
+        $ref: '#/definitions/ID'
+      type:
+        type: string
+        enum:
+        - credential
+      version:
+        type: integer
+        enum:
+        - 1
+      body:
+        type: object
+        properties:
+          user_id:
+            $ref: '#/definitions/ID'
+          resource_id:
+            $ref: '#/definitions/ID'
+          values:
+            type: object
+            description: |
+              Map of configuration variable names to values, names
+              must IEEE 1003.1 - 2001 Standard (checked in code).
+        additionalProperties: false
+        required:
+        - user_id
+        - resource_id
+        - values
+    additionalProperties: false
+    required:
+    - id
+    - type
+    - version
+    - body
+  Credential:
+    type: object
+    properties:
+      id:
+        $ref: '#/definitions/ID'
+      type:
+        type: string
+        enum:
+        - credential
+      version:
+        type: integer
+        enum:
+        - 1
+      body:
+        type: object
+        properties:
+          user_id:
+            $ref: '#/definitions/ID'
+          resource_id:
+            $ref: '#/definitions/ID'
+          values:
+            type: object
+            description: |
+              Map of configuration variable names to values, names
+              must IEEE 1003.1 - 2001 Standard (checked in code).
+          created_at:
+            type: string
+            format: datetime
+          updated_at:
+            type: string
+            format: datetime
+        additionalProperties: false
+        required:
+        - user_id
+        - resource_id
+        - values
+        - created_at
+        - updated_at
+    additionalProperties: false
+    required:
+    - id
+    - type
+    - version
+    - body

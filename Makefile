@@ -28,7 +28,8 @@ CMD_PKGS=\
 	github.com/client9/misspell/cmd/misspell \
 	github.com/gordonklaus/ineffassign \
 	github.com/tsenart/deadcode \
-	github.com/alecthomas/gometalinter
+	github.com/alecthomas/gometalinter \
+	github.com/go-swagger/go-swagger/cmd/swagger
 
 define VENDOR_BIN_TMPL
 vendor/bin/$(notdir $(1)): vendor
@@ -55,7 +56,7 @@ vendor: glide.lock
 test: vendor
 	@CGO_ENABLED=0 go test -v $$(glide nv)
 
-COVER_TEST_PKGS:=$(shell find . -type f -name '*_test.go' | grep -v vendor | rev | cut -d "/" -f 2- | rev | sort -u)
+COVER_TEST_PKGS:=$(shell find . -type f -name '*_test.go' | grep -v vendor | grep -v generated | rev | cut -d "/" -f 2- | rev | sort -u)
 $(COVER_TEST_PKGS:=-cover): %-cover: all-cover.txt
 	@CGO_ENABLED=0 go test -coverprofile=$@.out -covermode=atomic ./$*
 	@if [ -f $@.out ]; then \
@@ -70,10 +71,25 @@ cover: vendor all-cover.txt $(COVER_TEST_PKGS:=-cover)
 
 $(LINTERS): %: vendor/bin/gometalinter %-bin vendor
 	PATH=`pwd`/vendor/bin:$$PATH gometalinter --tests --disable-all --vendor \
-	    --deadline=5m -s data $$(glide nv) --enable $@
+	    --deadline=5m -s data $$(glide nv | grep -v generated) --enable $@
 
 
 .PHONY: cover $(LINTERS) $(COVER_TEST_PKGS:=-cover)
+
+# ################################################
+# Building Swagger Clients
+# ###############################################
+
+generated/%/client: specs/%.yaml vendor/bin/swagger
+	vendor/bin/swagger generate client -f $< -t generated/$*
+	touch generated/$*/client
+	touch generated/$*/models
+
+APIS=$(patsubst specs/%.yaml,%,$(wildcard specs/*.yaml))
+API_CLIENTS=$(APIS:%=generated/%/client)
+generated-clients: $(API_CLIENTS)
+
+.PHONY: generated-clients
 
 # ################################################
 # Building
@@ -85,12 +101,13 @@ ifeq ($(GOOS),windows)
     SUFFIX=.exe
 endif
 
-build: $(PREFIX)bin/manifold-cli
+build: $(PREFIX)bin/manifold-cli$(SUFFIX)
 
 MANIFOLDCLI_DEPS=\
 		vendor \
 		$(wildcard *.go) \
 		$(call rwildcard,cmd,*.go) \
+		generated-clients
 
 $(PREFIX)bin/manifold-cli$(SUFFIX): $(MANIFOLDCLI_DEPS)
 	$(GO_BUILD) -o $(PREFIX)bin/manifold-cli$(SUFFIX) ./cmd
@@ -105,3 +122,4 @@ clean:
 	rm -rf bin/manifold-cli
 	rm -rf bin/manifold-cli.exe
 	rm -rf build
+	rm -rf generated

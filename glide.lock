@@ -1,5 +1,5 @@
-hash: ce00b3211bfa5352d77d82a4b8c899f3a5106a2eddfd530506d839362f7bb084
-updated: 2017-07-10T13:09:23.165775247-03:00
+hash: 9972c736c3c52acda0f2dbd2cd9d4ff85c9e310f3ad7b6f9b094ec5db64089b1
+updated: 2017-07-10T13:40:33.889493062-03:00
 imports:
 - name: github.com/alecthomas/gometalinter
   version: bae2f1293d092fd8167939d5108d1b025eaef9de
@@ -7,6 +7,10 @@ imports:
   version: d06ddd376b273047dca6e16eeeb2a2a8f9791978
   subpackages:
   - cmd/misspell
+- name: github.com/go-swagger/go-swagger
+  version: fbc64c262a833b40adf3d2cdba241fc4d30664b0
+  subpackages:
+  - cmd/swagger
 - name: github.com/golang/lint
   version: cb00e5669539f047b2f4c53a421a01b0c8e172c6
   subpackages:
