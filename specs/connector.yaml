@@ -306,10 +306,6 @@ definitions:
     - version
     - type
     - body
-    x-go-type:
-      type: OAuthAuthorizationCode
-      import:
-        package: github.com/manifoldco/marketplace/connector/primitives
   OAuthClientID:
     description: |
       Client ID portion of the OAuth Credentials used for accessing the
