@@ -3,6 +3,7 @@ package clients
 import (
 	"net/url"
 
+	"github.com/go-openapi/runtime"
 	httptransport "github.com/go-openapi/runtime/client"
 	"github.com/go-openapi/strfmt"
 
@@ -24,7 +25,16 @@ func NewIdentity(cfg *config.Config) (*client.Identity, error) {
 	c.WithSchemes([]string{u.Scheme})
 
 	transport := httptransport.New(c.Host, c.BasePath, c.Schemes)
-	transport.DefaultAuthentication = httptransport.BearerToken(cfg.AuthToken)
+
+	if cfg.AuthToken != "" {
+		transport.DefaultAuthentication = NewBearerToken(cfg.AuthToken)
+	}
 
 	return client.New(transport, strfmt.Default), nil
+}
+
+// NewBearerToken returns a bearer token authenticator for use with a
+// go-swagger generated client.
+func NewBearerToken(token string) runtime.ClientAuthInfoWriter {
+	return httptransport.BearerToken(token)
 }

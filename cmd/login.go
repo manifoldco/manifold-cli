@@ -49,9 +49,9 @@ func login(_ *cli.Context) error {
 
 	s, err = session.Create(ctx, cfg, email, password)
 	if err != nil {
-		return cli.NewExitError("Are you sure the password and email match?", -1)
+		return cli.NewExitError("Are you sure the password and email match? "+err.Error(), -1)
 	}
 
-	fmt.Printf("You are logged in, hooray!\n")
+	fmt.Printf("You are logged in, hooray!")
 	return nil
 }

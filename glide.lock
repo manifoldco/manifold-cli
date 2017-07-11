@@ -1,5 +1,5 @@
-hash: 0f4c397509ce2eba6d16d8c85e5f115df396f78bc3a78b50645d0a834e5f911a
-updated: 2017-07-11T11:29:21.303657062-03:00
+hash: ec82422bb820baf96e7a428e7d78dd48efe36b18b45b555e6552b9d1fb2c80cc
+updated: 2017-07-11T13:55:50.112165512-03:00
 imports:
 - name: github.com/alecthomas/gometalinter
   version: bae2f1293d092fd8167939d5108d1b025eaef9de
@@ -57,6 +57,8 @@ imports:
   - jwriter
 - name: github.com/manifoldco/go-base32
   version: b6687e64fc5e75d8bb58badb858d79c46b0eee96
+- name: github.com/manifoldco/go-base64
+  version: bb5e620cf51d2bbe78e624a2c27117655ce73acc
 - name: github.com/manifoldco/go-manifold
   version: 8a4b15ba2615d028131c7050c9d0c5565266105e
   subpackages:
@@ -76,6 +78,11 @@ imports:
   version: 210d2dc333e90c7e3eedf4f2242507a8e83ed4ab
 - name: github.com/urfave/cli
   version: 0bdeddeeb0f650497d603c4ad7b20cfe685682f6
+- name: golang.org/x/crypto
+  version: 9ef620b9ca2f82b55030ffd4f41327fa9e77a92c
+  subpackages:
+  - ed25519
+  - scrypt
 - name: golang.org/x/net
   version: d1e1b351919c6738fdeb9893d5c998b161464f0c
   subpackages:
