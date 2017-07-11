@@ -1,10 +1,12 @@
-hash: fecc3c8fff20871b3303dfa293529affbca34c0149d8cdc95afd1d60ffc0b14d
-updated: 2017-07-10T14:15:53.343570603-03:00
+hash: 0f4c397509ce2eba6d16d8c85e5f115df396f78bc3a78b50645d0a834e5f911a
+updated: 2017-07-11T11:29:21.303657062-03:00
 imports:
 - name: github.com/alecthomas/gometalinter
   version: bae2f1293d092fd8167939d5108d1b025eaef9de
 - name: github.com/asaskevich/govalidator
   version: 7b3beb6df3c42abd3509abfc3bcacc0fbfb7c877
+- name: github.com/chzyer/readline
+  version: 41eea22f717c616615e1e59aa06cf831f9901f35
 - name: github.com/client9/misspell
   version: d06ddd376b273047dca6e16eeeb2a2a8f9791978
   subpackages:
@@ -60,6 +62,10 @@ imports:
   subpackages:
   - errors
   - idtype
+- name: github.com/manifoldco/torus-cli
+  version: 6968117466a156652a246a59301cd58310e5e965
+  subpackages:
+  - promptui
 - name: github.com/mitchellh/mapstructure
   version: 53818660ed4955e899c0bcafa97299a388bd7c8e
 - name: github.com/PuerkitoBio/purell
@@ -76,6 +82,10 @@ imports:
   - context
   - context/ctxhttp
   - idna
+- name: golang.org/x/sys
+  version: f3918c30c5c2cb527c0b071a27c35120a6c0719a
+  subpackages:
+  - unix
 - name: golang.org/x/text
   version: f4b4367115ec2de254587813edaa901bc1c723a8
   subpackages:

@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/manifoldco/manifold-cli/prompts"
 	"github.com/manifoldco/manifold-cli/session"
 
 	"github.com/manifoldco/manifold-cli/config"
@@ -20,17 +21,37 @@ func init() {
 	cmds = append(cmds, loginCmd)
 }
 
-func login(ctx *cli.Context) error {
+func login(_ *cli.Context) error {
+	ctx := context.Background()
 	cfg, err := config.Load()
 	if err != nil {
 		return cli.NewExitError("Could not load config: "+err.Error(), -1)
 	}
 
-	i, err := session.Retrieve(context.Background(), cfg)
+	s, err := session.Retrieve(ctx, cfg)
 	if err != nil {
 		return cli.NewExitError("Could not retrieve session: "+err.Error(), -1)
 	}
 
-	fmt.Printf("Identity: %+v\n", i)
+	if s.Authenticated() {
+		return cli.NewExitError("You're already logged in!", -1)
+	}
+
+	email, err := prompts.Email("")
+	if err != nil {
+		return err
+	}
+
+	password, err := prompts.Password()
+	if err != nil {
+		return err
+	}
+
+	s, err = session.Create(ctx, cfg, email, password)
+	if err != nil {
+		return cli.NewExitError("Are you sure the password and email match?", -1)
+	}
+
+	fmt.Printf("You are logged in, hooray!\n")
 	return nil
 }

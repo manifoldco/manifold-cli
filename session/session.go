@@ -74,7 +74,6 @@ func Retrieve(ctx context.Context, cfg *config.Config) (Session, error) {
 }
 
 // Create a new session with the Manifold API based on the provided credentials
-func Create(ctx context.Context, cfg *config.Config, username,
-	password string) (Session, error) {
+func Create(ctx context.Context, cfg *config.Config, email, password string) (Session, error) {
 	return nil, nil
 }
