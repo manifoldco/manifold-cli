@@ -2,15 +2,10 @@ package session
 
 import (
 	"context"
-	"fmt"
-	"net/url"
 
-	httptransport "github.com/go-openapi/runtime/client"
-	"github.com/go-openapi/strfmt"
-
+	"github.com/manifoldco/manifold-cli/clients"
 	"github.com/manifoldco/manifold-cli/config"
 
-	"github.com/manifoldco/manifold-cli/generated/identity/client"
 	"github.com/manifoldco/manifold-cli/generated/identity/client/user"
 	"github.com/manifoldco/manifold-cli/generated/identity/models"
 )
@@ -31,10 +26,10 @@ type Unauthorized struct{}
 
 // Authenticated returns if the session is authenticated or not, in this case
 //  false
-func (u *Unauthorized) Authenticated() bool { return false }
+func (*Unauthorized) Authenticated() bool { return false }
 
 // User returns the user object associated with this session, in this case nil
-func (u *Unauthorized) User() *models.User { return nil }
+func (*Unauthorized) User() *models.User { return nil }
 
 // Authorized struct to represent an authorized user session
 type Authorized struct {
@@ -49,40 +44,17 @@ func (a *Authorized) Authenticated() bool { return true }
 func (a *Authorized) User() *models.User { return a.userObj }
 
 /**
- * PRIVATE
- */
-
-func newIdentityClient(cfg *config.Config) (*client.Identity, error) {
-	identityURL := cfg.TransportScheme + "://api.identity." + cfg.Hostname + "/v1"
-	u, err := url.Parse(identityURL)
-	if err != nil {
-		return nil, err
-	}
-
-	c := client.DefaultTransportConfig()
-	c.WithHost(u.Host)
-	c.WithBasePath(u.Path)
-	c.WithSchemes([]string{u.Scheme})
-
-	transport := httptransport.New(c.Host, c.BasePath, c.Schemes)
-	transport.DefaultAuthentication = httptransport.APIKeyAuth("Authorization", "header", "Bearer "+cfg.AuthToken)
-
-	return client.New(transport, strfmt.Default), nil
-}
-
-/**
  * Public
  */
 
 // Retrieve a session struct from the Manifold API based on the auth token in
 //  the config
 func Retrieve(ctx context.Context, cfg *config.Config) (Session, error) {
-	fmt.Printf("hello%s?\n", cfg.AuthToken)
 	if cfg.AuthToken == "" {
 		return &Unauthorized{}, nil
 	}
 
-	c, err := newIdentityClient(cfg)
+	c, err := clients.NewIdentity(cfg)
 	if err != nil {
 		return nil, err
 	}
@@ -92,7 +64,6 @@ func Retrieve(ctx context.Context, cfg *config.Config) (Session, error) {
 	if err != nil {
 		switch e := err.(type) {
 		case *user.GetSelfUnauthorized:
-			fmt.Printf("Unauthorized yo: " + err.Error() + "\n")
 			return &Unauthorized{}, nil
 		default:
 			return nil, e
