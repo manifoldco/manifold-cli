@@ -22,3 +22,12 @@ import:
   version: 1.28.0
 - package: github.com/manifoldco/go-manifold
   version: 0.3.0
+- package: github.com/go-openapi/runtime
+- package: github.com/go-openapi/strfmt
+- package: github.com/manifoldco/torus-cli
+  version: v0.24.1
+- package: github.com/asaskevich/govalidator
+- package: golang.org/x/crypto
+  subpackages:
+  - scrypt
+  - ed25519

@@ -12,6 +12,7 @@ import (
 const (
 	requiredPermissions = 0600
 	defaultHostname     = "manifold.co"
+	defaultScheme       = "https"
 	rcFilename          = ".manifoldrc"
 )
 
@@ -27,14 +28,13 @@ var ErrWrongConfigPermissions = errors.New(
 // directory instead of a file.
 var ErrExpectedFile = errors.New("Expected ~/.manifoldrc to be a file; found a directory")
 
-// LoadConfig checks if ~/.manifoldrc exists, if it does, it reads it from
-// disk.
+// Load checks if ~/.manifoldrc exists, if it does, it reads it from disk.
 //
 // If it doesn't an empty config with the default values is returned.
 //
 // If the file cannot be read, or it has the incorrect permissions an error is
 // returned.
-func LoadConfig() (*Config, error) {
+func Load() (*Config, error) {
 	rcpath, err := RCPath()
 	if err != nil {
 		return nil, err
@@ -46,8 +46,9 @@ func LoadConfig() (*Config, error) {
 	}
 
 	cfg := &Config{
-		Hostname:  defaultHostname,
-		AuthToken: "",
+		Hostname:        defaultHostname,
+		AuthToken:       "",
+		TransportScheme: defaultScheme,
 	}
 
 	if os.IsNotExist(err) {
@@ -96,8 +97,9 @@ func RCPath() (string, error) {
 // Config represents the configuration which is stored inside a ~/.manifoldrc
 // file in ini format.
 type Config struct {
-	Hostname  string `ini:"hostname"`
-	AuthToken string `ini:"auth_token"`
+	Hostname        string `ini:"hostname"`
+	AuthToken       string `ini:"auth_token"`
+	TransportScheme string `ini:"scheme"`
 }
 
 // Write writes the contents of the Config struct to ~/.manifoldrc and sets the
