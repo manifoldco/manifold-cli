@@ -1,5 +1,5 @@
-hash: ec82422bb820baf96e7a428e7d78dd48efe36b18b45b555e6552b9d1fb2c80cc
-updated: 2017-07-11T13:55:50.112165512-03:00
+hash: eab82ce22e2f5e152ea11cf67afa1c838d67384342c1e6dc4732fcc301bfffe2
+updated: 2017-07-12T09:16:43.523988841-03:00
 imports:
 - name: github.com/alecthomas/gometalinter
   version: bae2f1293d092fd8167939d5108d1b025eaef9de
@@ -74,6 +74,8 @@ imports:
   version: 0bcb03f4b4d0a9428594752bd2a3b9aa0a9d4bd4
 - name: github.com/PuerkitoBio/urlesc
   version: bbf7a2afc14f93e1e0a5c06df524fbd75e5031e5
+- name: github.com/reconquest/hierr-go
+  version: 5322b90dda9c2b563e915c9af76bf20a8b95f630
 - name: github.com/tsenart/deadcode
   version: 210d2dc333e90c7e3eedf4f2242507a8e83ed4ab
 - name: github.com/urfave/cli
@@ -82,6 +84,8 @@ imports:
   version: 9ef620b9ca2f82b55030ffd4f41327fa9e77a92c
   subpackages:
   - ed25519
+  - ed25519/internal/edwards25519
+  - pbkdf2
   - scrypt
 - name: golang.org/x/net
   version: d1e1b351919c6738fdeb9893d5c998b161464f0c

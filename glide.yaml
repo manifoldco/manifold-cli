@@ -31,3 +31,4 @@ import:
   subpackages:
   - scrypt
   - ed25519
+- package: github.com/reconquest/hierr-go

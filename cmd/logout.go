@@ -41,6 +41,6 @@ func logout(_ *cli.Context) error {
 		return cli.NewExitError("Failed to logout: "+err.Error(), -1)
 	}
 
-	fmt.Printf("You are now logged out!")
+	fmt.Printf("You are now logged out!\n")
 	return nil
 }

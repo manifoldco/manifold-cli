@@ -5,6 +5,7 @@ import (
 
 	"github.com/go-openapi/strfmt"
 	"github.com/manifoldco/go-base64"
+	"github.com/reconquest/hierr-go"
 
 	"github.com/manifoldco/manifold-cli/clients"
 	"github.com/manifoldco/manifold-cli/config"
@@ -66,7 +67,7 @@ func Retrieve(ctx context.Context, cfg *config.Config) (Session, error) {
 	p := user.NewGetSelfParamsWithContext(ctx)
 	r, err := c.User.GetSelf(p, nil)
 	if err != nil {
-		switch e := err.(type) {
+		switch err.(type) {
 		case *user.GetSelfUnauthorized:
 			// Stored token is not valid
 
@@ -74,17 +75,14 @@ func Retrieve(ctx context.Context, cfg *config.Config) (Session, error) {
 			cfg.AuthToken = ""
 			err = cfg.Write()
 			if err != nil {
-				// TODO: Find nice way to wrap the following config write error in this
-				// context of the token being invalid
-				return nil, err
+				return nil, hierr.Errorf(err,
+					"Failed to update config after clearing expired auth token.")
 			}
 
 			// Return Unauthorized
 			return &Unauthorized{}, nil
-		case *user.GetSelfInternalServerError:
-			return nil, e
 		default:
-			return nil, e
+			return nil, err
 		}
 	}
 
@@ -194,9 +192,8 @@ func Destroy(ctx context.Context, cfg *config.Config) error {
 	cfg.AuthToken = ""
 	err = cfg.Write()
 	if err != nil {
-		// TODO: Find nice way to wrap the following config write error in this
-		// context of destroying the session token
-		return err
+		return hierr.Errorf(err,
+			"Failed to update config to clear auth token from logout.")
 	}
 
 	return nil
