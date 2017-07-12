@@ -29,7 +29,7 @@ type Session interface {
 type Unauthorized struct{}
 
 // Authenticated returns if the session is authenticated or not, in this case
-//  false
+// false
 func (*Unauthorized) Authenticated() bool { return false }
 
 // User returns the user object associated with this session, in this case nil
@@ -68,6 +68,18 @@ func Retrieve(ctx context.Context, cfg *config.Config) (Session, error) {
 	if err != nil {
 		switch e := err.(type) {
 		case *user.GetSelfUnauthorized:
+			// Stored token is not valid
+
+			// Clear stored token
+			cfg.AuthToken = ""
+			err = cfg.Write()
+			if err != nil {
+				// TODO: Find nice way to wrap the following config write error in this
+				// context of the token being invalid
+				return nil, err
+			}
+
+			// Return Unauthorized
 			return &Unauthorized{}, nil
 		case *user.GetSelfInternalServerError:
 			return nil, e
@@ -155,4 +167,37 @@ func Create(ctx context.Context, cfg *config.Config, email, password string) (Se
 	}
 
 	return Retrieve(ctx, cfg)
+}
+
+// Destroy the session by invalidating the token through the Manifold API and
+// clearing the local auth token cache
+func Destroy(ctx context.Context, cfg *config.Config) error {
+	c, err := clients.NewIdentity(cfg)
+	if err != nil {
+		return err
+	}
+
+	p := authentication.NewDeleteTokensTokenParamsWithContext(ctx)
+	p.SetToken(cfg.AuthToken)
+	_, err = c.Authentication.DeleteTokensToken(p, nil)
+	if err != nil {
+		switch err.(type) {
+		case *authentication.DeleteTokensTokenUnauthorized:
+			// Handle gracefully session already expired... this should have been
+			// caught on retrieve though
+		default:
+			return err
+		}
+	}
+
+	// Dispose of local auth token cache
+	cfg.AuthToken = ""
+	err = cfg.Write()
+	if err != nil {
+		// TODO: Find nice way to wrap the following config write error in this
+		// context of destroying the session token
+		return err
+	}
+
+	return nil
 }
