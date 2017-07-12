@@ -52,6 +52,6 @@ func login(_ *cli.Context) error {
 		return cli.NewExitError("Are you sure the password and email match? "+err.Error(), -1)
 	}
 
-	fmt.Printf("You are logged in, hooray!")
+	fmt.Printf("You are logged in, hooray!\n")
 	return nil
 }
