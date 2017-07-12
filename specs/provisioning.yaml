@@ -227,12 +227,23 @@ definitions:
       message:
         type: string
         description: A message associated with the operation to display to the user.
+      created_at:
+        type: string
+        format: datetime
+        description: A date time string representing the time the operation was created.
+      updated_at:
+        type: string
+        format: datetime
+        description: A date time string representing the time the operation was last
+          updated.
     additionalProperties: false
     required:
     - type
     - resource_id
     - user_id
     - message
+    - created_at
+    - updated_at
   provision:
     type: object
     allOf:
