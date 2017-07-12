@@ -4,11 +4,11 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/manifoldco/manifold-cli/prompts"
-	"github.com/manifoldco/manifold-cli/session"
+	"github.com/urfave/cli"
 
 	"github.com/manifoldco/manifold-cli/config"
-	"github.com/urfave/cli"
+	"github.com/manifoldco/manifold-cli/prompts"
+	"github.com/manifoldco/manifold-cli/session"
 )
 
 func init() {
@@ -34,7 +34,7 @@ func login(_ *cli.Context) error {
 	}
 
 	if s.Authenticated() {
-		return cli.NewExitError("You're already logged in!", -1)
+		return errAlreadyLoggedIn
 	}
 
 	email, err := prompts.Email("")
