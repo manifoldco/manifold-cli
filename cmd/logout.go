@@ -29,11 +29,11 @@ func logout(_ *cli.Context) error {
 
 	s, err := session.Retrieve(ctx, cfg)
 	if err != nil {
-		return cli.NewExitError("You are already logged out: "+err.Error(), -1)
+		return cli.NewExitError("Could not retrieve session: "+err.Error(), -1)
 	}
 
 	if !s.Authenticated() {
-		return cli.NewExitError("You're already logged out!", -1)
+		return errAlreadyLoggedOut
 	}
 
 	err = session.Destroy(ctx, cfg)
