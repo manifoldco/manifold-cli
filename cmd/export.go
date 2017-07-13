@@ -29,16 +29,14 @@ var formats = []string{"bash", "powershell", "fish", "cmd", "json"}
 func init() {
 
 	formatFlagStr := fmt.Sprintf("Export format of the secrets (%s)", strings.Join(formats, ", "))
-	flags := []cli.Flag{
-		formatFlag(formats[0], formatFlagStr),
-	}
-
 	exportCmd := cli.Command{
-		Name:      "export",
-		Usage:     "Exports all environment variables from all resources at the account level, optionally exports all environment variables within the specified App Group.",
-		ArgsUsage: "[app]",
-		Action:    export,
-		Flags:     flags,
+		Name:   "export",
+		Usage:  "Exports all environment variables from all resource",
+		Action: export,
+		Flags: []cli.Flag{
+			formatFlag(formats[0], formatFlagStr),
+			appFlag(),
+		},
 	}
 
 	cmds = append(cmds, exportCmd)
@@ -46,20 +44,13 @@ func init() {
 
 func export(cliCtx *cli.Context) error {
 	ctx := context.Background()
-	args := cliCtx.Args()
 
-	if len(args) > 1 {
-		return newUsageExitError(cliCtx, errTooManyArgs)
-	}
-
-	appName := ""
-	if len(args) == 1 {
-		name := manifold.Name(args[0])
+	appName := cliCtx.String("app")
+	if appName != "" {
+		name := manifold.Name(appName)
 		if err := name.Validate(nil); err != nil {
 			return newUsageExitError(cliCtx, errInvalidAppName)
 		}
-
-		appName = string(name)
 	}
 
 	format := cliCtx.String("format")
