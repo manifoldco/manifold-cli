@@ -2,6 +2,7 @@ package session
 
 import (
 	"context"
+	"os"
 
 	"github.com/go-openapi/strfmt"
 	"github.com/manifoldco/go-base64"
@@ -15,16 +16,21 @@ import (
 	"github.com/manifoldco/manifold-cli/generated/identity/models"
 )
 
+// EnvManifoldUser describes the environment variable name used to reference a
+// Manifold login username, which is at this time an email
+const EnvManifoldUser string = "MANIFOLD_USER"
+
+// EnvManifoldPass describes the environment variable name used to reference a
+// Manifold login password
+const EnvManifoldPass string = "MANIFOLD_PASS"
+
 // Session interface to describe user session and authentication with Manifold
 //  API
 type Session interface {
 	Authenticated() bool
+	FromEnvVars() bool
 	User() *models.User
 }
-
-/**
- * TYPES
- */
 
 // Unauthorized struct to represent an unauthorized user session
 type Unauthorized struct{}
@@ -33,12 +39,17 @@ type Unauthorized struct{}
 // false
 func (*Unauthorized) Authenticated() bool { return false }
 
+// FromEnvVars returns if the session was recently authenticated from
+// environment login variablesor not, in this case false
+func (*Unauthorized) FromEnvVars() bool { return false }
+
 // User returns the user object associated with this session, in this case nil
 func (*Unauthorized) User() *models.User { return nil }
 
 // Authorized struct to represent an authorized user session
 type Authorized struct {
-	user *models.User
+	user        *models.User
+	fromEnvVars bool
 }
 
 // Authenticated returns if the session is authenticated or not, in this case
@@ -48,6 +59,10 @@ func (a *Authorized) Authenticated() bool { return true }
 // User returns the user object associated with this session, in this case nil
 func (a *Authorized) User() *models.User { return a.user }
 
+// FromEnvVars returns if the session was recently authenticated from
+// environment login variablesor not
+func (a *Authorized) FromEnvVars() bool { return a.fromEnvVars }
+
 /**
  * Public
  */
@@ -55,6 +70,18 @@ func (a *Authorized) User() *models.User { return a.user }
 // Retrieve a session struct from the Manifold API based on the auth token in
 //  the config
 func Retrieve(ctx context.Context, cfg *config.Config) (Session, error) {
+	sess, err := retrieveSession(ctx, cfg, false)
+	if err != nil {
+		return nil, err
+	} else if !sess.Authenticated() {
+		// Attempt to login via environment variables if present
+		return loginFromEnv(ctx, cfg)
+	}
+	return sess, nil
+}
+
+func retrieveSession(ctx context.Context, cfg *config.Config,
+	fromEnvVars bool) (Session, error) {
 	if cfg.AuthToken == "" {
 		return &Unauthorized{}, nil
 	}
@@ -79,18 +106,39 @@ func Retrieve(ctx context.Context, cfg *config.Config) (Session, error) {
 					"Failed to update config after clearing expired auth token.")
 			}
 
-			// Return Unauthorized
 			return &Unauthorized{}, nil
 		default:
 			return nil, err
 		}
 	}
 
-	return &Authorized{user: r.Payload}, nil
+	return &Authorized{user: r.Payload, fromEnvVars: fromEnvVars}, nil
+}
+
+func loginFromEnv(ctx context.Context, cfg *config.Config) (Session, error) {
+	envUser := os.Getenv(EnvManifoldUser)
+	envPass := os.Getenv(EnvManifoldPass)
+
+	if envUser == "" || envPass == "" {
+		return &Unauthorized{}, nil
+	}
+
+	sess, err := createSession(ctx, cfg, envUser, envPass, true)
+	if err != nil {
+		return nil, hierr.Errorf(err, "Attempted to login with the %s and %s "+
+			"environment variables and failed", EnvManifoldUser, EnvManifoldPass)
+	}
+	return sess, nil
 }
 
 // Create a new session with the Manifold API based on the provided credentials
-func Create(ctx context.Context, cfg *config.Config, email, password string) (Session, error) {
+func Create(ctx context.Context, cfg *config.Config, email,
+	password string) (Session, error) {
+	return createSession(ctx, cfg, email, password, false)
+}
+
+func createSession(ctx context.Context, cfg *config.Config, email,
+	password string, fromEnvVars bool) (Session, error) {
 	// Erase the auth token, if it's set
 	// XXX: Come back and attempt a logout
 	if cfg.AuthToken != "" {
@@ -164,7 +212,7 @@ func Create(ctx context.Context, cfg *config.Config, email, password string) (Se
 		return nil, err
 	}
 
-	return Retrieve(ctx, cfg)
+	return retrieveSession(ctx, cfg, fromEnvVars)
 }
 
 // Destroy the session by invalidating the token through the Manifold API and
