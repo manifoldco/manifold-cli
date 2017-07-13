@@ -39,13 +39,13 @@ func list(_ *cli.Context) error {
 	}
 
 	// Get catalog
-	catalog, err := GenerateCatalogCache(ctx, cfg)
+	catalog, err := GenerateCatalog(ctx, cfg, nil)
 	if err != nil {
 		return cli.NewExitError("Failed to fetch catalog data: "+err.Error(), -1)
 	}
 
 	// Get resources
-	resources, err := GenerateResourceCache(ctx, cfg, catalog)
+	resources, err := GenerateResourceCache(ctx, cfg, nil)
 	if err != nil {
 		return cli.NewExitError("Failed to fetch resource data: "+err.Error(), -1)
 	}
@@ -55,14 +55,30 @@ func list(_ *cli.Context) error {
 	// TODO: Make table prettier
 	fmt.Fprintln(w, "Resource Name\tApp Name\tProduct\tPlan\tRegion")
 	for _, resource := range resources.resources {
-		appName := string(resource.Resource.AppName)
+		appName := string(resource.Body.AppName)
 		if appName == "" {
 			appName = "None"
 		}
 
-		fmt.Fprintf(w, "%s\t%s\t%s\t%s\t%s\n", resource.Resource.Name,
-			appName, resource.Product.Product.Name, resource.Plan.Name,
-			resource.Region.Name)
+		// Get catalog data
+		product, err := catalog.GetProduct(resource.Body.ProductID.String())
+		if err != nil {
+			cli.NewExitError("Product referenced by resource does not exist: "+
+				err.Error(), -1)
+		}
+		plan, err := catalog.GetPlan(resource.Body.PlanID.String())
+		if err != nil {
+			cli.NewExitError("Plan referenced by resource does not exist: "+
+				err.Error(), -1)
+		}
+		region, err := catalog.GetRegion(resource.Body.RegionID.String())
+		if err != nil {
+			cli.NewExitError("Region referenced by resource does not exist: "+
+				err.Error(), -1)
+		}
+
+		fmt.Fprintf(w, "%s\t%s\t%s\t%s\t%s\n", resource.Body.Name,
+			appName, product.Body.Name, plan.Body.Name, region.Body.Name)
 	}
 	w.Flush()
 	return nil
