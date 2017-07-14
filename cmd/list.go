@@ -4,13 +4,32 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"sort"
+	"strings"
 	"text/tabwriter"
 
 	"github.com/urfave/cli"
 
+	"github.com/manifoldco/manifold-cli/clients"
 	"github.com/manifoldco/manifold-cli/config"
+	"github.com/manifoldco/manifold-cli/data/catalog"
 	"github.com/manifoldco/manifold-cli/session"
+
+	marketplaceModels "github.com/manifoldco/manifold-cli/generated/marketplace/models"
 )
+
+type resourcesSortByName []*marketplaceModels.Resource
+
+func (r resourcesSortByName) Len() int {
+	return len(r)
+}
+func (r resourcesSortByName) Swap(i, j int) {
+	r[i], r[j] = r[j], r[i]
+}
+func (r resourcesSortByName) Less(i, j int) bool {
+	return strings.Compare(strings.ToLower(fmt.Sprintf("%s", r[i].Body.Name)),
+		fmt.Sprintf("%s", r[j].Body.Name)) < 0
+}
 
 func init() {
 	listCmd := cli.Command{
@@ -38,23 +57,39 @@ func list(_ *cli.Context) error {
 		return errNotLoggedIn
 	}
 
+	// Init catalog client
+	catalogClient, err := clients.NewCatalog(cfg)
+	if err != nil {
+		return cli.NewExitError("Failed to create the Catalog API client: "+
+			err.Error(), -1)
+	}
+
 	// Get catalog
-	catalog, err := GenerateCatalog(ctx, cfg, nil)
+	catalog, err := catalog.New(ctx, catalogClient)
 	if err != nil {
 		return cli.NewExitError("Failed to fetch catalog data: "+err.Error(), -1)
 	}
 
-	// Get resources
-	resources, err := GenerateResourceCache(ctx, cfg, nil)
+	// Init marketplace client
+	marketplaceClient, err := clients.NewMarketplace(cfg)
 	if err != nil {
-		return cli.NewExitError("Failed to fetch resource data: "+err.Error(), -1)
+		return cli.NewExitError("Failed to create the Marketplace API client: "+
+			err.Error(), -1)
 	}
+
+	// Get resources
+	res, err := marketplaceClient.Resource.GetResources(nil, nil)
+	if err != nil {
+		return cli.NewExitError("Failed to fetch the list of provisioned "+
+			"resources: "+err.Error(), -1)
+	}
+	// Sort resources by name
+	sort.Sort(resourcesSortByName(res.Payload))
 
 	// Write out the resources table
 	w := tabwriter.NewWriter(os.Stdout, 0, 0, 8, ' ', 0)
-	// TODO: Make table prettier
 	fmt.Fprintln(w, "Resource Name\tApp Name\tProduct\tPlan\tRegion")
-	for _, resource := range resources.resources {
+	for _, resource := range res.Payload {
 		appName := string(resource.Body.AppName)
 		if appName == "" {
 			appName = "None"

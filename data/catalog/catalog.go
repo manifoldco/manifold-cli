@@ -1,13 +1,10 @@
-package main
+package catalog
 
 import (
 	"context"
 	"errors"
 
 	hierr "github.com/reconquest/hierr-go"
-
-	"github.com/manifoldco/manifold-cli/clients"
-	"github.com/manifoldco/manifold-cli/config"
 
 	catalogClient "github.com/manifoldco/manifold-cli/generated/catalog/client"
 	catalogClientPlan "github.com/manifoldco/manifold-cli/generated/catalog/client/plan"
@@ -16,8 +13,7 @@ import (
 
 // Catalog represents a local in memory cache of catalog data
 type Catalog struct {
-	catalogClient *catalogClient.Catalog
-
+	client   *catalogClient.Catalog
 	products map[string]*catalogModels.Product
 	plans    map[string]*catalogModels.Plan
 	regions  map[string]*catalogModels.Region
@@ -50,27 +46,22 @@ func (c *Catalog) GetRegion(id string) (*catalogModels.Region, error) {
 	return region, nil
 }
 
-// GenerateCatalog builds a local in memory cache of catalog data for
-// searching
-func GenerateCatalog(ctx context.Context, cfg *config.Config,
-	cache *Catalog) (*Catalog, error) {
+// Sync attempts to update the catalog and returns an error if anything went
+// wrong
+func (c *Catalog) Sync(ctx context.Context) error {
+	_, err := updateCatalog(ctx, c)
+	return err
+}
 
-	// Init cache if nil
-	if cache == nil {
-		cache = &Catalog{}
-	}
+// New creates a new instance of a Catalog struct and populates it with data
+// from the API using the provided Catalog API client and context
+func New(ctx context.Context, client *catalogClient.Catalog) (*Catalog, error) {
+	return updateCatalog(ctx, &Catalog{client: client})
+}
 
-	// Initialize clients if needed
-	var err error
-	if cache.catalogClient == nil {
-		cache.catalogClient, err = clients.NewCatalog(cfg)
-		if err != nil {
-			return nil, hierr.Errorf(err, "Failed to create the Catalog API client")
-		}
-	}
-
+func updateCatalog(ctx context.Context, cache *Catalog) (*Catalog, error) {
 	// Get products
-	products, err := cache.catalogClient.Product.GetProducts(nil)
+	products, err := cache.client.Product.GetProducts(nil)
 	if err != nil {
 		return nil, hierr.Errorf(err, "Failed to fetch the latest products list")
 	}
@@ -87,7 +78,7 @@ func GenerateCatalog(ctx context.Context, cfg *config.Config,
 	// Get plans for known productIDs
 	planParams := catalogClientPlan.NewGetPlansParamsWithContext(ctx)
 	planParams.SetProductID(productIDs)
-	plans, err := cache.catalogClient.Plan.GetPlans(planParams)
+	plans, err := cache.client.Plan.GetPlans(planParams)
 	if err != nil {
 		return nil, hierr.Errorf(err,
 			"Failed to fetch the latest product plan data")
@@ -100,7 +91,7 @@ func GenerateCatalog(ctx context.Context, cfg *config.Config,
 	}
 
 	// Get regions
-	regions, err := cache.catalogClient.Region.GetRegions(nil)
+	regions, err := cache.client.Region.GetRegions(nil)
 	if err != nil {
 		return nil, hierr.Errorf(err, "Failed to fetch the latest region data")
 	}
