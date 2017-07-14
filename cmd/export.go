@@ -24,7 +24,7 @@ import (
 
 var errCannotUnpack = fmt.Errorf("Could not unpack credential value")
 
-var formats = []string{"bash", "powershell", "fish", "cmd", "json"}
+var formats = []string{"env", "bash", "powershell", "fish", "cmd", "json"}
 
 func init() {
 
@@ -92,6 +92,8 @@ func export(cliCtx *cli.Context) error {
 	rMap := indexResources(resources)
 	w := os.Stdout
 	switch format {
+	case "env":
+		err = writeFormat(w, rMap, cMap, "%s=%s\n")
 	case "bash":
 		err = writeFormat(w, rMap, cMap, "export %s=%s\n")
 	case "powershell":
