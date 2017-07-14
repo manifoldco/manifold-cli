@@ -114,6 +114,34 @@ $(PREFIX)bin/manifold-cli$(SUFFIX): $(MANIFOLDCLI_DEPS)
 
 .PHONY: build
 
+#################################################
+# Releasing
+#################################################
+
+NO_WINDOWS= \
+	darwin_amd64 \
+	linux_amd64
+OS_ARCH= \
+	$(NO_WINDOWS) \
+	windows_amd64
+
+os=$(word 1,$(subst _, ,$1))
+arch=$(word 2,$(subst _, ,$1))
+
+os-build/windows_amd64/bin/manifold-cli: os-build/%/bin/manifold-cli:
+	PREFIX=build/$*/ GOOS=$(call os,$*) GOARCH=$(call arch,$*) make build/$*/bin/manifold-cli.exe
+$(NO_WINDOWS:%=os-build/%/bin/manifold-cli): os-build/%/bin/manifold-cli:
+	PREFIX=build/$*/ GOOS=$(call os,$*) GOARCH=$(call arch,$*) make build/$*/bin/manifold-cli
+
+build/manifold-cli_$(VERSION)_windows_amd64.zip: build/manifold-cli_$(VERSION)_%.zip: os-build/%/bin/manifold-cli
+	cd build/$*/bin; zip -r ../../manifold-cli_$(VERSION)_$*.zip manifold-cli.exe
+$(NO_WINDOWS:%=build/manifold-cli_$(VERSION)_%.zip): build/manifold-cli_$(VERSION)_%.zip: os-build/%/bin/manifold-cli
+	cd build/$*/bin; zip -r ../../manifold-cli_$(VERSION)_$*.zip manifold-cli
+
+zips: $(OS_ARCH:%=build/manifold-cli_$(VERSION)_%.zip)
+
+.PHONY: zips $(OS_ARCH:%=os-build/%/bin/manifold-cli)
+
 # ################################################
 # Cleaning
 # ################################################
