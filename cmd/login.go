@@ -34,6 +34,11 @@ func login(_ *cli.Context) error {
 	}
 
 	if s.Authenticated() {
+		if s.FromEnvVars() {
+			fmt.Printf("You are logged in using your Manifold environment " +
+				"variables, hooray!\n")
+			return nil
+		}
 		return errAlreadyLoggedIn
 	}
 
