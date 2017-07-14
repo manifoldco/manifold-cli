@@ -9,6 +9,8 @@ import (
 	"github.com/go-openapi/strfmt"
 
 	"github.com/manifoldco/manifold-cli/config"
+
+	cClient "github.com/manifoldco/manifold-cli/generated/catalog/client"
 	iClient "github.com/manifoldco/manifold-cli/generated/identity/client"
 	mClient "github.com/manifoldco/manifold-cli/generated/marketplace/client"
 )
@@ -59,6 +61,27 @@ func NewMarketplace(cfg *config.Config) (*mClient.Marketplace, error) {
 // go-swagger generated client.
 func NewBearerToken(token string) runtime.ClientAuthInfoWriter {
 	return httptransport.BearerToken(token)
+}
+
+// NewCatalog returns a swagger generated client for the Catalog service
+func NewCatalog(cfg *config.Config) (*cClient.Catalog, error) {
+	u, err := deriveURL(cfg, "catalog")
+	if err != nil {
+		return nil, err
+	}
+
+	c := cClient.DefaultTransportConfig()
+	c.WithHost(u.Host)
+	c.WithBasePath(u.Path)
+	c.WithSchemes([]string{u.Scheme})
+
+	transport := httptransport.New(c.Host, c.BasePath, c.Schemes)
+
+	if cfg.AuthToken != "" {
+		transport.DefaultAuthentication = NewBearerToken(cfg.AuthToken)
+	}
+
+	return cClient.New(transport, strfmt.Default), nil
 }
 
 func deriveURL(cfg *config.Config, service string) (*url.URL, error) {

@@ -4,10 +4,10 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/manifoldco/manifold-cli/session"
+	"github.com/urfave/cli"
 
 	"github.com/manifoldco/manifold-cli/config"
-	"github.com/urfave/cli"
+	"github.com/manifoldco/manifold-cli/session"
 )
 
 func init() {
