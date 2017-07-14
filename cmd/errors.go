@@ -7,7 +7,7 @@ import (
 )
 
 var errMustLogin = cli.NewExitError("You must login to perform that command.", -1)
-var errAlreadyLoggedIn = cli.NewExitError("You're alredy logged in!", -1)
+var errAlreadyLoggedIn = cli.NewExitError("You're already logged in!", -1)
 var errAlreadyLoggedOut = cli.NewExitError("You're already logged out!", -1)
 var errInvalidAppName = cli.NewExitError("You've provided an invalid app name!", -1)
 
