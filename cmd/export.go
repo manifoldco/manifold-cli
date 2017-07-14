@@ -149,6 +149,21 @@ func writeFormat(w io.Writer, rMap map[manifold.ID]*models.Resource,
 }
 
 func writeJSON(w io.Writer, cMap map[manifold.ID][]*models.Credential) error {
+	credentials, err := flattenCMap(cMap)
+	if err != nil {
+		return err
+	}
+
+	b, err := json.MarshalIndent(credentials, "", "    ")
+	if err != nil {
+		return err
+	}
+
+	fmt.Fprintf(w, "%s\n", b)
+	return nil
+}
+
+func flattenCMap(cMap map[manifold.ID][]*models.Credential) (map[string]string, error) {
 	out := make(map[string]string)
 
 	for _, credentials := range cMap {
@@ -159,21 +174,15 @@ func writeJSON(w io.Writer, cMap map[manifold.ID][]*models.Credential) error {
 				case string:
 					out[strings.ToUpper(name)] = v
 				case int:
-					out[strings.ToUpper(name)] = fmt.Sprintf("%s", strconv.Itoa(v))
+					out[strings.ToUpper(name)] = strconv.Itoa(v)
 				default:
-					return errCannotUnpack
+					return nil, errCannotUnpack
 				}
 			}
 		}
 	}
 
-	b, err := json.MarshalIndent(out, "", "    ")
-	if err != nil {
-		return err
-	}
-
-	fmt.Fprintf(w, "%s\n", b)
-	return nil
+	return out, nil
 }
 
 func indexResources(resources []*models.Resource) map[manifold.ID]*models.Resource {
