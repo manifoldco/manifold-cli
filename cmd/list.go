@@ -8,6 +8,7 @@ import (
 	"strings"
 	"text/tabwriter"
 
+	"github.com/manifoldco/go-manifold"
 	"github.com/urfave/cli"
 
 	"github.com/manifoldco/manifold-cli/clients"
@@ -37,13 +38,25 @@ func init() {
 		Usage: "Allows a user to list the status of their provisioned Manifold " +
 			"resources.",
 		Action: list,
+		Flags: []cli.Flag{
+			appFlag(),
+		},
 	}
 
 	cmds = append(cmds, listCmd)
 }
 
-func list(_ *cli.Context) error {
+func list(cliCtx *cli.Context) error {
 	ctx := context.Background()
+
+	appName := cliCtx.String("app")
+	if appName != "" {
+		name := manifold.Name(appName)
+		if err := name.Validate(nil); err != nil {
+			return newUsageExitError(cliCtx, errInvalidAppName)
+		}
+	}
+
 	cfg, err := config.Load()
 	if err != nil {
 		return cli.NewExitError("Could not load config: "+err.Error(), -1)
@@ -83,13 +96,15 @@ func list(_ *cli.Context) error {
 		return cli.NewExitError("Failed to fetch the list of provisioned "+
 			"resources: "+err.Error(), -1)
 	}
-	// Sort resources by name
-	sort.Sort(resourcesSortByName(res.Payload))
+
+	// Sort resources by name and filter by given app name
+	resources := filterResourcesByAppName(res.Payload, appName)
+	sort.Sort(resourcesSortByName(resources))
 
 	// Write out the resources table
 	w := tabwriter.NewWriter(os.Stdout, 0, 0, 8, ' ', 0)
 	fmt.Fprintln(w, "Resource Name\tApp Name\tProduct\tPlan\tRegion")
-	for _, resource := range res.Payload {
+	for _, resource := range resources {
 		appName := string(resource.Body.AppName)
 		if appName == "" {
 			appName = "None"
