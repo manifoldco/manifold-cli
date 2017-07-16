@@ -120,7 +120,8 @@ func list(cliCtx *cli.Context) error {
 
 	// Write out the resources table
 	w := tabwriter.NewWriter(os.Stdout, 0, 0, 8, ' ', 0)
-	fmt.Fprintln(w, "Resource Name\tApp Name\tStatus\tProduct\tPlan\tRegion")
+	fmt.Fprintln(w, "RESOURCE NAME\tAPP NAME\tSTATUS\tPRODUCT\tPLAN\tREGION")
+	fmt.Fprintln(w, " \t \t \t \t \t \t")
 	for _, resource := range resources {
 		appName := string(resource.Body.AppName)
 
