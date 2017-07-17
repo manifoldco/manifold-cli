@@ -10,6 +10,7 @@ import (
 
 	"github.com/manifoldco/manifold-cli/clients"
 	"github.com/manifoldco/manifold-cli/config"
+	"github.com/manifoldco/manifold-cli/errs"
 
 	"github.com/manifoldco/manifold-cli/generated/identity/client/authentication"
 	"github.com/manifoldco/manifold-cli/generated/identity/client/user"
@@ -169,7 +170,7 @@ func createSession(ctx context.Context, cfg *config.Config, email,
 		case *authentication.PostTokensLoginInternalServerError:
 			return nil, e.Payload
 		default:
-			return nil, err
+			return nil, errs.ErrSomethingWentHorriblyWrong
 		}
 	}
 
@@ -202,7 +203,7 @@ func createSession(ctx context.Context, cfg *config.Config, email,
 		case *authentication.PostTokensAuthUnauthorized:
 			return nil, e.Payload
 		case *authentication.PostTokensAuthInternalServerError:
-			return nil, e.Payload
+			return nil, errs.ErrSomethingWentHorriblyWrong
 		}
 	}
 
