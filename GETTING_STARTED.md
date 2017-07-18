@@ -91,6 +91,9 @@ KEY=dd6bfbd68a14474283b9502d8e6sdfsdf
 RESOURCE_ID=268eentnn0x4fx5vp5947404sdfsdf
 ```
 
+**TIP**: You can export all credentials for any provisioned resource by not
+specifying the `-a` flag.
+
 **Example: Exporting Credentials into the Current Shell**
 
 ```bash
