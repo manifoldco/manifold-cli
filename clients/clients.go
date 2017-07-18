@@ -13,6 +13,7 @@ import (
 	cClient "github.com/manifoldco/manifold-cli/generated/catalog/client"
 	iClient "github.com/manifoldco/manifold-cli/generated/identity/client"
 	mClient "github.com/manifoldco/manifold-cli/generated/marketplace/client"
+	pClient "github.com/manifoldco/manifold-cli/generated/provisioning/client"
 )
 
 // NewIdentity returns a swagger generated client for the Identity service
@@ -55,6 +56,28 @@ func NewMarketplace(cfg *config.Config) (*mClient.Marketplace, error) {
 	}
 
 	return mClient.New(transport, strfmt.Default), nil
+}
+
+// NewProvisioning returns a swagger generated client for the Provisioning
+// service
+func NewProvisioning(cfg *config.Config) (*pClient.Provisioning, error) {
+	u, err := deriveURL(cfg, "provisioning")
+	if err != nil {
+		return nil, err
+	}
+
+	c := pClient.DefaultTransportConfig()
+	c.WithHost(u.Host)
+	c.WithBasePath(u.Path)
+	c.WithSchemes([]string{u.Scheme})
+
+	transport := httptransport.New(c.Host, c.BasePath, c.Schemes)
+
+	if cfg.AuthToken != "" {
+		transport.DefaultAuthentication = NewBearerToken(cfg.AuthToken)
+	}
+
+	return pClient.New(transport, strfmt.Default), nil
 }
 
 // NewBearerToken returns a bearer token authenticator for use with a
