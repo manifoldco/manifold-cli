@@ -17,9 +17,9 @@ import (
 	"github.com/manifoldco/manifold-cli/generated/identity/models"
 )
 
-// EnvManifoldUser describes the environment variable name used to reference a
-// Manifold login username, which is at this time an email
-const EnvManifoldUser string = "MANIFOLD_USER"
+// EnvManifoldEmail describes the environment variable name used to reference a
+// Manifold login email
+const EnvManifoldEmail string = "MANIFOLD_EMAIL"
 
 // EnvManifoldPass describes the environment variable name used to reference a
 // Manifold login password
@@ -117,7 +117,7 @@ func retrieveSession(ctx context.Context, cfg *config.Config,
 }
 
 func loginFromEnv(ctx context.Context, cfg *config.Config) (Session, error) {
-	envUser := os.Getenv(EnvManifoldUser)
+	envUser := os.Getenv(EnvManifoldEmail)
 	envPass := os.Getenv(EnvManifoldPass)
 
 	if envUser == "" || envPass == "" {
@@ -127,7 +127,7 @@ func loginFromEnv(ctx context.Context, cfg *config.Config) (Session, error) {
 	sess, err := createSession(ctx, cfg, envUser, envPass, true)
 	if err != nil {
 		return nil, hierr.Errorf(err, "Attempted to login with the %s and %s "+
-			"environment variables and failed", EnvManifoldUser, EnvManifoldPass)
+			"environment variables and failed", EnvManifoldEmail, EnvManifoldPass)
 	}
 	return sess, nil
 }

@@ -135,7 +135,7 @@ func run(cliCtx *cli.Context) error {
 func filterEnv() []string {
 	env := []string{}
 	for _, e := range os.Environ() {
-		if strings.HasPrefix(e, session.EnvManifoldUser+"=") || strings.HasPrefix(e, session.EnvManifoldPass+"=") {
+		if strings.HasPrefix(e, session.EnvManifoldEmail+"=") || strings.HasPrefix(e, session.EnvManifoldPass+"=") {
 			continue
 		}
 
