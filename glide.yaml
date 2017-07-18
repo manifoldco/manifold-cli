@@ -32,3 +32,6 @@ import:
   - scrypt
   - ed25519
 - package: github.com/reconquest/hierr-go
+- package: github.com/rhymond/go-money
+- package: github.com/briandowns/spinner
+- package: github.com/fatih/color

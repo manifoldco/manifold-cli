@@ -7,6 +7,7 @@ import (
 	"github.com/urfave/cli"
 
 	"github.com/manifoldco/manifold-cli/config"
+	"github.com/manifoldco/manifold-cli/errs"
 	"github.com/manifoldco/manifold-cli/session"
 )
 
@@ -33,7 +34,7 @@ func logout(_ *cli.Context) error {
 	}
 
 	if !s.Authenticated() {
-		return errAlreadyLoggedOut
+		return errs.ErrAlreadyLoggedOut
 	}
 
 	err = session.Destroy(ctx, cfg)

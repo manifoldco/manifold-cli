@@ -14,6 +14,7 @@ import (
 	"github.com/manifoldco/manifold-cli/clients"
 	"github.com/manifoldco/manifold-cli/config"
 	"github.com/manifoldco/manifold-cli/data/catalog"
+	"github.com/manifoldco/manifold-cli/errs"
 	"github.com/manifoldco/manifold-cli/session"
 
 	"github.com/manifoldco/manifold-cli/generated/marketplace/client/resource"
@@ -56,7 +57,7 @@ func list(cliCtx *cli.Context) error {
 	if appName != "" {
 		name := manifold.Name(appName)
 		if err := name.Validate(nil); err != nil {
-			return newUsageExitError(cliCtx, errInvalidAppName)
+			return errs.NewUsageExitError(cliCtx, errs.ErrInvalidAppName)
 		}
 	}
 
@@ -70,7 +71,7 @@ func list(cliCtx *cli.Context) error {
 		return cli.NewExitError("Could not retrieve session: "+err.Error(), -1)
 	}
 	if !s.Authenticated() {
-		return errNotLoggedIn
+		return errs.ErrNotLoggedIn
 	}
 
 	catalogClient, err := clients.NewCatalog(cfg)
@@ -126,17 +127,17 @@ func list(cliCtx *cli.Context) error {
 		appName := string(resource.Body.AppName)
 
 		// Get catalog data
-		product, err := catalog.GetProduct(resource.Body.ProductID.String())
+		product, err := catalog.GetProduct(resource.Body.ProductID)
 		if err != nil {
 			cli.NewExitError("Product referenced by resource does not exist: "+
 				err.Error(), -1)
 		}
-		plan, err := catalog.GetPlan(resource.Body.PlanID.String())
+		plan, err := catalog.GetPlan(resource.Body.PlanID)
 		if err != nil {
 			cli.NewExitError("Plan referenced by resource does not exist: "+
 				err.Error(), -1)
 		}
-		region, err := catalog.GetRegion(resource.Body.RegionID.String())
+		region, err := catalog.GetRegion(resource.Body.RegionID)
 		if err != nil {
 			cli.NewExitError("Region referenced by resource does not exist: "+
 				err.Error(), -1)

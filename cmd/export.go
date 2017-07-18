@@ -14,6 +14,7 @@ import (
 
 	"github.com/manifoldco/manifold-cli/clients"
 	"github.com/manifoldco/manifold-cli/config"
+	"github.com/manifoldco/manifold-cli/errs"
 	"github.com/manifoldco/manifold-cli/session"
 
 	mClient "github.com/manifoldco/manifold-cli/generated/marketplace/client"
@@ -49,7 +50,7 @@ func export(cliCtx *cli.Context) error {
 	if appName != "" {
 		name := manifold.Name(appName)
 		if err := name.Validate(nil); err != nil {
-			return newUsageExitError(cliCtx, errInvalidAppName)
+			return errs.NewUsageExitError(cliCtx, errs.ErrInvalidAppName)
 		}
 	}
 
@@ -69,7 +70,7 @@ func export(cliCtx *cli.Context) error {
 	}
 
 	if !s.Authenticated() {
-		return errMustLogin
+		return errs.ErrMustLogin
 	}
 
 	marketplace, err := clients.NewMarketplace(cfg)

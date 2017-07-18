@@ -14,6 +14,7 @@ import (
 
 	"github.com/manifoldco/manifold-cli/clients"
 	"github.com/manifoldco/manifold-cli/config"
+	"github.com/manifoldco/manifold-cli/errs"
 	"github.com/manifoldco/manifold-cli/session"
 
 	"github.com/manifoldco/manifold-cli/generated/marketplace/client/resource"
@@ -37,7 +38,7 @@ func run(cliCtx *cli.Context) error {
 	args := cliCtx.Args()
 
 	if len(args) == 0 {
-		return newUsageExitError(cliCtx, fmt.Errorf("A command is required"))
+		return errs.NewUsageExitError(cliCtx, fmt.Errorf("A command is required"))
 	} else if len(args) == 1 { //only one arg, maybe it was quoted
 		args = strings.Split(args[0], " ")
 	}
@@ -46,7 +47,7 @@ func run(cliCtx *cli.Context) error {
 	if appName != "" {
 		name := manifold.Name(appName)
 		if err := name.Validate(nil); err != nil {
-			return newUsageExitError(cliCtx, errInvalidAppName)
+			return errs.NewUsageExitError(cliCtx, errs.ErrInvalidAppName)
 		}
 	}
 
@@ -61,7 +62,7 @@ func run(cliCtx *cli.Context) error {
 	}
 
 	if !s.Authenticated() {
-		return errMustLogin
+		return errs.ErrMustLogin
 	}
 
 	marketplace, err := clients.NewMarketplace(cfg)

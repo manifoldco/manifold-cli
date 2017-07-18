@@ -1,10 +1,12 @@
-hash: eab82ce22e2f5e152ea11cf67afa1c838d67384342c1e6dc4732fcc301bfffe2
-updated: 2017-07-12T09:16:43.523988841-03:00
+hash: 91fadcae99f2a254c972ac53e040e555e66a27ab20dfb0e631150316fed6cc96
+updated: 2017-07-18T17:28:20.16685612-03:00
 imports:
 - name: github.com/alecthomas/gometalinter
   version: bae2f1293d092fd8167939d5108d1b025eaef9de
 - name: github.com/asaskevich/govalidator
   version: 7b3beb6df3c42abd3509abfc3bcacc0fbfb7c877
+- name: github.com/briandowns/spinner
+  version: 48dbb65d7bd5c74ab50d53d04c949f20e3d14944
 - name: github.com/chzyer/readline
   version: 41eea22f717c616615e1e59aa06cf831f9901f35
 - name: github.com/client9/misspell
@@ -13,6 +15,8 @@ imports:
   - cmd/misspell
 - name: github.com/dchest/blake2b
   version: 06006a921c7d13e3fdf63c401cb0e4529a26e6e4
+- name: github.com/fatih/color
+  version: 62e9147c64a1ed519147b62a56a14e83e2be02c1
 - name: github.com/go-ini/ini
   version: d3de07a94d22b4a0972deb4b96d790c2c0ce8333
 - name: github.com/go-openapi/analysis
@@ -68,6 +72,12 @@ imports:
   version: 6968117466a156652a246a59301cd58310e5e965
   subpackages:
   - promptui
+- name: github.com/mattn/go-colorable
+  version: 5411d3eea5978e6cdc258b30de592b60df6aba96
+  repo: https://github.com/mattn/go-colorable
+- name: github.com/mattn/go-isatty
+  version: 57fdcb988a5c543893cc61bce354a6e24ab70022
+  repo: https://github.com/mattn/go-isatty
 - name: github.com/mitchellh/mapstructure
   version: 53818660ed4955e899c0bcafa97299a388bd7c8e
 - name: github.com/PuerkitoBio/purell
@@ -76,6 +86,8 @@ imports:
   version: bbf7a2afc14f93e1e0a5c06df524fbd75e5031e5
 - name: github.com/reconquest/hierr-go
   version: 5322b90dda9c2b563e915c9af76bf20a8b95f630
+- name: github.com/rhymond/go-money
+  version: b9b9af789ed62b7458e1f5c5f9a31eb0fc35f3c6
 - name: github.com/tsenart/deadcode
   version: 210d2dc333e90c7e3eedf4f2242507a8e83ed4ab
 - name: github.com/urfave/cli
@@ -94,7 +106,8 @@ imports:
   - context/ctxhttp
   - idna
 - name: golang.org/x/sys
-  version: f3918c30c5c2cb527c0b071a27c35120a6c0719a
+  version: e24f485414aeafb646f6fca458b0bf869c0880a1
+  repo: https://go.googlesource.com/sys
   subpackages:
   - unix
 - name: golang.org/x/text

@@ -18,3 +18,20 @@ func appFlag() cli.Flag {
 		EnvVar: "MANIFOLD_APP",
 	}
 }
+
+func planFlag() cli.Flag {
+	return cli.StringFlag{
+		Name:   "plan, p",
+		Usage:  "Specify a plan",
+		Value:  "",
+		EnvVar: "MANIFOLD_PLAN",
+	}
+}
+
+func skipFlag() cli.Flag {
+	return cli.BoolFlag{
+		Name:   "no-wait, w",
+		Usage:  "Do not wait when creating, updating, or deleting a resource",
+		EnvVar: "MANIFOLD_DONT_WAIT",
+	}
+}

@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 
+	"github.com/manifoldco/go-manifold"
 	hierr "github.com/reconquest/hierr-go"
 
 	catalogClient "github.com/manifoldco/manifold-cli/generated/catalog/client"
@@ -14,23 +15,23 @@ import (
 // Catalog represents a local in memory cache of catalog data
 type Catalog struct {
 	client   *catalogClient.Catalog
-	products map[string]*catalogModels.Product
-	plans    map[string]*catalogModels.Plan
-	regions  map[string]*catalogModels.Region
+	products map[manifold.ID]*catalogModels.Product
+	plans    map[manifold.ID]*catalogModels.Plan
+	regions  map[manifold.ID]*catalogModels.Region
 }
 
-// GetProduct returns the Product data model based on the provided string id
-func (c *Catalog) GetProduct(id string) (*catalogModels.Product, error) {
-	product, ok := c.products[id]
+// GetProduct returns the Product data model based on the provided id
+func (c *Catalog) GetProduct(ID manifold.ID) (*catalogModels.Product, error) {
+	product, ok := c.products[ID]
 	if !ok {
 		return nil, errors.New("Product not found")
 	}
 	return product, nil
 }
 
-// GetPlan returns the Plan data model based on the provided string id
-func (c *Catalog) GetPlan(id string) (*catalogModels.Plan, error) {
-	plan, ok := c.plans[id]
+// GetPlan returns the Plan data model based on the provided id
+func (c *Catalog) GetPlan(ID manifold.ID) (*catalogModels.Plan, error) {
+	plan, ok := c.plans[ID]
 	if !ok {
 		return nil, errors.New("Product not found")
 	}
@@ -38,12 +39,42 @@ func (c *Catalog) GetPlan(id string) (*catalogModels.Plan, error) {
 }
 
 // GetRegion returns the Region data model based on the provided string id
-func (c *Catalog) GetRegion(id string) (*catalogModels.Region, error) {
-	region, ok := c.regions[id]
+func (c *Catalog) GetRegion(ID manifold.ID) (*catalogModels.Region, error) {
+	region, ok := c.regions[ID]
 	if !ok {
 		return nil, errors.New("Product not found")
 	}
 	return region, nil
+}
+
+// Returns a list of Plans from the Catalog
+func (c *Catalog) Plans() []*catalogModels.Plan {
+	plans := make([]*catalogModels.Plan, 0, len(c.plans))
+	for _, p := range c.plans {
+		plans = append(plans, p)
+	}
+
+	return plans
+}
+
+// Returns a list of Products from the Catalog
+func (c *Catalog) Products() []*catalogModels.Product {
+	products := make([]*catalogModels.Product, 0, len(c.products))
+	for _, p := range c.products {
+		products = append(products, p)
+	}
+
+	return products
+}
+
+// Returns a list of Regions from the Catalog
+func (c *Catalog) Regions() []*catalogModels.Region {
+	regions := make([]*catalogModels.Region, 0, len(c.regions))
+	for _, r := range c.regions {
+		regions = append(regions, r)
+	}
+
+	return regions
 }
 
 // Sync attempts to update the catalog and returns an error if anything went
@@ -67,12 +98,12 @@ func updateCatalog(ctx context.Context, cache *Catalog) (*Catalog, error) {
 	}
 
 	// Map products catalog, so its searchable by id through hashmap
-	cache.products = make(map[string]*catalogModels.Product)
+	cache.products = make(map[manifold.ID]*catalogModels.Product)
 	productIDs := make([]string, len(products.Payload))
 	for i, product := range products.Payload {
-		productID := product.ID.String()
+		productID := product.ID
 		cache.products[productID] = product
-		productIDs[i] = productID
+		productIDs[i] = productID.String()
 	}
 
 	// Get plans for known productIDs
@@ -85,9 +116,9 @@ func updateCatalog(ctx context.Context, cache *Catalog) (*Catalog, error) {
 	}
 
 	// Map plan catalog, so its searchable by id through hashmap
-	cache.plans = make(map[string]*catalogModels.Plan)
+	cache.plans = make(map[manifold.ID]*catalogModels.Plan)
 	for _, plan := range plans.Payload {
-		cache.plans[plan.ID.String()] = plan
+		cache.plans[plan.ID] = plan
 	}
 
 	// Get regions
@@ -97,9 +128,9 @@ func updateCatalog(ctx context.Context, cache *Catalog) (*Catalog, error) {
 	}
 
 	// Map region catalog, so its searchable by id through hashmap
-	cache.regions = make(map[string]*catalogModels.Region)
+	cache.regions = make(map[manifold.ID]*catalogModels.Region)
 	for _, region := range regions.Payload {
-		cache.regions[region.ID.String()] = region
+		cache.regions[region.ID] = region
 	}
 
 	return cache, nil

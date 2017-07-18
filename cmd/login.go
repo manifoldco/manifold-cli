@@ -7,6 +7,7 @@ import (
 	"github.com/urfave/cli"
 
 	"github.com/manifoldco/manifold-cli/config"
+	"github.com/manifoldco/manifold-cli/errs"
 	"github.com/manifoldco/manifold-cli/prompts"
 	"github.com/manifoldco/manifold-cli/session"
 )
@@ -39,7 +40,7 @@ func login(_ *cli.Context) error {
 				"variables, hooray!\n")
 			return nil
 		}
-		return errAlreadyLoggedIn
+		return errs.ErrAlreadyLoggedIn
 	}
 
 	email, err := prompts.Email("")
