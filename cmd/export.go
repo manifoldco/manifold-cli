@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"sort"
 	"strconv"
 	"strings"
 
@@ -85,6 +86,7 @@ func export(cliCtx *cli.Context) error {
 	}
 
 	resources := filterResourcesByAppName(r.Payload, appName)
+	sort.Sort(resourcesSortByName(resources))
 	cMap, err := fetchCredentials(ctx, marketplace, resources)
 	if err != nil {
 		return cli.NewExitError("Could not retrieve credentials: "+err.Error(), -1)

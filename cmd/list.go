@@ -33,7 +33,7 @@ func (r resourcesSortByName) Swap(i, j int) {
 }
 func (r resourcesSortByName) Less(i, j int) bool {
 	return strings.Compare(strings.ToLower(fmt.Sprintf("%s", r[i].Body.Name)),
-		fmt.Sprintf("%s", r[j].Body.Name)) < 0
+		fmt.Sprintf("%s", r[j].Body.Name)) > 0
 }
 
 func init() {
