@@ -6,6 +6,7 @@ import (
 
 	"github.com/urfave/cli"
 
+	"github.com/manifoldco/manifold-cli/analytics"
 	"github.com/manifoldco/manifold-cli/config"
 	"github.com/manifoldco/manifold-cli/errs"
 	"github.com/manifoldco/manifold-cli/session"
@@ -36,6 +37,13 @@ func logout(_ *cli.Context) error {
 	if !s.Authenticated() {
 		return errs.ErrAlreadyLoggedOut
 	}
+
+	a, err := analytics.New(cfg, s)
+	if err != nil {
+		return cli.NewExitError("Something went horribly wrong: "+err.Error(), -1)
+	}
+
+	a.Track(ctx, "Logout", nil)
 
 	err = session.Destroy(ctx, cfg)
 	if err != nil {

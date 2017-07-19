@@ -20,12 +20,46 @@ securityDefinitions:
     type: apiKey
     name: Authorization
     in: header
+  loginTokenRequired:
+    type: apiKey
+    name: Authorization
+    in: header
 security:
 - jwtRequired: []
 paths:
+  /analytics/:
+    post:
+      summary: An endpoint used by the cli to push analytics into segment.
+      security: []
+      parameters:
+      - name: body
+        in: body
+        description: An analytics event
+        required: true
+        schema:
+          $ref: '#/definitions/AnalyticsEvent'
+      tags:
+      - User
+      responses:
+        204:
+          description: An empty response
+        400:
+          description: Invalid request
+          schema:
+            $ref: '#/definitions/Error'
+        401:
+          description: Unknown token, or token not owned the the requester
+          schema:
+            $ref: '#/definitions/Error'
+        500:
+          description: Request failed due to an internal server error.
+          schema:
+            $ref: '#/definitions/Error'
   /tokens/auth:
     post:
-      summary: Create a new auth token
+      summary: Exchange a login token for a general use auth token
+      security:
+      - loginTokenRequired: []
       parameters:
       - name: body
         in: body
@@ -36,7 +70,7 @@ paths:
           $ref: '#/definitions/AuthTokenRequest'
       - name: authorization
         in: header
-        description: Token used to authenticate a user against a specific service
+        description: A JWT Bearer token for the user, as returned from /tokens/login
         required: true
         type: string
       tags:
@@ -64,7 +98,7 @@ paths:
             $ref: '#/definitions/Error'
   /tokens/login:
     post:
-      summary: Create a new auth or login token
+      summary: Create a new login token
       security: []
       parameters:
       - name: body
@@ -407,6 +441,25 @@ definitions:
       import:
         package: github.com/manifoldco/go-manifold
         alias: manifold
+  AnalyticsEvent:
+    type: object
+    properties:
+      event_name:
+        type: string
+      user_id:
+        $ref: '#/definitions/ID'
+      properties:
+        type: object
+        properties:
+          platform:
+            type: string
+            enum:
+            - cli
+        additionalProperties: true
+    additionalProperties: false
+    required:
+    - event_name
+    - user_id
   User:
     type: object
     properties:

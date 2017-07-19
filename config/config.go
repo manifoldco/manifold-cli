@@ -9,10 +9,15 @@ import (
 	"github.com/go-ini/ini"
 )
 
+// Version represents the version of the cli. This variable is updated at build
+// time.
+var Version = "dev"
+
 const (
 	requiredPermissions = 0600
 	defaultHostname     = "manifold.co"
 	defaultScheme       = "https"
+	defaultAnalytics    = true
 	rcFilename          = ".manifoldrc"
 )
 
@@ -49,6 +54,7 @@ func Load() (*Config, error) {
 		Hostname:        defaultHostname,
 		AuthToken:       "",
 		TransportScheme: defaultScheme,
+		Analytics:       defaultAnalytics,
 	}
 
 	if os.IsNotExist(err) {
@@ -100,6 +106,7 @@ type Config struct {
 	Hostname        string `ini:"hostname"`
 	AuthToken       string `ini:"auth_token"`
 	TransportScheme string `ini:"scheme"`
+	Analytics       bool   `ini:"analytics"`
 }
 
 // Write writes the contents of the Config struct to ~/.manifoldrc and sets the

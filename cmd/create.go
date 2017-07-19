@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"strconv"
 	"time"
 
 	"github.com/briandowns/spinner"
@@ -11,6 +12,7 @@ import (
 	"github.com/manifoldco/go-manifold/idtype"
 	"github.com/urfave/cli"
 
+	"github.com/manifoldco/manifold-cli/analytics"
 	"github.com/manifoldco/manifold-cli/clients"
 	"github.com/manifoldco/manifold-cli/config"
 	"github.com/manifoldco/manifold-cli/data/catalog"
@@ -159,7 +161,7 @@ func create(cliCtx *cli.Context) error {
 	}
 
 	if dontWait {
-		op, err := createResource(ctx, s, pClient, products[productIdx], plans[planIdx],
+		op, err := createResource(ctx, cfg, s, pClient, products[productIdx], plans[planIdx],
 			regions[regionIdx], appName, resourceName, true)
 		if err != nil {
 			return cli.NewExitError("Could not create resource: "+err.Error(), -1)
@@ -176,7 +178,7 @@ func create(cliCtx *cli.Context) error {
 
 	spin := spinner.New(spinner.CharSets[38], 500*time.Millisecond)
 	spin.Start()
-	op, err := createResource(ctx, s, pClient, products[productIdx], plans[planIdx],
+	op, err := createResource(ctx, cfg, s, pClient, products[productIdx], plans[planIdx],
 		regions[regionIdx], appName, resourceName, dontWait)
 	spin.Stop()
 	if err != nil {
@@ -188,9 +190,14 @@ func create(cliCtx *cli.Context) error {
 	return nil
 }
 
-func createResource(ctx context.Context, s session.Session, pClient *provisioning.Provisioning,
-	product *cModels.Product, plan *cModels.Plan, region *cModels.Region, appName,
-	resourceName string, dontWait bool) (*pModels.Operation, error) {
+func createResource(ctx context.Context, cfg *config.Config, s session.Session,
+	pClient *provisioning.Provisioning, product *cModels.Product, plan *cModels.Plan,
+	region *cModels.Region, appName, resourceName string, dontWait bool) (*pModels.Operation, error) {
+
+	a, err := analytics.New(cfg, s)
+	if err != nil {
+		return nil, err
+	}
 
 	ID, err := manifold.NewID(idtype.Operation)
 	if err != nil {
@@ -252,6 +259,13 @@ func createResource(ctx context.Context, s session.Session, pClient *provisionin
 		}
 	}
 
+	params := map[string]string{
+		"product": string(product.Body.Label),
+		"plan":    string(plan.Body.Label),
+		"price":   toPrice(*plan.Body.Cost),
+		"region":  string(*region.Body.Location),
+	}
+	a.Track(ctx, "Provision Operation", &params)
 	if dontWait {
 		return res.Payload, nil
 	}
@@ -355,4 +369,21 @@ func fetchUniqueAppNames(resources []*mModels.Resource) []string {
 	}
 
 	return out
+}
+
+func toPrice(cost int64) string {
+	s := strconv.Itoa(int(cost))
+	if len(s) == 0 {
+		return "0.00"
+	}
+
+	if len(s) == 1 {
+		return "0.0" + s
+	}
+
+	if len(s) == 2 {
+		return "0." + s
+	}
+
+	return s[:len(s)-2] + "." + s[len(s)-2:]
 }

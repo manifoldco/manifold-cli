@@ -6,6 +6,7 @@ import (
 
 	"github.com/urfave/cli"
 
+	"github.com/manifoldco/manifold-cli/analytics"
 	"github.com/manifoldco/manifold-cli/config"
 	"github.com/manifoldco/manifold-cli/errs"
 	"github.com/manifoldco/manifold-cli/prompts"
@@ -57,6 +58,13 @@ func login(_ *cli.Context) error {
 	if err != nil {
 		return cli.NewExitError("Are you sure the password and email match? "+err.Error(), -1)
 	}
+
+	a, err := analytics.New(cfg, s)
+	if err != nil {
+		return cli.NewExitError("A problem occurred: "+err.Error(), -1)
+	}
+
+	a.Track(ctx, "Logged In", nil)
 
 	fmt.Printf("You are logged in, hooray!\n")
 	return nil
