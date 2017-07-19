@@ -12,6 +12,7 @@ import (
 	"github.com/manifoldco/go-manifold"
 	"github.com/urfave/cli"
 
+	"github.com/manifoldco/manifold-cli/analytics"
 	"github.com/manifoldco/manifold-cli/clients"
 	"github.com/manifoldco/manifold-cli/config"
 	"github.com/manifoldco/manifold-cli/errs"
@@ -86,6 +87,18 @@ func run(cliCtx *cli.Context) error {
 	if err != nil {
 		return cli.NewExitError("Could not flatten credential map: "+err.Error(), -1)
 	}
+
+	a, err := analytics.New(cfg, s)
+	if err != nil {
+		return cli.NewExitError("Something went horribly wrong: "+err.Error(), -1)
+	}
+
+	params := map[string]string{}
+	if appName != "" {
+		params["app"] = appName
+	}
+
+	a.Track(ctx, "App Run", &params)
 
 	cmd := exec.Command(args[0], args[1:]...)
 	cmd.Stdin = os.Stdin

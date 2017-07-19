@@ -4,9 +4,9 @@ import (
 	"fmt"
 
 	"github.com/urfave/cli"
-)
 
-var version = "dev"
+	"github.com/manifoldco/manifold-cli/config"
+)
 
 func init() {
 	versionCmd := cli.Command{
@@ -19,7 +19,7 @@ func init() {
 }
 
 func versionLookup(ctx *cli.Context) error {
-	fmt.Printf("%s\n", version)
+	fmt.Printf("%s\n", config.Version)
 
 	return nil
 }
