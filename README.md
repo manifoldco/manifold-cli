@@ -9,13 +9,19 @@ You can download a release of the Manifold CLI from the
 [Releases](https://github.com/manifoldco/manifold-cli/releases) section of this
 repository.
 
+## Writing Code
+
+Any new change in behaviour, whether it's a new feature *or* bug fix, should be
+documented in the CHANGELOG.md as a part of a pull request submission!
+
 ## Releasing
 
 Releasing the `manifold-cli` is a manual process run on a developers local machine.
 
 1. Ensure all of the required code has been merged into master.
-3. Create a tag off master (following [semver](http://semver.org/)), which matches the remote sha of master
-   on github.
+2. Ensure the CHANGELOG.md is up to date!
+3. Create a tag off master (following [semver](http://semver.org/)), which
+   matches the remote sha of master on github.
 4. Build the cli locally from scratch (`make clean; make`)
 5. Create the build zips (`make zips`)
 6. Create a release on github for the tag which includes the changelog for this
