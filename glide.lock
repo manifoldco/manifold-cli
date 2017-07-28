@@ -1,5 +1,5 @@
-hash: 91fadcae99f2a254c972ac53e040e555e66a27ab20dfb0e631150316fed6cc96
-updated: 2017-07-18T17:28:20.16685612-03:00
+hash: 899b7db45c53fec305c5cad8c3158f2a89f48ee8658b8b470ab912edc2fa5559
+updated: 2017-07-27T22:22:21.857957462-03:00
 imports:
 - name: github.com/alecthomas/gometalinter
   version: bae2f1293d092fd8167939d5108d1b025eaef9de
@@ -71,6 +71,9 @@ imports:
 - name: github.com/manifoldco/torus-cli
   version: 6968117466a156652a246a59301cd58310e5e965
   subpackages:
+  - data
+  - errs
+  - prefs
   - promptui
 - name: github.com/mattn/go-colorable
   version: 5411d3eea5978e6cdc258b30de592b60df6aba96
@@ -127,6 +130,8 @@ imports:
   subpackages:
   - bson
   - internal/json
+- name: gopkg.in/oleiade/reflections.v1
+  version: 2b6ec3da648e3e834dc41bad8d9ed7f2dc6a9496
 - name: gopkg.in/yaml.v2
   version: cd8b52f8269e0feb286dfeef29f8fe4d5b397e0b
 testImports: []

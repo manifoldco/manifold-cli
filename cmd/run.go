@@ -25,7 +25,7 @@ func init() {
 	runCmd := cli.Command{
 		Name:   "run",
 		Usage:  "Run a process and inject secrets into its environment",
-		Action: run,
+		Action: chain(loadDirPrefs, run),
 		Flags: []cli.Flag{
 			appFlag(),
 		},

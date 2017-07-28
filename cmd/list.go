@@ -41,7 +41,7 @@ func init() {
 		Name: "list",
 		Usage: "Allows a user to list the status of their provisioned Manifold " +
 			"resources.",
-		Action: list,
+		Action: chain(loadDirPrefs, list),
 		Flags: []cli.Flag{
 			appFlag(),
 		},

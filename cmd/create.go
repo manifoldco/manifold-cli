@@ -33,7 +33,7 @@ func init() {
 		Name:      "create",
 		ArgsUsage: "[product] [name]",
 		Usage:     "Allows a user to create a new resource through Manifold.",
-		Action:    create,
+		Action:    chain(loadDirPrefs, create),
 		Flags: []cli.Flag{
 			appFlag(),
 			planFlag(),
