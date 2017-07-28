@@ -15,6 +15,8 @@ import (
 	cModels "github.com/manifoldco/manifold-cli/generated/catalog/models"
 )
 
+const namePattern = "^[a-zA-Z\\s,\\.'\\-pL]{1,64}$"
+
 type plansSortByCost []*cModels.Plan
 
 func (p plansSortByCost) Len() int {
@@ -230,6 +232,24 @@ func Email(defaultValue string) (string, error) {
 		},
 	}
 
+	if defaultValue != "" {
+		p.Default = defaultValue
+	}
+
+	return p.Run()
+}
+
+// FullName prompts the user to input a person's name
+func FullName(defaultValue string) (string, error) {
+	p := promptui.Prompt{
+		Label: "Name",
+		Validate: func(input string) error {
+			if govalidator.StringMatches(input, namePattern) {
+				return nil
+			}
+			return promptui.NewValidationError("Please enter a valid name")
+		},
+	}
 	if defaultValue != "" {
 		p.Default = defaultValue
 	}
