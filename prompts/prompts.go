@@ -9,6 +9,8 @@ import (
 	"github.com/manifoldco/go-manifold"
 	"github.com/manifoldco/torus-cli/promptui"
 	"github.com/rhymond/go-money"
+	"github.com/stripe/stripe-go"
+	"github.com/stripe/stripe-go/token"
 
 	"github.com/manifoldco/manifold-cli/errs"
 
@@ -16,6 +18,8 @@ import (
 )
 
 const namePattern = "^[a-zA-Z\\s,\\.'\\-pL]{1,64}$"
+
+var errBad = promptui.NewValidationError("Bad Value")
 
 type plansSortByCost []*cModels.Plan
 
@@ -299,4 +303,69 @@ func getPlanCost(p *cModels.Plan) string {
 	}
 
 	return money.New(c, "USD").Display()
+}
+
+func isCard(raw string) error {
+	if govalidator.StringLength(raw, "16", "16") && govalidator.IsNumeric(raw) {
+		return nil
+	}
+
+	return errBad
+}
+
+func isExpiry(raw string) error {
+	if govalidator.StringLength(raw, "5", "5") {
+		return nil
+	}
+
+	return errBad
+}
+
+func isCVV(raw string) error {
+	if govalidator.StringLength(raw, "3", "3") && govalidator.IsNumeric(raw) {
+		return nil
+	}
+
+	return errBad
+}
+
+// CreditCard handles receiving and tokenizing payment information
+func CreditCard() (*stripe.Token, error) {
+	rCrd, err := (&promptui.Prompt{
+		Label:    "💳  Card Number",
+		Validate: isCard,
+	}).Run()
+	if err != nil {
+		return nil, err
+	}
+
+	rExp, err := (&promptui.Prompt{
+		Label:    "📅  Expiry (YY/MM)",
+		Validate: isExpiry,
+	}).Run()
+	if err != nil {
+		return nil, err
+	}
+
+	rCVV, err := (&promptui.Prompt{
+		Label:    "🔒  CVV",
+		Validate: isCVV,
+	}).Run()
+	if err != nil {
+		return nil, err
+	}
+
+	parts := strings.Split(rExp, "/")
+	year, month := "20"+parts[0], parts[1]
+	tkn, err := token.New(&stripe.TokenParams{Card: &stripe.CardParams{
+		Number: rCrd,
+		Month:  month,
+		Year:   year,
+		CVC:    rCVV,
+	}})
+	if err != nil {
+		return nil, errs.NewStripeError(err)
+	}
+
+	return tkn, nil
 }

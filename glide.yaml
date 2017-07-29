@@ -37,3 +37,5 @@ import:
 - package: github.com/fatih/color
 - package: gopkg.in/oleiade/reflections.v1
   version: ^1.0.0
+- package: github.com/stripe/stripe-go
+  version: ^24.2.0

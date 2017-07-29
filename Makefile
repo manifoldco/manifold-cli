@@ -1,6 +1,7 @@
 VERSION?=$(shell git describe --tags --dirty | sed 's/^v//')
 PKG=github.com/manifoldco/manifold-cli
-GO_BUILD=CGO_ENABLED=0 go build -i --ldflags="-w -X $(PKG)/config.Version=$(VERSION)"
+STRIPE_PKEY=${STRIPE_PUBLISHABLE_KEY}
+GO_BUILD=CGO_ENABLED=0 go build -i --ldflags="-w -X $(PKG)/config.Version=$(VERSION) -X $(PKG)/config.StripePublishableKey=$(STRIPE_PKEY)"
 
 rwildcard=$(foreach d,$(wildcard $1*),$(call rwildcard,$d/,$2) \
     $(filter $(subst *,%,$2),$d))
@@ -96,13 +97,18 @@ generated-clients: $(API_CLIENTS)
 # Building
 # ###############################################$
 
+check-env:
+ifndef STRIPE_PUBLISHABLE_KEY
+    $(error STRIPE_PUBLISHABLE_KEY is undefined)
+endif
+
 PREFIX?=
 SUFFIX=
 ifeq ($(GOOS),windows)
     SUFFIX=.exe
 endif
 
-build: $(PREFIX)bin/manifold-cli$(SUFFIX)
+build: check-env $(PREFIX)bin/manifold-cli$(SUFFIX)
 
 MANIFOLDCLI_DEPS=\
 		vendor \
