@@ -19,6 +19,9 @@ import (
 
 const namePattern = "^[a-zA-Z\\s,\\.'\\-pL]{1,64}$"
 
+// NumberMask is the character used to mask number inputs
+const NumberMask = '#'
+
 var errBad = promptui.NewValidationError("Bad Value")
 
 type plansSortByCost []*cModels.Plan
@@ -349,6 +352,7 @@ func CreditCard() (*stripe.Token, error) {
 
 	rCVV, err := (&promptui.Prompt{
 		Label:    "🔒  CVV",
+		Mask:     NumberMask,
 		Validate: isCVV,
 	}).Run()
 	if err != nil {
