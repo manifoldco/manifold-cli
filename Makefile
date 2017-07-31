@@ -97,18 +97,13 @@ generated-clients: $(API_CLIENTS)
 # Building
 # ###############################################$
 
-check-env:
-ifndef STRIPE_PUBLISHABLE_KEY
-    $(error STRIPE_PUBLISHABLE_KEY is undefined)
-endif
-
 PREFIX?=
 SUFFIX=
 ifeq ($(GOOS),windows)
     SUFFIX=.exe
 endif
 
-build: check-env $(PREFIX)bin/manifold-cli$(SUFFIX)
+build: $(PREFIX)bin/manifold-cli$(SUFFIX)
 
 MANIFOLDCLI_DEPS=\
 		vendor \

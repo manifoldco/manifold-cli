@@ -15,7 +15,7 @@ import (
 var Version = "dev"
 
 // StripePublishableKey facilitates secure transmission of payment values
-var StripePublishableKey string
+var StripePublishableKey = "pk_live_A6qSWh1v4SrNnrWSftgDcKFQ"
 
 func init() {
 	stripe.LogLevel = 0
