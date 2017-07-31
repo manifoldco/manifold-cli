@@ -2,6 +2,7 @@ package clients
 
 import (
 	"fmt"
+	"net/http"
 	"net/url"
 
 	"github.com/go-openapi/runtime"
@@ -16,6 +17,30 @@ import (
 	pClient "github.com/manifoldco/manifold-cli/generated/provisioning/client"
 )
 
+const defaultUserAgent = "manifold-cli"
+
+// newRoundTripper applies a UserAgent header to the transport
+func newRoundTripper(next http.RoundTripper) http.RoundTripper {
+	version := config.Version
+	if version != "" {
+		version = "-" + version
+	}
+	return &roundTripper{
+		next:      next,
+		userAgent: defaultUserAgent + version,
+	}
+}
+
+type roundTripper struct {
+	next      http.RoundTripper
+	userAgent string
+}
+
+func (rt *roundTripper) RoundTrip(req *http.Request) (*http.Response, error) {
+	req.Header.Set("User-Agent", rt.userAgent)
+	return rt.next.RoundTrip(req)
+}
+
 // NewIdentity returns a swagger generated client for the Identity service
 func NewIdentity(cfg *config.Config) (*iClient.Identity, error) {
 	u, err := deriveURL(cfg, "identity")
@@ -29,6 +54,7 @@ func NewIdentity(cfg *config.Config) (*iClient.Identity, error) {
 	c.WithSchemes([]string{u.Scheme})
 
 	transport := httptransport.New(c.Host, c.BasePath, c.Schemes)
+	transport.Transport = newRoundTripper(transport.Transport)
 
 	if cfg.AuthToken != "" {
 		transport.DefaultAuthentication = NewBearerToken(cfg.AuthToken)
@@ -50,6 +76,7 @@ func NewMarketplace(cfg *config.Config) (*mClient.Marketplace, error) {
 	c.WithSchemes([]string{u.Scheme})
 
 	transport := httptransport.New(c.Host, c.BasePath, c.Schemes)
+	transport.Transport = newRoundTripper(transport.Transport)
 
 	if cfg.AuthToken != "" {
 		transport.DefaultAuthentication = NewBearerToken(cfg.AuthToken)
@@ -72,6 +99,7 @@ func NewProvisioning(cfg *config.Config) (*pClient.Provisioning, error) {
 	c.WithSchemes([]string{u.Scheme})
 
 	transport := httptransport.New(c.Host, c.BasePath, c.Schemes)
+	transport.Transport = newRoundTripper(transport.Transport)
 
 	if cfg.AuthToken != "" {
 		transport.DefaultAuthentication = NewBearerToken(cfg.AuthToken)
@@ -99,6 +127,7 @@ func NewCatalog(cfg *config.Config) (*cClient.Catalog, error) {
 	c.WithSchemes([]string{u.Scheme})
 
 	transport := httptransport.New(c.Host, c.BasePath, c.Schemes)
+	transport.Transport = newRoundTripper(transport.Transport)
 
 	if cfg.AuthToken != "" {
 		transport.DefaultAuthentication = NewBearerToken(cfg.AuthToken)
