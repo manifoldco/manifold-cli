@@ -6,6 +6,7 @@ import (
 
 	"github.com/go-openapi/strfmt"
 	"github.com/manifoldco/go-base64"
+	"github.com/manifoldco/go-manifold"
 	"github.com/reconquest/hierr-go"
 
 	"github.com/manifoldco/manifold-cli/clients"
@@ -246,4 +247,43 @@ func Destroy(ctx context.Context, cfg *config.Config) error {
 	}
 
 	return nil
+}
+
+// Signup makes a request to create a new account
+func Signup(ctx context.Context, cfg *config.Config, name, email, password string) (*models.User, error) {
+	c, err := clients.NewIdentity(cfg)
+	if err != nil {
+		return nil, err
+	}
+
+	alg, salt, pubkey, err := newKeyMaterial(password)
+	if err != nil {
+		return nil, hierr.Errorf(err,
+			"Failed to derive publickey")
+	}
+
+	p := user.NewPostUsersParamsWithContext(ctx)
+	p.Body = &models.CreateUser{
+		Body: &models.CreateUserBody{
+			Email: manifold.Email(email),
+			Name:  models.UserDisplayName(name),
+			PublicKey: &models.LoginPublicKey{
+				Alg:   alg,
+				Salt:  salt,
+				Value: pubkey,
+			},
+		},
+	}
+	resp, err := c.User.PostUsers(p)
+
+	if err != nil {
+		switch e := err.(type) {
+		case *user.PostUsersBadRequest:
+			return nil, e.Payload
+		default:
+			return nil, errs.ErrSomethingWentHorriblyWrong
+		}
+	}
+
+	return resp.Payload, nil
 }
