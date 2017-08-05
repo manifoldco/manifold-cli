@@ -10,10 +10,19 @@ func formatFlag(defaultValue, description string) cli.Flag {
 	return placeholder.New("format, f", "FORMAT", description, defaultValue, "MANIFOLD_FORMAT", false)
 }
 
+func nameFlag() cli.Flag {
+	return cli.StringFlag{
+		Name:   "name, n",
+		Usage:  "Specify a name for a resource",
+		Value:  "",
+		EnvVar: "MANIFOLD_NAME",
+	}
+}
+
 func appFlag() cli.Flag {
 	return cli.StringFlag{
 		Name:   "app, a",
-		Usage:  "Filter output to only items related to the specified App.",
+		Usage:  "Specify an app for filtering, and updatings",
 		Value:  "",
 		EnvVar: "MANIFOLD_APP",
 	}
