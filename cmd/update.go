@@ -4,10 +4,12 @@ import (
 	"context"
 	"errors"
 	"fmt"
-
 	"time"
 
 	"github.com/briandowns/spinner"
+	"github.com/go-openapi/strfmt"
+	"github.com/urfave/cli"
+
 	"github.com/manifoldco/go-manifold"
 	"github.com/manifoldco/manifold-cli/clients"
 	"github.com/manifoldco/manifold-cli/config"
@@ -15,14 +17,15 @@ import (
 	"github.com/manifoldco/manifold-cli/errs"
 	"github.com/manifoldco/manifold-cli/prompts"
 	"github.com/manifoldco/manifold-cli/session"
-	"github.com/urfave/cli"
 
+	"github.com/manifoldco/go-manifold/idtype"
 	"github.com/manifoldco/manifold-cli/analytics"
 	cModels "github.com/manifoldco/manifold-cli/generated/catalog/models"
 	mClient "github.com/manifoldco/manifold-cli/generated/marketplace/client"
 	resClient "github.com/manifoldco/manifold-cli/generated/marketplace/client/resource"
 	mModels "github.com/manifoldco/manifold-cli/generated/marketplace/models"
 	pClient "github.com/manifoldco/manifold-cli/generated/provisioning/client"
+	"github.com/manifoldco/manifold-cli/generated/provisioning/client/operation"
 	pModels "github.com/manifoldco/manifold-cli/generated/provisioning/models"
 )
 
@@ -90,7 +93,7 @@ func update(cliCtx *cli.Context) error {
 
 	provisioningClient, err := clients.NewProvisioning(cfg)
 	if err != nil {
-		return cli.NewExitError(fmt.Sprintf("Failed to create Provisioning Client", err), -1)
+		return cli.NewExitError(fmt.Sprintf("Failed to create Provisioning Client: %s", err), -1)
 	}
 
 	res, err := marketplaceClient.Resource.GetResources(
@@ -130,17 +133,11 @@ func update(cliCtx *cli.Context) error {
 			return errs.NewUsageExitError(cliCtx, errs.ErrInvalidPlanLabel)
 		}
 	}
-	// TODO: Move this+filterRegionsForPlans+fetchUniqueAppNames from create.go into another file/package?
+	// TODO: Move this+fetchUniqueAppNames from create.go into another file/package?
 	plans := filterPlansByProductID(catalog.Plans(), resource.Body.ProductID)
 	planIdx, _, err := prompts.SelectPlan(plans, planLabel)
 	if err != nil {
 		return prompts.HandleSelectError(err, "Could not select plan")
-	}
-
-	regions := filterRegionsForPlan(catalog.Regions(), plans[planIdx].Body.Regions)
-	regionIdx, _, err := prompts.SelectRegion(regions)
-	if err != nil {
-		return prompts.HandleSelectError(err, "Could not select region")
 	}
 
 	appName := cliCtx.String("app")
@@ -166,18 +163,18 @@ func update(cliCtx *cli.Context) error {
 		spin.Start()
 	}
 
-	pOp, mrb, err := updateResource(ctx, cfg, s, resource, marketplaceClient, provisioningClient,
-		plans[planIdx], regions[regionIdx], appName, newResourceName,
+	_, mrb, err := updateResource(ctx, cfg, s, resource, marketplaceClient, provisioningClient,
+		plans[planIdx], appName, newResourceName, dontWait,
 	)
 	if err != nil {
 		return cli.NewExitError(fmt.Sprintf("Failed to update resource: %s", err), -1)
 	}
-	_ = pOp
-	_ = mrb
 
 	if !dontWait {
 		spin.Stop()
 	}
+
+	fmt.Printf("Your instance \"%s\" has been updated", mrb.Body.Name)
 
 	return nil
 }
@@ -198,35 +195,94 @@ func pickResourcesByLabel(resources []*mModels.Resource, resourceLabel string) (
 
 func updateResource(ctx context.Context, cfg *config.Config, s session.Session, resource *mModels.Resource,
 	marketplaceClient *mClient.Marketplace, provisioningClient *pClient.Provisioning, plan *cModels.Plan,
-	region *cModels.Region, appName, resourceName string,
-) (*pModels.Operation, *mModels.ResourceBody, error) {
+	appName, resourceName string, dontWait bool,
+) (*pModels.Operation, *mModels.Resource, error) {
 	a, err := analytics.New(cfg, s)
 	if err != nil {
 		return nil, nil, err
 	}
-	_ = a
 
-	if appName != string(resource.Body.AppName) || resourceName != string(resource.Body.Name) {
-		label := "" // re-generate
-		rename := &mModels.PublicUpdateResource{
-			Body: &mModels.PublicUpdateResourceBody{
-				AppName: &appName,
-				Label:   manifold.Label(label),
-				Name:    manifold.Name(resourceName),
-			},
-		}
-
-		c := resClient.NewPatchResourcesIDParamsWithContext(ctx)
-		c.SetBody(rename)
-		c.SetID(resource.ID.String())
-
-		res, err := marketplaceClient.Resource.PatchResourcesID(c, nil)
-		if err != nil {
-			panic(err)
-		}
-
-		fmt.Sprintf("%#v", res)
+	label := "" // re-generate
+	rename := &mModels.PublicUpdateResource{
+		Body: &mModels.PublicUpdateResourceBody{
+			AppName: &appName,
+			Label:   manifold.Label(label),
+			Name:    manifold.Name(resourceName),
+		},
 	}
 
-	return nil, nil, nil
+	c := resClient.NewPatchResourcesIDParamsWithContext(ctx)
+	c.SetBody(rename)
+	c.SetID(resource.ID.String())
+
+	patchRes, err := marketplaceClient.Resource.PatchResourcesID(c, nil)
+	if err != nil {
+		switch e := err.(type) {
+		case *resClient.PatchResourcesIDBadRequest:
+			return nil, nil, e.Payload
+		case *resClient.PatchResourcesIDUnauthorized:
+			return nil, nil, e.Payload
+		case *resClient.PatchResourcesIDInternalServerError:
+			return nil, nil, errs.ErrSomethingWentHorriblyWrong
+		}
+	}
+
+	ID, err := manifold.NewID(idtype.Operation)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	typeStr := "operation"
+	version := int64(1)
+	state := "resize"
+	curTime := strfmt.DateTime(time.Now())
+	op := &pModels.Operation{
+		ID:      ID,
+		Type:    &typeStr,
+		Version: &version,
+		Body: &pModels.Resize{
+			PlanID: plan.ID,
+			State:  &state,
+		},
+	}
+
+	op.Body.SetCreatedAt(&curTime)
+	op.Body.SetUpdatedAt(&curTime)
+	op.Body.SetResourceID(resource.ID)
+	op.Body.SetUserID(s.User().ID)
+
+	p := operation.NewPutOperationsIDParamsWithContext(ctx)
+	p.SetBody(op)
+	p.SetID(ID.String())
+
+	opRes, err := provisioningClient.Operation.PutOperationsID(p, nil)
+	if err != nil {
+		switch e := err.(type) {
+		case *operation.PutOperationsIDBadRequest:
+			return nil, nil, e.Payload
+		case *operation.PutOperationsIDUnauthorized:
+			return nil, nil, e.Payload
+		case *operation.PutOperationsIDNotFound:
+			return nil, nil, e.Payload
+		case *operation.PutOperationsIDConflict:
+			return nil, nil, e.Payload
+		case *operation.PutOperationsIDInternalServerError:
+			return nil, nil, errs.ErrSomethingWentHorriblyWrong
+		default:
+			return nil, nil, err
+		}
+	}
+
+	params := map[string]string{
+		"plan":  string(plan.Body.Label),
+		"price": toPrice(*plan.Body.Cost),
+	}
+	a.Track(ctx, "Update Resource", &params)
+
+	if dontWait {
+		return opRes.Payload, patchRes.Payload, err
+	}
+
+	opModel, err := waitForOp(ctx, provisioningClient, opRes.Payload)
+	return opModel, patchRes.Payload, err
 }

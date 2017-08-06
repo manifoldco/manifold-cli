@@ -312,14 +312,25 @@ func waitForOp(ctx context.Context, pClient *provisioning.Provisioning, op *pMod
 			return nil, err
 		}
 
-		provision := op.Body.(*pModels.Provision)
-		switch *provision.State {
-		case "done":
-			return op, nil
-		case "error":
-			return nil, fmt.Errorf("Error completing provision")
-		default:
-			continue
+		switch provision := op.Body.(type) {
+		case *pModels.Provision:
+			switch *provision.State {
+			case "done":
+				return op, nil
+			case "error":
+				return nil, fmt.Errorf("Error completing provision")
+			default:
+				continue
+			}
+		case *pModels.Resize:
+			switch *provision.State {
+			case "done":
+				return op, nil
+			case "error":
+				return nil, fmt.Errorf("Error completing resize")
+			default:
+				continue
+			}
 		}
 	}
 }
