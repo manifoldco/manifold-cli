@@ -15,6 +15,7 @@ import (
 	"github.com/manifoldco/manifold-cli/errs"
 
 	cModels "github.com/manifoldco/manifold-cli/generated/catalog/models"
+	mModels "github.com/manifoldco/manifold-cli/generated/marketplace/models"
 )
 
 const namePattern = "^[a-zA-Z\\s,\\.'\\-pL]{1,64}$"
@@ -96,12 +97,13 @@ func SelectProduct(products []*cModels.Product, label string) (int, string, erro
 }
 
 // SelectPlan prompts the user to select a plan from the given list.
-func SelectPlan(plans []*cModels.Plan, label string) (int, string, error) {
+func SelectPlan(plans []*cModels.Plan, label string, filterLabelTop bool) (int, string, error) {
 	line := func(p *cModels.Plan) string {
 		return fmt.Sprintf("%s (%s) - %s", p.Body.Name, p.Body.Label, getPlanCost(p))
 	}
 
 	var idx int
+	var fp *cModels.Plan
 	if label != "" {
 		found := false
 		for i, p := range plans {
@@ -112,24 +114,75 @@ func SelectPlan(plans []*cModels.Plan, label string) (int, string, error) {
 			}
 		}
 
-		p := plans[idx]
+		fp = plans[idx]
 		if !found {
 			fmt.Println(promptui.FailedValue("Plan", label))
 			return 0, "", errs.ErrPlanNotFound
 		}
 
-		fmt.Println(promptui.SuccessfulValue("Plan", line(p)))
-		return idx, label, nil
+		if !filterLabelTop {
+			fmt.Println(promptui.SuccessfulValue("Plan", line(fp)))
+			return idx, label, nil
+		}
 	}
 
 	sort.Sort(plansSortByCost(plans))
 	labels := make([]string, len(plans))
+
+	var selectedIdx int
 	for i, p := range plans {
 		labels[i] = line(p)
+		if p == fp {
+			selectedIdx = i
+		}
+	}
+
+	if filterLabelTop {
+		labels[0], labels[selectedIdx] = labels[selectedIdx], labels[0]
 	}
 
 	prompt := promptui.Select{
 		Label: "Select Plan",
+		Items: labels,
+	}
+
+	return prompt.Run()
+}
+
+// SelectResource promps the user to select a provisioned resource from the given list
+func SelectResource(resources []*mModels.Resource, label string) (int, string, error) {
+	line := func(r *mModels.Resource) string {
+		return fmt.Sprintf("%s (%s) %s", r.Body.Name, r.Body.Label, r.Body.AppName)
+	}
+
+	var idx int
+	if label != "" {
+		found := false
+		for i, p := range resources {
+			if string(p.Body.Label) == label {
+				idx = i
+				found = true
+				break
+			}
+		}
+
+		r := resources[idx]
+		if !found {
+			fmt.Println(promptui.FailedValue("Resource", label))
+			return 0, "", errs.ErrResourceNotFound
+		}
+
+		fmt.Println(promptui.SuccessfulValue("Resource", line(r)))
+		return idx, label, nil
+	}
+
+	labels := make([]string, len(resources))
+	for i, r := range resources {
+		labels[i] = line(r)
+	}
+
+	prompt := promptui.Select{
+		Label: "Select Resource",
 		Items: labels,
 	}
 
@@ -163,18 +216,24 @@ func SelectRegion(regions []*cModels.Region) (int, string, error) {
 
 // SelectCreateAppName prompts the user to select or create an application
 // name, a -1 idx will be returned if the app name requires creation.
-func SelectCreateAppName(names []string, label string) (int, string, error) {
+func SelectCreateAppName(names []string, label string, filterToTop bool) (int, string, error) {
 	labels := make([]string, len(names))
+
+	var idx int
 	for i, n := range names {
 		labels[i] = n
 
 		if label != "" && labels[i] == label {
-			fmt.Println(promptui.SuccessfulValue("App Name", label))
-			return i, label, nil
+			if !filterToTop {
+				fmt.Println(promptui.SuccessfulValue("App Name", label))
+				return i, label, nil
+			}
+
+			idx = i
 		}
 	}
 
-	if label != "" {
+	if label != "" && !filterToTop {
 		prompt := promptui.Prompt{
 			Label:   "App Name",
 			Default: label,
@@ -182,6 +241,10 @@ func SelectCreateAppName(names []string, label string) (int, string, error) {
 
 		value, err := prompt.Run()
 		return -1, value, err
+	}
+
+	if filterToTop {
+		labels[0], labels[idx] = labels[idx], labels[0]
 	}
 
 	prompt := promptui.SelectWithAdd{
@@ -203,22 +266,36 @@ func SelectCreateAppName(names []string, label string) (int, string, error) {
 
 // ResourceName prompts the user to provide a resource name or to accept empty
 // to let the system generate one.
-func ResourceName(defaultValue string) (string, error) {
-	p := promptui.Prompt{
-		Label:   "Resource Name (one will be generated if left blank)",
-		Default: defaultValue,
-		Validate: func(input string) error {
-			if len(input) == 0 {
-				return nil
-			}
-
-			n := manifold.Name(input)
-			if err := n.Validate(nil); err != nil {
-				return promptui.NewValidationError("Please provide a valid App Name")
-			}
-
+func ResourceName(defaultValue string, autoSelect bool) (string, error) {
+	validate := func(input string) error {
+		if len(input) == 0 {
 			return nil
-		},
+		}
+
+		n := manifold.Name(input)
+		if err := n.Validate(nil); err != nil {
+			return promptui.NewValidationError("Please provide a valid App Name")
+		}
+
+		return nil
+	}
+
+	label := "Resource Name (one will be generated if left blank)"
+
+	if autoSelect {
+		err := validate(defaultValue)
+		if err != nil {
+			fmt.Println(promptui.FailedValue(label, defaultValue))
+		} else {
+			fmt.Println(promptui.SuccessfulValue(label, defaultValue))
+		}
+		return defaultValue, err
+	}
+
+	p := promptui.Prompt{
+		Label:    label,
+		Default:  defaultValue,
+		Validate: validate,
 	}
 
 	return p.Run()

@@ -2,8 +2,8 @@ package main
 
 import (
 	"context"
-	"errors"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/briandowns/spinner"
@@ -28,8 +28,6 @@ import (
 	"github.com/manifoldco/manifold-cli/generated/provisioning/client/operation"
 	pModels "github.com/manifoldco/manifold-cli/generated/provisioning/models"
 )
-
-var errCannotFindResource = errors.New("Cannot find resource")
 
 func init() {
 	updateCmd := cli.Command{
@@ -103,22 +101,36 @@ func update(cliCtx *cli.Context) error {
 			fmt.Sprintf("Failed to fetch the list of provisioned resources: %s", err), -1)
 	}
 
-	resource, err := pickResourcesByLabel(res.Payload, resourceLabel)
-	if err != nil {
-		return cli.NewExitError(fmt.Sprintf("Failed to fetch resource: %s", err), -1)
+	if len(res.Payload) == 0 {
+		return cli.NewExitError("No resources found for updating", -1)
+	}
+
+	var resource *mModels.Resource
+	if resourceLabel != "" {
+		var err error
+		resource, err = pickResourcesByLabel(res.Payload, resourceLabel)
+		if err != nil {
+			return cli.NewExitError(fmt.Sprintf("Failed to fetch resource: %s", err), -1)
+		}
+	} else {
+		resourceIdx, _, err := prompts.SelectResource(res.Payload, resourceLabel)
+		if err != nil {
+			return prompts.HandleSelectError(err, "Could not select Resource")
+		}
+		resource = res.Payload[resourceIdx]
 	}
 
 	newResourceName := cliCtx.String("name")
+	resourceName := string(resource.Body.Name)
+	autoSelect := false
 	if newResourceName != "" {
-		n := manifold.Name(newResourceName)
-		if err := n.Validate(nil); err != nil {
-			return errs.NewUsageExitError(cliCtx, errs.ErrInvalidResourceName)
-		}
-	} else {
-		newResourceName, err = prompts.ResourceName(string(resource.Body.Name))
-		if err != nil {
-			cli.NewExitError(fmt.Sprintf("Could not rename the resource: %s", err), -1)
-		}
+		resourceName = newResourceName
+		autoSelect = true
+	}
+
+	newResourceName, err = prompts.ResourceName(resourceName, autoSelect)
+	if err != nil {
+		cli.NewExitError(fmt.Sprintf("Could not rename the resource: %s", err), -1)
 	}
 
 	catalog, err := catalogcache.New(ctx, catalogClient)
@@ -126,16 +138,23 @@ func update(cliCtx *cli.Context) error {
 		return cli.NewExitError(fmt.Sprintf("Failed to catalog data: %s", err), -1)
 	}
 
+	// TODO: Move this+fetchUniqueAppNames from create.go into another file/package?
+	plans := filterPlansByProductID(catalog.Plans(), resource.Body.ProductID)
 	planLabel := cliCtx.String("plan")
 	if planLabel != "" {
 		l := manifold.Label(planLabel)
 		if err := l.Validate(nil); err != nil {
 			return errs.NewUsageExitError(cliCtx, errs.ErrInvalidPlanLabel)
 		}
+	} else {
+		plan, err := pickPlanByID(plans, resource.Body.PlanID)
+		if err != nil {
+			return cli.NewExitError("Could not find provided plan", -1)
+		}
+		planLabel = string(plan.Body.Label)
 	}
-	// TODO: Move this+fetchUniqueAppNames from create.go into another file/package?
-	plans := filterPlansByProductID(catalog.Plans(), resource.Body.ProductID)
-	planIdx, _, err := prompts.SelectPlan(plans, planLabel)
+
+	planIdx, _, err := prompts.SelectPlan(plans, planLabel, true)
 	if err != nil {
 		return prompts.HandleSelectError(err, "Could not select plan")
 	}
@@ -147,12 +166,14 @@ func update(cliCtx *cli.Context) error {
 			return errs.NewUsageExitError(cliCtx, errs.ErrInvalidAppName)
 		}
 	} else {
-		apps := fetchUniqueAppNames(res.Payload)
-		// TODO: This auto-selects the app and doesn't let the user change it without the -a flag
-		_, appName, err = prompts.SelectCreateAppName(apps, string(resource.Body.AppName))
-		if err != nil {
-			return prompts.HandleSelectError(err, "Could not select apps")
-		}
+		appName = string(resource.Body.AppName)
+	}
+
+	apps := fetchUniqueAppNames(res.Payload)
+	// TODO: This auto-selects the app and doesn't let the user change it without the -a flag
+	_, appName, err = prompts.SelectCreateAppName(apps, appName, true)
+	if err != nil {
+		return prompts.HandleSelectError(err, "Could not select apps")
 	}
 
 	spin := spinner.New(spinner.CharSets[38], 500*time.Millisecond)
@@ -181,7 +202,7 @@ func update(cliCtx *cli.Context) error {
 
 func pickResourcesByLabel(resources []*mModels.Resource, resourceLabel string) (*mModels.Resource, error) {
 	if resourceLabel == "" {
-		return nil, errCannotFindResource
+		return nil, errs.ErrResourceNotFound
 	}
 
 	for _, resource := range resources {
@@ -190,7 +211,17 @@ func pickResourcesByLabel(resources []*mModels.Resource, resourceLabel string) (
 		}
 	}
 
-	return nil, errCannotFindResource
+	return nil, errs.ErrResourceNotFound
+}
+
+func pickPlanByID(plans []*cModels.Plan, id manifold.ID) (*cModels.Plan, error) {
+	for _, p := range plans {
+		if p.ID == id {
+			return p, nil
+		}
+	}
+
+	return nil, errs.ErrPlanNotFound
 }
 
 func updateResource(ctx context.Context, cfg *config.Config, s session.Session, resource *mModels.Resource,
@@ -202,7 +233,7 @@ func updateResource(ctx context.Context, cfg *config.Config, s session.Session, 
 		return nil, nil, err
 	}
 
-	label := "" // re-generate
+	label := strings.Replace(strings.ToLower(resourceName), " ", "-", -1)
 	rename := &mModels.PublicUpdateResource{
 		Body: &mModels.PublicUpdateResourceBody{
 			AppName: &appName,

@@ -50,6 +50,10 @@ var ErrProductNotFound = cli.NewExitError("The provided product does not exist!"
 // does not exist.
 var ErrPlanNotFound = cli.NewExitError("The provided plan does not exist!", -1)
 
+// ErrResourceNotFound represents an error where the provided user's resource label
+// does not exist
+var ErrResourceNotFound = cli.NewExitError("The provided resource does not exist!", -1)
+
 // ErrRegionNotFound represents an error where the provided user's region label
 // does not exist
 var ErrRegionNotFound = cli.NewExitError("The provided region does not exist!", -1)
