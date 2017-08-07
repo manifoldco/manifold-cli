@@ -14,6 +14,17 @@ repository.
 Any new change in behaviour, whether it's a new feature *or* bug fix, should be
 documented in the CHANGELOG.md as a part of a pull request submission!
 
+## Local Configuration
+
+To point the CLI at a local instance of the Marketplace, add the following lines
+to a `.manifoldrc` file in your home directory.
+
+```
+hostname = arigato.tools
+scheme = http
+analytics = false
+```
+
 ## Releasing
 
 Releasing the `manifold-cli` is a manual process run on a developers local machine.
