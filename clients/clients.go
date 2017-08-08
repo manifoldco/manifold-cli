@@ -11,6 +11,7 @@ import (
 
 	"github.com/manifoldco/manifold-cli/config"
 
+	bClient "github.com/manifoldco/manifold-cli/generated/billing/client"
 	cClient "github.com/manifoldco/manifold-cli/generated/catalog/client"
 	iClient "github.com/manifoldco/manifold-cli/generated/identity/client"
 	mClient "github.com/manifoldco/manifold-cli/generated/marketplace/client"
@@ -83,6 +84,28 @@ func NewMarketplace(cfg *config.Config) (*mClient.Marketplace, error) {
 	}
 
 	return mClient.New(transport, strfmt.Default), nil
+}
+
+// NewBilling returns a swagger generated client for the Billing
+// service
+func NewBilling(cfg *config.Config) (*bClient.Billing, error) {
+	u, err := deriveURL(cfg, "billing")
+	if err != nil {
+		return nil, err
+	}
+
+	c := bClient.DefaultTransportConfig()
+	c.WithHost(u.Host)
+	c.WithBasePath(u.Path)
+	c.WithSchemes([]string{u.Scheme})
+
+	transport := httptransport.New(c.Host, c.BasePath, c.Schemes)
+
+	if cfg.AuthToken != "" {
+		transport.DefaultAuthentication = NewBearerToken(cfg.AuthToken)
+	}
+
+	return bClient.New(transport, strfmt.Default), nil
 }
 
 // NewProvisioning returns a swagger generated client for the Provisioning

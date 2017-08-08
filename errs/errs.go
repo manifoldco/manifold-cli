@@ -1,6 +1,8 @@
 package errs
 
 import (
+	"encoding/json"
+	"errors"
 	"fmt"
 
 	"github.com/urfave/cli"
@@ -76,4 +78,22 @@ func usageString(ctx *cli.Context) string {
 	spacer := "    "
 	return fmt.Sprintf("Usage:\n%s%s %s [comand options] %s",
 		spacer, ctx.App.HelpName, ctx.Command.Name, ctx.Command.ArgsUsage)
+}
+
+type stripeError struct {
+	Message string `json:"message"`
+}
+
+func (s stripeError) Error() error {
+	return errors.New(s.Message)
+}
+
+// NewStripeError marshals the stripe json error to a human error
+func NewStripeError(err error) error {
+	var sErr stripeError
+	jErr := json.Unmarshal([]byte(err.Error()), &sErr)
+	if jErr != nil {
+		return err
+	}
+	return sErr.Error()
 }

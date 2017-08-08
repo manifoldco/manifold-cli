@@ -1,5 +1,5 @@
-hash: 899b7db45c53fec305c5cad8c3158f2a89f48ee8658b8b470ab912edc2fa5559
-updated: 2017-07-27T22:22:21.857957462-03:00
+hash: 6836b1d194625476e07ca02149348ecea599dbe80c862c092dc5343d2e72fca9
+updated: 2017-08-08T10:41:40.972030717-03:00
 imports:
 - name: github.com/alecthomas/gometalinter
   version: bae2f1293d092fd8167939d5108d1b025eaef9de
@@ -71,9 +71,6 @@ imports:
 - name: github.com/manifoldco/torus-cli
   version: 6968117466a156652a246a59301cd58310e5e965
   subpackages:
-  - data
-  - errs
-  - prefs
   - promptui
 - name: github.com/mattn/go-colorable
   version: 5411d3eea5978e6cdc258b30de592b60df6aba96
@@ -91,6 +88,11 @@ imports:
   version: 5322b90dda9c2b563e915c9af76bf20a8b95f630
 - name: github.com/rhymond/go-money
   version: b9b9af789ed62b7458e1f5c5f9a31eb0fc35f3c6
+- name: github.com/stripe/stripe-go
+  version: fe1c3cfcbb1da53afa0ba7f6b2dd33fd317f37bf
+  subpackages:
+  - orderitem
+  - token
 - name: github.com/tsenart/deadcode
   version: 210d2dc333e90c7e3eedf4f2242507a8e83ed4ab
 - name: github.com/urfave/cli

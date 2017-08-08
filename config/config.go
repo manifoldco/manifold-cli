@@ -7,11 +7,20 @@ import (
 	"path"
 
 	"github.com/go-ini/ini"
+	"github.com/stripe/stripe-go"
 )
 
 // Version represents the version of the cli. This variable is updated at build
 // time.
 var Version = "dev"
+
+// StripePublishableKey facilitates secure transmission of payment values
+var StripePublishableKey = "pk_live_A6qSWh1v4SrNnrWSftgDcKFQ"
+
+func init() {
+	stripe.LogLevel = 0
+	stripe.Key = StripePublishableKey
+}
 
 const (
 	requiredPermissions = 0600
