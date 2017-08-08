@@ -35,7 +35,7 @@ func init() {
 	exportCmd := cli.Command{
 		Name:   "export",
 		Usage:  "Exports all environment variables from all resource",
-		Action: export,
+		Action: chain(loadDirPrefs, export),
 		Flags: []cli.Flag{
 			formatFlag(formats[0], formatFlagStr),
 			appFlag(),

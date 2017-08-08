@@ -33,7 +33,7 @@ func init() {
 		Name:      "create",
 		ArgsUsage: "[product] [name]",
 		Usage:     "Allows a user to create a new resource through Manifold.",
-		Action:    create,
+		Action:    chain(loadDirPrefs, create),
 		Flags: []cli.Flag{
 			appFlag(),
 			planFlag(),
@@ -150,9 +150,14 @@ func create(cliCtx *cli.Context) error {
 	}
 
 	appNames := fetchUniqueAppNames(res.Payload)
-	_, appName, err = prompts.SelectCreateAppName(appNames, appName)
+	newA, appName, err := prompts.SelectCreateAppName(appNames, appName)
 	if err != nil {
 		return prompts.HandleSelectError(err, "Could not select app.")
+	}
+	if newA == -1 {
+		// TODO: create app name that doesn't exist yet
+		// https://github.com/manifoldco/engineering/issues/2614
+		return cli.NewExitError("Whoops! A new app cannot be created without a resource", -1)
 	}
 
 	resourceName, err = prompts.ResourceName(resourceName)
