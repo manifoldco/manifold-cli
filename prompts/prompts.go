@@ -343,7 +343,7 @@ func CreditCard() (*stripe.Token, error) {
 	}
 
 	rExp, err := (&promptui.Prompt{
-		Label:    "📅  Expiry (YY/MM)",
+		Label:    "📅  Expiry (MM/YY)",
 		Validate: isExpiry,
 	}).Run()
 	if err != nil {
@@ -360,7 +360,7 @@ func CreditCard() (*stripe.Token, error) {
 	}
 
 	parts := strings.Split(rExp, "/")
-	year, month := "20"+parts[0], parts[1]
+	year, month := "20"+parts[1], parts[0]
 	tkn, err := token.New(&stripe.TokenParams{Card: &stripe.CardParams{
 		Number: rCrd,
 		Month:  month,
