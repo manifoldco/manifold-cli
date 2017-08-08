@@ -4,6 +4,10 @@ go:
 branches:
   only:
   - master
+cache:
+- directories:
+  - "$GOPATH/bin"
+  - "$GOPATH/pkg"
 before_install:
 - mkdir -p $HOME/gopath/bin
 install:
