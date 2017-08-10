@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+### Added
+
+- Add signup command to signup with Manifold.
+- Add init command to configure a directory with defaults.
+- Add billing command to add/update billing profile.
+
+### Fixed
+
+- The built command line tool is now called `manifold`.
+- Include a user agent header in requests.
+
 ## [0.1.0] - 2017-07-19
 
 ### Added
