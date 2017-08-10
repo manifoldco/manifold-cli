@@ -112,7 +112,7 @@ MANIFOLDCLI_DEPS=\
 		generated-clients
 
 $(PREFIX)bin/manifold-cli$(SUFFIX): $(MANIFOLDCLI_DEPS)
-	$(GO_BUILD) -o $(PREFIX)bin/manifold-cli$(SUFFIX) ./cmd
+	$(GO_BUILD) -o $(PREFIX)bin/manifold$(SUFFIX) ./cmd
 
 .PHONY: build
 
