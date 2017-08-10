@@ -135,12 +135,12 @@ os-build/windows_amd64/bin/manifold: os-build/%/bin/manifold:
 $(NO_WINDOWS:%=os-build/%/bin/manifold): os-build/%/bin/manifold:
 	PREFIX=build/$*/ GOOS=$(call os,$*) GOARCH=$(call arch,$*) make build/$*/bin/manifold
 
-build/manifold_$(VERSION)_windows_amd64.zip: build/manifold_$(VERSION)_%.zip: os-build/%/bin/manifold
-	cd build/$*/bin; zip -r ../../manifold_$(VERSION)_$*.zip manifold.exe
-$(NO_WINDOWS:%=build/manifold_$(VERSION)_%.zip): build/manifold_$(VERSION)_%.zip: os-build/%/bin/manifold
-	cd build/$*/bin; zip -r ../../manifold_$(VERSION)_$*.zip manifold
+build/manifold-cli_$(VERSION)_windows_amd64.zip: build/manifold-cli_$(VERSION)_%.zip: os-build/%/bin/manifold
+	cd build/$*/bin; zip -r ../../manifold-cli_$(VERSION)_$*.zip manifold.exe
+$(NO_WINDOWS:%=build/manifold-cli_$(VERSION)_%.zip): build/manifold-cli_$(VERSION)_%.zip: os-build/%/bin/manifold
+	cd build/$*/bin; zip -r ../../manifold-cli_$(VERSION)_$*.zip manifold
 
-zips: $(OS_ARCH:%=build/manifold_$(VERSION)_%.zip)
+zips: $(OS_ARCH:%=build/manifold-cli_$(VERSION)_%.zip)
 
 .PHONY: zips $(OS_ARCH:%=os-build/%/bin/manifold)
 
