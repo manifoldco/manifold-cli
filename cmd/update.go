@@ -34,7 +34,7 @@ func init() {
 		Name:      "update",
 		ArgsUsage: "[label]",
 		Usage:     "Allows a user to update a resource in Manifold",
-		Action:    update,
+		Action:    chain(ensureSession, loadDirPrefs, updateResourceCmd),
 		Flags: []cli.Flag{
 			nameFlag(),
 			appFlag(),
@@ -46,7 +46,7 @@ func init() {
 	cmds = append(cmds, updateCmd)
 }
 
-func update(cliCtx *cli.Context) error {
+func updateResourceCmd(cliCtx *cli.Context) error {
 	ctx := context.Background()
 	args := cliCtx.Args()
 
@@ -74,9 +74,6 @@ func update(cliCtx *cli.Context) error {
 	s, err := session.Retrieve(ctx, cfg)
 	if err != nil {
 		return cli.NewExitError(fmt.Sprintf("Could not retrieve session: %s", err), -1)
-	}
-	if !s.Authenticated() {
-		return errs.ErrNotLoggedIn
 	}
 
 	marketplaceClient, err := clients.NewMarketplace(cfg)
@@ -195,7 +192,7 @@ func update(cliCtx *cli.Context) error {
 		spin.Stop()
 	}
 
-	fmt.Printf("Your instance \"%s\" has been updated", mrb.Body.Name)
+	fmt.Printf("Your instance \"%s\" has been updated\n", mrb.Body.Name)
 
 	return nil
 }
