@@ -103,7 +103,7 @@ ifeq ($(GOOS),windows)
     SUFFIX=.exe
 endif
 
-build: $(PREFIX)bin/manifold-cli$(SUFFIX)
+build: $(PREFIX)bin/manifold$(SUFFIX)
 
 MANIFOLDCLI_DEPS=\
 		vendor \
@@ -111,7 +111,7 @@ MANIFOLDCLI_DEPS=\
 		$(call rwildcard,cmd,*.go) \
 		generated-clients
 
-$(PREFIX)bin/manifold-cli$(SUFFIX): $(MANIFOLDCLI_DEPS)
+$(PREFIX)bin/manifold$(SUFFIX): $(MANIFOLDCLI_DEPS)
 	$(GO_BUILD) -o $(PREFIX)bin/manifold$(SUFFIX) ./cmd
 
 .PHONY: build
@@ -130,26 +130,26 @@ OS_ARCH= \
 os=$(word 1,$(subst _, ,$1))
 arch=$(word 2,$(subst _, ,$1))
 
-os-build/windows_amd64/bin/manifold-cli: os-build/%/bin/manifold-cli:
-	PREFIX=build/$*/ GOOS=$(call os,$*) GOARCH=$(call arch,$*) make build/$*/bin/manifold-cli.exe
-$(NO_WINDOWS:%=os-build/%/bin/manifold-cli): os-build/%/bin/manifold-cli:
-	PREFIX=build/$*/ GOOS=$(call os,$*) GOARCH=$(call arch,$*) make build/$*/bin/manifold-cli
+os-build/windows_amd64/bin/manifold: os-build/%/bin/manifold:
+	PREFIX=build/$*/ GOOS=$(call os,$*) GOARCH=$(call arch,$*) make build/$*/bin/manifold.exe
+$(NO_WINDOWS:%=os-build/%/bin/manifold): os-build/%/bin/manifold:
+	PREFIX=build/$*/ GOOS=$(call os,$*) GOARCH=$(call arch,$*) make build/$*/bin/manifold
 
-build/manifold-cli_$(VERSION)_windows_amd64.zip: build/manifold-cli_$(VERSION)_%.zip: os-build/%/bin/manifold-cli
-	cd build/$*/bin; zip -r ../../manifold-cli_$(VERSION)_$*.zip manifold-cli.exe
-$(NO_WINDOWS:%=build/manifold-cli_$(VERSION)_%.zip): build/manifold-cli_$(VERSION)_%.zip: os-build/%/bin/manifold-cli
-	cd build/$*/bin; zip -r ../../manifold-cli_$(VERSION)_$*.zip manifold-cli
+build/manifold_$(VERSION)_windows_amd64.zip: build/manifold_$(VERSION)_%.zip: os-build/%/bin/manifold
+	cd build/$*/bin; zip -r ../../manifold_$(VERSION)_$*.zip manifold.exe
+$(NO_WINDOWS:%=build/manifold_$(VERSION)_%.zip): build/manifold_$(VERSION)_%.zip: os-build/%/bin/manifold
+	cd build/$*/bin; zip -r ../../manifold_$(VERSION)_$*.zip manifold
 
-zips: $(OS_ARCH:%=build/manifold-cli_$(VERSION)_%.zip)
+zips: $(OS_ARCH:%=build/manifold_$(VERSION)_%.zip)
 
-.PHONY: zips $(OS_ARCH:%=os-build/%/bin/manifold-cli)
+.PHONY: zips $(OS_ARCH:%=os-build/%/bin/manifold)
 
 # ################################################
 # Cleaning
 # ################################################
 
 clean:
-	rm -rf bin/manifold-cli
-	rm -rf bin/manifold-cli.exe
+	rm -rf bin/manifold
+	rm -rf bin/manifold.exe
 	rm -rf build
 	rm -rf generated
