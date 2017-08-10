@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+## [0.2.0] - 2017-08-10
+
 ### Added
 
 - Add signup command to signup with Manifold.
