@@ -399,7 +399,7 @@ definitions:
             type: string
         additionalProperties: false
         required:
-        - user_id
+        - provider_id
         - account_id
     additionalProperties: false
     required:
@@ -464,6 +464,8 @@ definitions:
       body:
         type: object
         properties:
+          team_id:
+            $ref: '#/definitions/ID'
           user_id:
             $ref: '#/definitions/ID'
           sources:
@@ -482,6 +484,8 @@ definitions:
   ProfileCreateRequest:
     type: object
     properties:
+      team_id:
+        $ref: '#/definitions/ID'
       user_id:
         $ref: '#/definitions/ID'
       token:
@@ -491,7 +495,6 @@ definitions:
         description: |
           Tokenized source of funds
     required:
-    - user_id
     - token
     additionalProperties: false
   ProfileUpdateRequest:
@@ -599,6 +602,8 @@ definitions:
       occurred_at:
         type: string
         format: date-time
+      team_id:
+        $ref: '#/definitions/ID'
       user_id:
         $ref: '#/definitions/ID'
       provider_id:
@@ -611,7 +616,6 @@ definitions:
     required:
     - event_type
     - event_number
-    - user_id
     - operation_id
     - occurred_at
   credit:

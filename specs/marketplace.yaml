@@ -243,6 +243,8 @@ definitions:
             $ref: '#/definitions/Label'
           app_name:
             $ref: '#/definitions/Name'
+          team_id:
+            $ref: '#/definitions/ID'
           user_id:
             $ref: '#/definitions/ID'
           product_id:
@@ -292,6 +294,8 @@ definitions:
             $ref: '#/definitions/Label'
           app_name:
             $ref: '#/definitions/Name'
+          team_id:
+            $ref: '#/definitions/ID'
           user_id:
             $ref: '#/definitions/ID'
           product_id:
@@ -310,7 +314,6 @@ definitions:
         required:
         - name
         - label
-        - user_id
         - product_id
         - plan_id
         - region_id
@@ -372,8 +375,6 @@ definitions:
       body:
         type: object
         properties:
-          user_id:
-            $ref: '#/definitions/ID'
           resource_id:
             $ref: '#/definitions/ID'
           values:
@@ -383,7 +384,6 @@ definitions:
               must IEEE 1003.1 - 2001 Standard (checked in code).
         additionalProperties: false
         required:
-        - user_id
         - resource_id
         - values
     additionalProperties: false
@@ -408,8 +408,6 @@ definitions:
       body:
         type: object
         properties:
-          user_id:
-            $ref: '#/definitions/ID'
           resource_id:
             $ref: '#/definitions/ID'
           values:
@@ -425,7 +423,6 @@ definitions:
             format: datetime
         additionalProperties: false
         required:
-        - user_id
         - resource_id
         - values
         - created_at

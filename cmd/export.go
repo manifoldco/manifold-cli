@@ -21,7 +21,6 @@ import (
 
 	mClient "github.com/manifoldco/manifold-cli/generated/marketplace/client"
 	"github.com/manifoldco/manifold-cli/generated/marketplace/client/credential"
-	"github.com/manifoldco/manifold-cli/generated/marketplace/client/resource"
 	"github.com/manifoldco/manifold-cli/generated/marketplace/models"
 )
 
@@ -80,13 +79,12 @@ func export(cliCtx *cli.Context) error {
 		return cli.NewExitError("Could not create marketplace client: "+err.Error(), -1)
 	}
 
-	p := resource.NewGetResourcesParamsWithContext(ctx)
-	r, err := marketplace.Resource.GetResources(p, nil)
+	r, err := clients.FetchResources(ctx, marketplace)
 	if err != nil {
 		return cli.NewExitError("Could not retrieve resources: "+err.Error(), -1)
 	}
 
-	resources := filterResourcesByAppName(r.Payload, appName)
+	resources := filterResourcesByAppName(r, appName)
 	sort.Sort(resourcesSortByName(resources))
 	cMap, err := fetchCredentials(ctx, marketplace, resources)
 	if err != nil {

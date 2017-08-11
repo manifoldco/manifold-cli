@@ -222,6 +222,8 @@ definitions:
         description: Type of operation this object represents
       resource_id:
         $ref: '#/definitions/ID'
+      team_id:
+        $ref: '#/definitions/ID'
       user_id:
         $ref: '#/definitions/ID'
       message:
@@ -240,7 +242,6 @@ definitions:
     required:
     - type
     - resource_id
-    - user_id
     - message
     - created_at
     - updated_at

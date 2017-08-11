@@ -17,9 +17,7 @@ import (
 	"github.com/manifoldco/manifold-cli/errs"
 	"github.com/manifoldco/manifold-cli/session"
 
-	"github.com/manifoldco/manifold-cli/generated/marketplace/client/resource"
 	"github.com/manifoldco/manifold-cli/generated/marketplace/models"
-	"github.com/manifoldco/manifold-cli/generated/provisioning/client/operation"
 	pModels "github.com/manifoldco/manifold-cli/generated/provisioning/models"
 )
 
@@ -99,21 +97,19 @@ func list(cliCtx *cli.Context) error {
 	}
 
 	// Get resources
-	res, err := marketplaceClient.Resource.GetResources(
-		resource.NewGetResourcesParamsWithContext(ctx), nil)
+	res, err := clients.FetchResources(ctx, marketplaceClient)
 	if err != nil {
 		return cli.NewExitError("Failed to fetch the list of provisioned "+
 			"resources: "+err.Error(), -1)
 	}
 
 	// Get operations
-	oRes, err := pClient.Operation.GetOperations(
-		operation.NewGetOperationsParamsWithContext(ctx), nil)
+	oRes, err := clients.FetchOperations(ctx, pClient)
 	if err != nil {
 		return cli.NewExitError("Failed to fetch the list of operations: "+err.Error(), -1)
 	}
 
-	resources, statuses := buildResourceList(res.Payload, oRes.Payload)
+	resources, statuses := buildResourceList(res, oRes)
 
 	// Sort resources by name and filter by given app name
 	resources = filterResourcesByAppName(resources, appName)
