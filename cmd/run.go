@@ -17,8 +17,6 @@ import (
 	"github.com/manifoldco/manifold-cli/config"
 	"github.com/manifoldco/manifold-cli/errs"
 	"github.com/manifoldco/manifold-cli/session"
-
-	"github.com/manifoldco/manifold-cli/generated/marketplace/client/resource"
 )
 
 func init() {
@@ -71,13 +69,12 @@ func run(cliCtx *cli.Context) error {
 		return cli.NewExitError("Could not create marketplace client: "+err.Error(), -1)
 	}
 
-	p := resource.NewGetResourcesParamsWithContext(ctx)
-	r, err := marketplace.Resource.GetResources(p, nil)
+	r, err := clients.FetchResources(ctx, marketplace)
 	if err != nil {
 		return cli.NewExitError("Could not retrieve resources: "+err.Error(), -1)
 	}
 
-	resources := filterResourcesByAppName(r.Payload, appName)
+	resources := filterResourcesByAppName(r, appName)
 	cMap, err := fetchCredentials(ctx, marketplace, resources)
 	if err != nil {
 		return cli.NewExitError("Could not retrieve credentials: "+err.Error(), -1)

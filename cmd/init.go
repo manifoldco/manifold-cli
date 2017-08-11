@@ -15,8 +15,6 @@ import (
 	"github.com/manifoldco/manifold-cli/errs"
 	"github.com/manifoldco/manifold-cli/prompts"
 	"github.com/manifoldco/manifold-cli/session"
-
-	"github.com/manifoldco/manifold-cli/generated/marketplace/client/resource"
 )
 
 func init() {
@@ -68,13 +66,12 @@ func initDir(cliCtx *cli.Context) error {
 			err.Error(), -1)
 	}
 
-	res, err := mClient.Resource.GetResources(
-		resource.NewGetResourcesParamsWithContext(ctx), nil)
+	res, err := clients.FetchResources(ctx, mClient)
 	if err != nil {
 		return cli.NewExitError("Failed to fetch resource list: "+err.Error(), -1)
 	}
 
-	appNames := fetchUniqueAppNames(res.Payload)
+	appNames := fetchUniqueAppNames(res)
 	newA, appName, err := prompts.SelectCreateAppName(appNames, appName, true)
 	if err != nil {
 		return prompts.HandleSelectError(err, "Could not select app.")

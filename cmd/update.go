@@ -91,30 +91,29 @@ func updateResourceCmd(cliCtx *cli.Context) error {
 		return cli.NewExitError(fmt.Sprintf("Failed to create Provisioning Client: %s", err), -1)
 	}
 
-	res, err := marketplaceClient.Resource.GetResources(
-		resClient.NewGetResourcesParamsWithContext(ctx), nil)
+	res, err := clients.FetchResources(ctx, marketplaceClient)
 	if err != nil {
 		return cli.NewExitError(
 			fmt.Sprintf("Failed to fetch the list of provisioned resources: %s", err), -1)
 	}
 
-	if len(res.Payload) == 0 {
+	if len(res) == 0 {
 		return cli.NewExitError("No resources found for updating", -1)
 	}
 
 	var resource *mModels.Resource
 	if resourceLabel != "" {
 		var err error
-		resource, err = pickResourcesByLabel(res.Payload, resourceLabel)
+		resource, err = pickResourcesByLabel(res, resourceLabel)
 		if err != nil {
 			return cli.NewExitError(fmt.Sprintf("Failed to fetch resource: %s", err), -1)
 		}
 	} else {
-		resourceIdx, _, err := prompts.SelectResource(res.Payload, resourceLabel)
+		resourceIdx, _, err := prompts.SelectResource(res, resourceLabel)
 		if err != nil {
 			return prompts.HandleSelectError(err, "Could not select Resource")
 		}
-		resource = res.Payload[resourceIdx]
+		resource = res[resourceIdx]
 	}
 
 	newResourceName := cliCtx.String("name")
@@ -166,7 +165,7 @@ func updateResourceCmd(cliCtx *cli.Context) error {
 		appName = string(resource.Body.AppName)
 	}
 
-	apps := fetchUniqueAppNames(res.Payload)
+	apps := fetchUniqueAppNames(res)
 	// TODO: This auto-selects the app and doesn't let the user change it without the -a flag
 	_, appName, err = prompts.SelectCreateAppName(apps, appName, true)
 	if err != nil {

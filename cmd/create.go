@@ -21,7 +21,6 @@ import (
 	"github.com/manifoldco/manifold-cli/session"
 
 	cModels "github.com/manifoldco/manifold-cli/generated/catalog/models"
-	"github.com/manifoldco/manifold-cli/generated/marketplace/client/resource"
 	mModels "github.com/manifoldco/manifold-cli/generated/marketplace/models"
 	provisioning "github.com/manifoldco/manifold-cli/generated/provisioning/client"
 	"github.com/manifoldco/manifold-cli/generated/provisioning/client/operation"
@@ -143,13 +142,12 @@ func create(cliCtx *cli.Context) error {
 	}
 
 	// Get resources, so we can fetch the list of valid appnames
-	res, err := mClient.Resource.GetResources(
-		resource.NewGetResourcesParamsWithContext(ctx), nil)
+	res, err := clients.FetchResources(ctx, mClient)
 	if err != nil {
 		return cli.NewExitError("Failed to fetch resource list: "+err.Error(), -1)
 	}
 
-	appNames := fetchUniqueAppNames(res.Payload)
+	appNames := fetchUniqueAppNames(res)
 	newA, appName, err := prompts.SelectCreateAppName(appNames, appName, false)
 	if err != nil {
 		return prompts.HandleSelectError(err, "Could not select app.")
