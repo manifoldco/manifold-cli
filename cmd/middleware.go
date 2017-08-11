@@ -1,13 +1,18 @@
 package main
 
 import (
+	"context"
+	"fmt"
 	"reflect"
 	"strings"
 
 	"github.com/urfave/cli"
 	"gopkg.in/oleiade/reflections.v1"
 
+	"github.com/manifoldco/manifold-cli/config"
 	"github.com/manifoldco/manifold-cli/dirprefs"
+	"github.com/manifoldco/manifold-cli/errs"
+	"github.com/manifoldco/manifold-cli/session"
 )
 
 // chain allows easy sequential calling of BeforeFuncs and AfterFuncs.
@@ -34,6 +39,26 @@ func loadDirPrefs(ctx *cli.Context) error {
 	}
 
 	return reflectArgs(ctx, d, "json")
+}
+
+func ensureSession(_ *cli.Context) error {
+	ctx := context.Background()
+
+	cfg, err := config.Load()
+	if err != nil {
+		return cli.NewExitError(fmt.Sprintf("Could not load configuration: %s", err), -1)
+	}
+
+	s, err := session.Retrieve(ctx, cfg)
+	if err != nil {
+		return cli.NewExitError(fmt.Sprintf("Could not retrieve session: %s", err), -1)
+	}
+
+	if !s.Authenticated() {
+		return errs.ErrNotLoggedIn
+	}
+
+	return nil
 }
 
 func reflectArgs(ctx *cli.Context, i interface{}, tagName string) error {

@@ -131,7 +131,7 @@ func create(cliCtx *cli.Context) error {
 	}
 
 	plans := filterPlansByProductID(catalog.Plans(), products[productIdx].ID)
-	planIdx, _, err := prompts.SelectPlan(plans, planLabel)
+	planIdx, _, err := prompts.SelectPlan(plans, planLabel, false)
 	if err != nil {
 		return prompts.HandleSelectError(err, "Could not select plan.")
 	}
@@ -150,7 +150,7 @@ func create(cliCtx *cli.Context) error {
 	}
 
 	appNames := fetchUniqueAppNames(res.Payload)
-	newA, appName, err := prompts.SelectCreateAppName(appNames, appName)
+	newA, appName, err := prompts.SelectCreateAppName(appNames, appName, false)
 	if err != nil {
 		return prompts.HandleSelectError(err, "Could not select app.")
 	}
@@ -160,7 +160,7 @@ func create(cliCtx *cli.Context) error {
 		return cli.NewExitError("Whoops! A new app cannot be created without a resource", -1)
 	}
 
-	resourceName, err = prompts.ResourceName(resourceName)
+	resourceName, err = prompts.ResourceName(resourceName, false)
 	if err != nil {
 		return cli.NewExitError("Could not name the resource: "+err.Error(), -1)
 	}
@@ -312,14 +312,25 @@ func waitForOp(ctx context.Context, pClient *provisioning.Provisioning, op *pMod
 			return nil, err
 		}
 
-		provision := op.Body.(*pModels.Provision)
-		switch *provision.State {
-		case "done":
-			return op, nil
-		case "error":
-			return nil, fmt.Errorf("Error completing provision")
-		default:
-			continue
+		switch provision := op.Body.(type) {
+		case *pModels.Provision:
+			switch *provision.State {
+			case "done":
+				return op, nil
+			case "error":
+				return nil, fmt.Errorf("Error completing provision")
+			default:
+				continue
+			}
+		case *pModels.Resize:
+			switch *provision.State {
+			case "done":
+				return op, nil
+			case "error":
+				return nil, fmt.Errorf("Error completing resize")
+			default:
+				continue
+			}
 		}
 	}
 }

@@ -75,7 +75,7 @@ func initDir(cliCtx *cli.Context) error {
 	}
 
 	appNames := fetchUniqueAppNames(res.Payload)
-	newA, appName, err := prompts.SelectCreateAppName(appNames, appName)
+	newA, appName, err := prompts.SelectCreateAppName(appNames, appName, true)
 	if err != nil {
 		return prompts.HandleSelectError(err, "Could not select app.")
 	}
