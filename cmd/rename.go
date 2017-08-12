@@ -26,7 +26,7 @@ func init() {
 			appFlag(),
 			nameFlag(),
 		},
-		Action: rename,
+		Action: chain(ensureSession, loadDirPrefs, rename),
 	}
 
 	cmds = append(cmds, renameCmd)
