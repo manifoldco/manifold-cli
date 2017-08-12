@@ -13,6 +13,7 @@ import (
 	"github.com/manifoldco/manifold-cli/config"
 	"github.com/manifoldco/manifold-cli/dirprefs"
 	"github.com/manifoldco/manifold-cli/errs"
+	"github.com/manifoldco/manifold-cli/middleware"
 	"github.com/manifoldco/manifold-cli/prompts"
 	"github.com/manifoldco/manifold-cli/session"
 )
@@ -28,7 +29,7 @@ func init() {
 				Usage: "Overwrite existing app.",
 			},
 		},
-		Action: chain(loadDirPrefs, initDir),
+		Action: middleware.Chain(middleware.LoadDirPrefs, initDir),
 	}
 
 	cmds = append(cmds, initCmd)

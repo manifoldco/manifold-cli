@@ -17,6 +17,7 @@ import (
 	"github.com/manifoldco/manifold-cli/config"
 	"github.com/manifoldco/manifold-cli/data/catalog"
 	"github.com/manifoldco/manifold-cli/errs"
+	"github.com/manifoldco/manifold-cli/middleware"
 	"github.com/manifoldco/manifold-cli/prompts"
 	"github.com/manifoldco/manifold-cli/session"
 
@@ -32,7 +33,7 @@ func init() {
 		Name:      "create",
 		ArgsUsage: "[product] [name]",
 		Usage:     "Allows a user to create a new resource through Manifold.",
-		Action:    chain(loadDirPrefs, create),
+		Action:    middleware.Chain(middleware.LoadDirPrefs, create),
 		Flags: []cli.Flag{
 			appFlag(),
 			planFlag(),

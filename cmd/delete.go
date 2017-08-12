@@ -18,6 +18,7 @@ import (
 	pClient "github.com/manifoldco/manifold-cli/generated/provisioning/client"
 	"github.com/manifoldco/manifold-cli/generated/provisioning/client/operation"
 	pModels "github.com/manifoldco/manifold-cli/generated/provisioning/models"
+	"github.com/manifoldco/manifold-cli/middleware"
 	"github.com/manifoldco/manifold-cli/prompts"
 	"github.com/manifoldco/manifold-cli/session"
 )
@@ -27,7 +28,7 @@ func init() {
 		Name:      "delete",
 		ArgsUsage: "[name]",
 		Usage:     "Deletes a resource in Manifold.",
-		Action:    chain(ensureSession, deleteCmd),
+		Action:    middleware.Chain(middleware.EnsureSession, deleteCmd),
 		Flags: []cli.Flag{
 			skipFlag(),
 		},

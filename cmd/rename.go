@@ -14,6 +14,7 @@ import (
 	"github.com/manifoldco/manifold-cli/generated/marketplace/client"
 	resClient "github.com/manifoldco/manifold-cli/generated/marketplace/client/resource"
 	"github.com/manifoldco/manifold-cli/generated/marketplace/models"
+	"github.com/manifoldco/manifold-cli/middleware"
 	"github.com/manifoldco/manifold-cli/prompts"
 )
 
@@ -26,7 +27,7 @@ func init() {
 			appFlag(),
 			nameFlag(),
 		},
-		Action: chain(ensureSession, loadDirPrefs, rename),
+		Action: middleware.Chain(middleware.EnsureSession, middleware.LoadDirPrefs, rename),
 	}
 
 	cmds = append(cmds, renameCmd)

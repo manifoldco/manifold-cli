@@ -15,6 +15,7 @@ import (
 	"github.com/manifoldco/manifold-cli/config"
 	catalogcache "github.com/manifoldco/manifold-cli/data/catalog"
 	"github.com/manifoldco/manifold-cli/errs"
+	"github.com/manifoldco/manifold-cli/middleware"
 	"github.com/manifoldco/manifold-cli/prompts"
 	"github.com/manifoldco/manifold-cli/session"
 
@@ -34,7 +35,7 @@ func init() {
 		Name:      "update",
 		ArgsUsage: "[label]",
 		Usage:     "Allows a user to update a resource in Manifold",
-		Action:    chain(ensureSession, loadDirPrefs, updateResourceCmd),
+		Action:    middleware.Chain(middleware.EnsureSession, middleware.LoadDirPrefs, updateResourceCmd),
 		Flags: []cli.Flag{
 			nameFlag(),
 			appFlag(),

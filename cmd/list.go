@@ -15,6 +15,7 @@ import (
 	"github.com/manifoldco/manifold-cli/config"
 	"github.com/manifoldco/manifold-cli/data/catalog"
 	"github.com/manifoldco/manifold-cli/errs"
+	"github.com/manifoldco/manifold-cli/middleware"
 	"github.com/manifoldco/manifold-cli/session"
 
 	"github.com/manifoldco/manifold-cli/generated/marketplace/models"
@@ -39,7 +40,7 @@ func init() {
 		Name: "list",
 		Usage: "Allows a user to list the status of their provisioned Manifold " +
 			"resources.",
-		Action: chain(loadDirPrefs, list),
+		Action: middleware.Chain(middleware.LoadDirPrefs, list),
 		Flags: []cli.Flag{
 			appFlag(),
 		},

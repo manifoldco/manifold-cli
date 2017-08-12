@@ -1,4 +1,4 @@
-package main
+package middleware
 
 import (
 	"context"
@@ -15,9 +15,9 @@ import (
 	"github.com/manifoldco/manifold-cli/session"
 )
 
-// chain allows easy sequential calling of BeforeFuncs and AfterFuncs.
+// Chain allows easy sequential calling of BeforeFuncs and AfterFuncs.
 // chain will exit on the first error seen.
-func chain(funcs ...func(*cli.Context) error) func(*cli.Context) error {
+func Chain(funcs ...func(*cli.Context) error) func(*cli.Context) error {
 	return func(ctx *cli.Context) error {
 
 		for _, f := range funcs {
@@ -31,8 +31,8 @@ func chain(funcs ...func(*cli.Context) error) func(*cli.Context) error {
 	}
 }
 
-// loadDirPrefs loads argument values from the .torus.json file
-func loadDirPrefs(ctx *cli.Context) error {
+// LoadDirPrefs loads argument values from the .torus.json file
+func LoadDirPrefs(ctx *cli.Context) error {
 	d, err := dirprefs.Load(true)
 	if err != nil {
 		return err
@@ -41,7 +41,8 @@ func loadDirPrefs(ctx *cli.Context) error {
 	return reflectArgs(ctx, d, "json")
 }
 
-func ensureSession(_ *cli.Context) error {
+// EnsureSession checks that the user has an active session
+func EnsureSession(_ *cli.Context) error {
 	ctx := context.Background()
 
 	cfg, err := config.Load()
