@@ -329,7 +329,19 @@ func waitForOp(ctx context.Context, pClient *provisioning.Provisioning, op *pMod
 			default:
 				continue
 			}
+		case *pModels.Deprovision:
+			switch *provision.State {
+			case "done":
+				return op, nil
+			case "error":
+				return nil, fmt.Errorf("Error completing delete")
+			default:
+				continue
+			}
+		default:
+			return nil, fmt.Errorf("Unknown provision operation")
 		}
+
 	}
 }
 
