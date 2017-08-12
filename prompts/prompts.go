@@ -301,6 +301,43 @@ func ResourceName(defaultValue string, autoSelect bool) (string, error) {
 	return p.Run()
 }
 
+// ResourceLabel prompts the user to provide a label name
+func ResourceLabel(defaultValue string, autoSelect bool) (string, error) {
+	validate := func(input string) error {
+		if len(input) == 0 {
+			return promptui.NewValidationError("Please provide a resource label")
+		}
+
+		l := manifold.Label(input)
+		if err := l.Validate(nil); err != nil {
+			return promptui.NewValidationError("Please provide a valid resource label")
+		}
+
+		return nil
+	}
+
+	label := "Resource Label"
+
+	if autoSelect {
+		err := validate(defaultValue)
+		if err != nil {
+			fmt.Println(promptui.FailedValue(label, defaultValue))
+		} else {
+			fmt.Println(promptui.SuccessfulValue(label, defaultValue))
+		}
+
+		return defaultValue, err
+	}
+
+	p := promptui.Prompt{
+		Label:    label,
+		Default:  defaultValue,
+		Validate: validate,
+	}
+
+	return p.Run()
+}
+
 // Email prompts the user to provide an email *or* accepted the default
 // email value
 func Email(defaultValue string) (string, error) {
