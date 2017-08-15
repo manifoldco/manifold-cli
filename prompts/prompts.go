@@ -362,6 +362,16 @@ func Password() (string, error) {
 	return prompt.Run()
 }
 
+// Confirm is a confirmation prompt
+func Confirm(msg string) (string, error) {
+	p := promptui.Prompt{
+		Label:     msg,
+		IsConfirm: true,
+	}
+
+	return p.Run()
+}
+
 // HandleSelectError returns a cli error if the error is not an EOF or
 // Interrupt
 func HandleSelectError(err error, generic string) error {

@@ -238,7 +238,7 @@ func createResource(ctx context.Context, cfg *config.Config, s session.Session,
 	op.Body.SetCreatedAt(&curTime)
 	op.Body.SetUpdatedAt(&curTime)
 	op.Body.SetResourceID(resourceID)
-	op.Body.SetUserID(s.User().ID)
+	op.Body.SetUserID(&s.User().ID)
 
 	p := operation.NewPutOperationsIDParamsWithContext(ctx)
 	p.SetBody(op)
@@ -329,7 +329,19 @@ func waitForOp(ctx context.Context, pClient *provisioning.Provisioning, op *pMod
 			default:
 				continue
 			}
+		case *pModels.Deprovision:
+			switch *provision.State {
+			case "done":
+				return op, nil
+			case "error":
+				return nil, fmt.Errorf("Error completing delete")
+			default:
+				continue
+			}
+		default:
+			return nil, fmt.Errorf("Unknown provision operation")
 		}
+
 	}
 }
 
