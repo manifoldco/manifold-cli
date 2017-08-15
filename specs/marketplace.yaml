@@ -181,6 +181,17 @@ definitions:
       import:
         package: github.com/manifoldco/go-manifold
         alias: manifold
+  OptionalID:
+    type: string
+    description: A base32 encoded 18 byte identifier.
+    pattern: '^[0-9abcdefghjkmnpqrtuvwxyz]{29}$'
+    format: base32ID
+    x-nullable: true
+    x-go-type:
+      type: ID
+      import:
+        package: 'github.com/manifoldco/go-manifold'
+        alias: manifold
   Label:
     type: string
     description: A machine readable unique label, which is url safe.
@@ -244,9 +255,9 @@ definitions:
           app_name:
             $ref: '#/definitions/Name'
           team_id:
-            $ref: '#/definitions/ID'
+            $ref: '#/definitions/OptionalID'
           user_id:
-            $ref: '#/definitions/ID'
+            $ref: '#/definitions/OptionalID'
           product_id:
             $ref: '#/definitions/ID'
           plan_id:
@@ -295,9 +306,9 @@ definitions:
           app_name:
             $ref: '#/definitions/Name'
           team_id:
-            $ref: '#/definitions/ID'
+            $ref: '#/definitions/OptionalID'
           user_id:
-            $ref: '#/definitions/ID'
+            $ref: '#/definitions/OptionalID'
           product_id:
             $ref: '#/definitions/ID'
           plan_id:

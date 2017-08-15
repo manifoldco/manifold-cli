@@ -166,6 +166,17 @@ definitions:
       import:
         package: github.com/manifoldco/go-manifold
         alias: manifold
+  OptionalID:
+    type: string
+    description: A base32 encoded 18 byte identifier.
+    pattern: '^[0-9abcdefghjkmnpqrtuvwxyz]{29}$'
+    format: base32ID
+    x-nullable: true
+    x-go-type:
+      type: ID
+      import:
+        package: 'github.com/manifoldco/go-manifold'
+        alias: manifold
   Callback:
     type: object
     description: |
@@ -223,9 +234,9 @@ definitions:
       resource_id:
         $ref: '#/definitions/ID'
       team_id:
-        $ref: '#/definitions/ID'
+        $ref: '#/definitions/OptionalID'
       user_id:
-        $ref: '#/definitions/ID'
+        $ref: '#/definitions/OptionalID'
       message:
         type: string
         description: A message associated with the operation to display to the user.

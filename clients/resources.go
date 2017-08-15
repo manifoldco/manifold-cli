@@ -41,7 +41,7 @@ func FetchResources(ctx context.Context, c *mClient.Marketplace) ([]*mModels.Res
 	var results []*mModels.Resource
 	for _, r := range res.Payload {
 		// TODO: remove this once CLI has first-class Teams support
-		if !r.Body.TeamID.IsEmpty() {
+		if r.Body.TeamID != nil {
 			continue
 		}
 		results = append(results, r)

@@ -148,7 +148,7 @@ func deleteResource(ctx context.Context, cfg *config.Config, s session.Session, 
 
 	op.Body.SetCreatedAt(&curTime)
 	op.Body.SetUpdatedAt(&curTime)
-	op.Body.SetUserID(s.User().ID)
+	op.Body.SetUserID(&s.User().ID)
 	op.Body.SetResourceID(resource.ID)
 
 	d := operation.NewPutOperationsIDParamsWithContext(ctx)

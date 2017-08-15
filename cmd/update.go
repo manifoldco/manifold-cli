@@ -276,7 +276,7 @@ func updateResource(ctx context.Context, cfg *config.Config, s session.Session, 
 	op.Body.SetCreatedAt(&curTime)
 	op.Body.SetUpdatedAt(&curTime)
 	op.Body.SetResourceID(resource.ID)
-	op.Body.SetUserID(s.User().ID)
+	op.Body.SetUserID(&s.User().ID)
 
 	p := operation.NewPutOperationsIDParamsWithContext(ctx)
 	p.SetBody(op)
