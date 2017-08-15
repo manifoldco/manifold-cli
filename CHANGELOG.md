@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+## [0.2.4] - 2017-08-15
+
+### Added
+
+- Add the update command, to modify and resize resources.
+
 ## [0.2.3] - 2017-08-10
 
 ### Fixed
