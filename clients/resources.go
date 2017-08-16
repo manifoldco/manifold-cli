@@ -22,7 +22,7 @@ func FetchOperations(ctx context.Context, c *pClient.Provisioning) ([]*pModels.O
 	var results []*pModels.Operation
 	for _, o := range res.Payload {
 		// TODO: remove this once CLI has first-class Teams support
-		if !o.Body.TeamID().IsEmpty() {
+		if o.Body.TeamID() != nil {
 			continue
 		}
 		results = append(results, o)
