@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+## [0.2.6] - 2017-08-16
+
+### Fixed
+
+- Fix release process tag selection.
+
 ## [0.2.5] - 2017-08-16
 
 ### Added

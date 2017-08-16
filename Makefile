@@ -145,7 +145,7 @@ zips: $(OS_ARCH:%=build/manifold-cli_$(VERSION)_%.zip)
 release: zips
 	curl -LO https://releases.manifold.co/promulgate/0.0.5/promulgate_0.0.5_linux_amd64.zip
 	unzip promulgate_*
-	./promulgate release $(VERSION)
+	./promulgate release v$(VERSION)
 
 .PHONY: release zips $(OS_ARCH:%=os-build/%/bin/manifold)
 
