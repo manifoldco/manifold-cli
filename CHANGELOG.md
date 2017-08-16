@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+## [0.2.5] - 2017-08-16
+
+### Added
+
+- Add delete command to delete resources.
+- Add rename command to rename resources.
+
+### Fixed
+
+- Fix help output to display `manifold` instead of `manifold-cli`.
+
 ## [0.2.4] - 2017-08-15
 
 ### Added
