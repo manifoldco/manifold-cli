@@ -142,7 +142,12 @@ $(NO_WINDOWS:%=build/manifold-cli_$(VERSION)_%.zip): build/manifold-cli_$(VERSIO
 
 zips: $(OS_ARCH:%=build/manifold-cli_$(VERSION)_%.zip)
 
-.PHONY: zips $(OS_ARCH:%=os-build/%/bin/manifold)
+release: zips
+	curl -LO https://releases.manifold.co/promulgate/0.0.5/promulgate_0.0.5_linux_amd64.zip
+	unzip promulgate_*
+	./promulgate release $(VERSION)
+
+.PHONY: release zips $(OS_ARCH:%=os-build/%/bin/manifold)
 
 # ################################################
 # Cleaning
