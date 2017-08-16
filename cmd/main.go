@@ -16,8 +16,8 @@ func main() {
 	}
 
 	app := cli.NewApp()
-	app.Name = "manifold-cli"
-	app.HelpName = "manifold-cli"
+	app.Name = "manifold"
+	app.HelpName = "manifold"
 	app.Usage = "A tool making it easy to buy, manage, and integrate developer services into an application."
 	app.Version = config.Version
 	app.Commands = cmds
