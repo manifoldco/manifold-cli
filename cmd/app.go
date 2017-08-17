@@ -77,6 +77,9 @@ func appAddCmd(cliCtx *cli.Context) error {
 	}
 
 	resourceIdx, _, err := prompts.SelectResource(res, resourceLabel)
+	if err != nil {
+		return prompts.HandleSelectError(err, "Could not select Resource")
+	}
 	resource := res[resourceIdx]
 
 	if appName == "" {
