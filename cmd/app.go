@@ -66,7 +66,7 @@ func appAddCmd(cliCtx *cli.Context) error {
 		return cli.NewExitError(fmt.Sprintf("Failed to create Marketplace client: %s", err), -1)
 	}
 
-	resource, res, err := getResource(ctx, cliCtx, cfg, marketplaceClient)
+	resource, res, err := getResource(ctx, cliCtx, cfg, marketplaceClient, false)
 	if err != nil {
 		return cli.NewExitError(err, -1)
 	}
@@ -102,7 +102,7 @@ func deleteAppCmd(cliCtx *cli.Context) error {
 		return cli.NewExitError(fmt.Sprintf("Failed to create Marketplace client: %s", err), -1)
 	}
 
-	resource, _, err := getResource(ctx, cliCtx, cfg, marketplaceClient)
+	resource, _, err := getResource(ctx, cliCtx, cfg, marketplaceClient, true)
 	if err != nil {
 		return cli.NewExitError(err, -1)
 	}
@@ -120,7 +120,7 @@ func deleteAppCmd(cliCtx *cli.Context) error {
 }
 
 func getResource(ctx context.Context, cliCtx *cli.Context, cfg *config.Config,
-	marketplaceClient *client.Marketplace,
+	marketplaceClient *client.Marketplace, withAppsOnly bool,
 ) (*models.Resource, []*models.Resource, error) {
 	args := cliCtx.Args()
 
@@ -142,9 +142,11 @@ func getResource(ctx context.Context, cliCtx *cli.Context, cfg *config.Config,
 			fmt.Sprintf("Failed to fetch the list of provisioned resources: %s", err), -1)
 	}
 
-	res, err = filterResourcesWithApp(res)
-	if err != nil {
-		return nil, nil, err
+	if withAppsOnly {
+		res, err = filterResourcesWithApp(res)
+		if err != nil {
+			return nil, nil, err
+		}
 	}
 
 	resourceIdx, _, err := prompts.SelectResource(res, resourceLabel)
