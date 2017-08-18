@@ -30,6 +30,15 @@ func init() {
 				},
 				Action: chain(ensureSession, loadDirPrefs, appAddCmd),
 			},
+			{
+				Name:      "delete",
+				ArgsUsage: "[label]",
+				Usage:     "Removes a resource from an app in Manifold.",
+				Flags: []cli.Flag{
+					appFlag(),
+				},
+				Action: chain(ensureSession, deleteAppCmd),
+			},
 		},
 	}
 
@@ -38,19 +47,6 @@ func init() {
 
 func appAddCmd(cliCtx *cli.Context) error {
 	ctx := context.Background()
-	args := cliCtx.Args()
-
-	resourceLabel := ""
-	if len(args) > 1 {
-		return errs.NewUsageExitError(cliCtx, errs.ErrTooManyArgs)
-	}
-	if len(args) > 0 {
-		resourceLabel = args[0]
-		l := manifold.Label(resourceLabel)
-		if err := l.Validate(nil); err != nil {
-			return errs.NewUsageExitError(cliCtx, errs.ErrInvalidResourceName)
-		}
-	}
 
 	appName := cliCtx.String("app")
 	if appName != "" {
@@ -70,17 +66,10 @@ func appAddCmd(cliCtx *cli.Context) error {
 		return cli.NewExitError(fmt.Sprintf("Failed to create Marketplace client: %s", err), -1)
 	}
 
-	res, err := clients.FetchResources(ctx, marketplaceClient)
+	resource, res, err := getResource(ctx, cliCtx, cfg, marketplaceClient, false)
 	if err != nil {
-		return cli.NewExitError(
-			fmt.Sprintf("Failed to fetch the list of provisioned resources: %s", err), -1)
+		return cli.NewExitError(err, -1)
 	}
-
-	resourceIdx, _, err := prompts.SelectResource(res, resourceLabel)
-	if err != nil {
-		return prompts.HandleSelectError(err, "Could not select Resource")
-	}
-	resource := res[resourceIdx]
 
 	if appName == "" {
 		apps := fetchUniqueAppNames(res)
@@ -90,7 +79,7 @@ func appAddCmd(cliCtx *cli.Context) error {
 		}
 	}
 
-	err = addAppToResource(ctx, cfg, resource, marketplaceClient, appName)
+	err = updateResourceApp(ctx, cfg, resource, marketplaceClient, appName)
 	if err != nil {
 		return cli.NewExitError(fmt.Sprintf("Failed to add app to resource: %s", err), -1)
 	}
@@ -100,7 +89,75 @@ func appAddCmd(cliCtx *cli.Context) error {
 	return nil
 }
 
-func addAppToResource(ctx context.Context, cfg *config.Config, resource *models.Resource,
+func deleteAppCmd(cliCtx *cli.Context) error {
+	ctx := context.Background()
+
+	cfg, err := config.Load()
+	if err != nil {
+		return cli.NewExitError(fmt.Sprintf("Could not load configuration: %s", err), -1)
+	}
+
+	marketplaceClient, err := clients.NewMarketplace(cfg)
+	if err != nil {
+		return cli.NewExitError(fmt.Sprintf("Failed to create Marketplace client: %s", err), -1)
+	}
+
+	resource, _, err := getResource(ctx, cliCtx, cfg, marketplaceClient, true)
+	if err != nil {
+		return cli.NewExitError(err, -1)
+	}
+
+	err = updateResourceApp(ctx, cfg, resource, marketplaceClient, "")
+	if err != nil {
+		return cli.NewExitError(
+			fmt.Sprintf("Failed to remove app from resource \"%s\": %s", resource.Body.Label, err), -1)
+	}
+
+	fmt.Printf("Your resource \"%s\" has been removed from the app \"%s\"\n", resource.Body.Label,
+		resource.Body.AppName)
+
+	return nil
+}
+
+func getResource(ctx context.Context, cliCtx *cli.Context, cfg *config.Config,
+	marketplaceClient *client.Marketplace, withAppsOnly bool,
+) (*models.Resource, []*models.Resource, error) {
+	args := cliCtx.Args()
+
+	resourceLabel := ""
+	if len(args) > 1 {
+		return nil, nil, errs.NewUsageExitError(cliCtx, errs.ErrTooManyArgs)
+	}
+	if len(args) > 0 {
+		resourceLabel = args[0]
+		l := manifold.Label(resourceLabel)
+		if err := l.Validate(nil); err != nil {
+			return nil, nil, errs.NewUsageExitError(cliCtx, errs.ErrInvalidResourceName)
+		}
+	}
+
+	res, err := clients.FetchResources(ctx, marketplaceClient)
+	if err != nil {
+		return nil, nil, cli.NewExitError(
+			fmt.Sprintf("Failed to fetch the list of provisioned resources: %s", err), -1)
+	}
+
+	if withAppsOnly {
+		res, err = filterResourcesWithApp(res)
+		if err != nil {
+			return nil, nil, err
+		}
+	}
+
+	resourceIdx, _, err := prompts.SelectResource(res, resourceLabel)
+	if err != nil {
+		return nil, nil, prompts.HandleSelectError(err, "Could not select Resource")
+	}
+
+	return res[resourceIdx], res, nil
+}
+
+func updateResourceApp(ctx context.Context, cfg *config.Config, resource *models.Resource,
 	marketplaceClient *client.Marketplace, appName string,
 ) error {
 	appAdd := &models.PublicUpdateResource{
@@ -126,4 +183,20 @@ func addAppToResource(ctx context.Context, cfg *config.Config, resource *models.
 	}
 
 	return nil
+}
+
+func filterResourcesWithApp(resources []*models.Resource) ([]*models.Resource, error) {
+	var rs []*models.Resource
+
+	for _, r := range resources {
+		if r.Body.AppName != "" {
+			rs = append(rs, r)
+		}
+	}
+
+	if len(rs) == 0 {
+		return nil, errs.ErrNoApps
+	}
+
+	return rs, nil
 }
