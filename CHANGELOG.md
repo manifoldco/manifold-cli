@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+### Fixed
+
+- Add a newline after signup output, so it won't mess up the prompt.
+
 ## [0.2.6] - 2017-08-16
 
 ### Fixed
