@@ -253,6 +253,17 @@ definitions:
       import:
         package: github.com/manifoldco/go-manifold
         alias: manifold
+  OptionalID:
+    type: string
+    description: A base32 encoded 18 byte identifier.
+    pattern: '^[0-9abcdefghjkmnpqrtuvwxyz]{29}$'
+    format: base32ID
+    x-nullable: true
+    x-go-type:
+      type: ID
+      import:
+        package: 'github.com/manifoldco/go-manifold'
+        alias: manifold
   Base64:
     type: string
     description: A base64 encoded binary value.
@@ -465,9 +476,9 @@ definitions:
         type: object
         properties:
           team_id:
-            $ref: '#/definitions/ID'
+            $ref: '#/definitions/OptionalID'
           user_id:
-            $ref: '#/definitions/ID'
+            $ref: '#/definitions/OptionalID'
           sources:
             type: array
             items:
@@ -485,9 +496,9 @@ definitions:
     type: object
     properties:
       team_id:
-        $ref: '#/definitions/ID'
+        $ref: '#/definitions/OptionalID'
       user_id:
-        $ref: '#/definitions/ID'
+        $ref: '#/definitions/OptionalID'
       token:
         type: string
         minLength: 3
@@ -555,6 +566,8 @@ definitions:
     properties:
       code:
         $ref: '#/definitions/CouponCode'
+      team_id:
+        $ref: "#/definitions/OptionalID"
     required:
     - code
     additionalProperties: false
@@ -603,9 +616,9 @@ definitions:
         type: string
         format: date-time
       team_id:
-        $ref: '#/definitions/ID'
+        $ref: '#/definitions/OptionalID'
       user_id:
-        $ref: '#/definitions/ID'
+        $ref: '#/definitions/OptionalID'
       provider_id:
         $ref: '#/definitions/ID'
       resource_id:
