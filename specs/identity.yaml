@@ -156,7 +156,6 @@ paths:
   /self:
     get:
       summary: Retrieve the underlying user represented by a Token
-      parameters: []
       tags:
       - User
       responses:
@@ -346,6 +345,29 @@ paths:
           schema:
             $ref: '#/definitions/Error'
   /teams:
+    get:
+      summary: List teams for the current authenticated user
+      tags:
+      - Team
+      responses:
+        200:
+          description: Teams the authenticated user belongs to
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Team'
+        401:
+          description: Authentication failed for the request.
+          schema:
+            $ref: '#/definitions/Error'
+        500:
+          description: Request failed due to an internal server error.
+          schema:
+            $ref: '#/definitions/Error'
+        default:
+          description: Unexpected error
+          schema:
+            $ref: '#/definitions/Error'
     post:
       summary: Create a new team
       tags:
@@ -377,6 +399,332 @@ paths:
             $ref: '#/definitions/Error'
         409:
           description: An team with this label already exists.
+          schema:
+            $ref: '#/definitions/Error'
+        500:
+          description: Request failed due to an internal server error.
+          schema:
+            $ref: '#/definitions/Error'
+        default:
+          description: Unexpected error
+          schema:
+            $ref: '#/definitions/Error'
+  /teams/{id}:
+    get:
+      summary: Get a single team's profile
+      tags:
+      - Team
+      parameters:
+      - name: id
+        in: path
+        description: |
+          ID of the Team to lookup, stored as a base32 encoded 18 byte
+          identifier.
+        required: true
+        type: string
+        pattern: ^[0-9abcdefghjkmnpqrtuvwxyz]{29}$
+        format: base32ID
+      responses:
+        200:
+          description: Complete team object
+          schema:
+            $ref: '#/definitions/Team'
+        400:
+          description: Validation failed for request
+          schema:
+            $ref: '#/definitions/Error'
+        500:
+          description: Request failed due to an internal server error.
+          schema:
+            $ref: '#/definitions/Error'
+        default:
+          description: Unexpected error
+          schema:
+            $ref: '#/definitions/Error'
+    patch:
+      summary: Update team profile
+      tags:
+      - Team
+      parameters:
+      - name: id
+        in: path
+        description: |
+          ID of the Team to lookup, stored as a base32 encoded 18 byte
+          identifier.
+        required: true
+        type: string
+        pattern: ^[0-9abcdefghjkmnpqrtuvwxyz]{29}$
+        format: base32ID
+      - name: body
+        in: body
+        description: |
+          Team update request
+        required: true
+        schema:
+          $ref: '#/definitions/UpdateTeam'
+      responses:
+        200:
+          description: Complete team object
+          schema:
+            $ref: '#/definitions/Team'
+        400:
+          description: Validation failed for request
+          schema:
+            $ref: '#/definitions/Error'
+        500:
+          description: Request failed due to an internal server error.
+          schema:
+            $ref: '#/definitions/Error'
+        default:
+          description: Unexpected error
+          schema:
+            $ref: '#/definitions/Error'
+  /teams/{id}/members:
+    get:
+      summary: Get team members by team id
+      tags:
+      - Team
+      security:
+      - xInternalAuthRequired: []
+      - jwtRequired: []
+      parameters:
+      - name: id
+        in: path
+        description: |
+          ID of the Team to lookup, stored as a base32 encoded 18 byte
+          identifier.
+        required: true
+        type: string
+        pattern: ^[0-9abcdefghjkmnpqrtuvwxyz]{29}$
+        format: base32ID
+      responses:
+        200:
+          description: List of users
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/MemberProfile'
+        400:
+          description: Validation failed for request.
+          schema:
+            $ref: '#/definitions/Error'
+        401:
+          description: Authentication failed for the request.
+          schema:
+            $ref: '#/definitions/Error'
+        500:
+          description: Request failed due to an internal server error.
+          schema:
+            $ref: '#/definitions/Error'
+        default:
+          description: Unexpected error
+          schema:
+            $ref: '#/definitions/Error'
+  /invites/{id}/:
+    delete:
+      summary: Revoke an existing invite
+      tags:
+      - Invite
+      parameters:
+      - name: id
+        in: path
+        description: |
+          ID of the Invite to lookup, stored as a base32 encoded 18 byte
+          identifier.
+        required: true
+        type: string
+        pattern: ^[0-9abcdefghjkmnpqrtuvwxyz]{29}$
+        format: base32ID
+      responses:
+        204:
+          description: Empty response
+        404:
+          description: Invite not found
+          schema:
+            $ref: '#/definitions/Error'
+        401:
+          description: Authentication failed for the request.
+          schema:
+            $ref: '#/definitions/Error'
+        500:
+          description: Request failed due to an internal server error.
+          schema:
+            $ref: '#/definitions/Error'
+        default:
+          description: Unexpected error
+          schema:
+            $ref: '#/definitions/Error'
+  /invites/{token}/:
+    get:
+      summary: Retrieve an invite's details by token
+      tags:
+      - Invite
+      security: []
+      parameters:
+      - name: token
+        in: path
+        description: |
+          Token corresponding to the Invite being retrieved.
+        required: true
+        type: string
+        pattern: ^[a-zA-Z0-9_-]{52}$
+      responses:
+        200:
+          description: Invite object
+          schema:
+            $ref: '#/definitions/PublicInvite'
+        500:
+          description: Request failed due to an internal server error.
+          schema:
+            $ref: '#/definitions/Error'
+        default:
+          description: Unexpected error
+          schema:
+            $ref: '#/definitions/Error'
+  /invites/accept:
+    post:
+      summary: Accept an invite
+      tags:
+      - Invite
+      parameters:
+      - name: body
+        in: body
+        description: |
+          Invite create request.
+        required: true
+        schema:
+          $ref: '#/definitions/AcceptInvite'
+      responses:
+        204:
+          description: Empty response
+        400:
+          description: Validation failed for request.
+          schema:
+            $ref: '#/definitions/Error'
+        401:
+          description: Authentication failed for the request.
+          schema:
+            $ref: '#/definitions/Error'
+        500:
+          description: Request failed due to an internal server error.
+          schema:
+            $ref: '#/definitions/Error'
+        default:
+          description: Unexpected error
+          schema:
+            $ref: '#/definitions/Error'
+  /invites:
+    get:
+      summary: List of invites for the user
+      tags:
+      - Invite
+      parameters:
+      - name: team_id
+        in: query
+        description: |
+          ID of the Team to filter Invites by, stored as a
+          base32encoded 18 byte identifier.
+        type: string
+        pattern: ^[0-9abcdefghjkmnpqrtuvwxyz]{29}$
+        format: base32ID
+        required: true
+      responses:
+        200:
+          description: Invite object
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Invite'
+        401:
+          description: Authentication failed for the request.
+          schema:
+            $ref: '#/definitions/Error'
+        500:
+          description: Request failed due to an internal server error.
+          schema:
+            $ref: '#/definitions/Error'
+        default:
+          description: Unexpected error
+          schema:
+            $ref: '#/definitions/Error'
+    post:
+      summary: Create a new invite
+      tags:
+      - Invite
+      parameters:
+      - name: body
+        in: body
+        description: |
+          Invite create request.
+        required: true
+        schema:
+          $ref: '#/definitions/CreateInvite'
+      responses:
+        200:
+          description: Invite object
+          schema:
+            $ref: '#/definitions/Invite'
+        204:
+          description: Empty response
+        400:
+          description: Validation failed for request.
+          schema:
+            $ref: '#/definitions/Error'
+        401:
+          description: Authentication failed for the request.
+          schema:
+            $ref: '#/definitions/Error'
+        500:
+          description: Request failed due to an internal server error.
+          schema:
+            $ref: '#/definitions/Error'
+        default:
+          description: Unexpected error
+          schema:
+            $ref: '#/definitions/Error'
+  /memberships:
+    get:
+      summary: List memberships for the user
+      tags:
+      - Team
+      responses:
+        200:
+          description: Complete team object
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/TeamMembership'
+        401:
+          description: Authentication failed for the request.
+          schema:
+            $ref: '#/definitions/Error'
+        500:
+          description: Request failed due to an internal server error.
+          schema:
+            $ref: '#/definitions/Error'
+        default:
+          description: Unexpected error
+          schema:
+            $ref: '#/definitions/Error'
+  /memberships/{id}:
+    delete:
+      summary: Remove a member from a team
+      parameters:
+      - name: id
+        in: path
+        description: The base32 encoded 18 byte ID of the membership
+        required: true
+        type: string
+        pattern: ^[0-9abcdefghjkmnpqrtuvwxyz]{29}$
+        format: base32ID
+      tags:
+      - Team
+      responses:
+        204:
+          description: Empty response
+        401:
+          description: Unknown id, or the requestor is not authorized to remove the
+            membership
           schema:
             $ref: '#/definitions/Error'
         500:
@@ -523,6 +871,96 @@ definitions:
     additionalProperties: false
     required:
     - body
+  AcceptInvite:
+    type: object
+    properties:
+      token:
+        $ref: '#/definitions/LimitedLifeTokenBase32'
+    additionalProperties: false
+    required:
+    - token
+  CreateInvite:
+    type: object
+    properties:
+      body:
+        type: object
+        properties:
+          name:
+            $ref: '#/definitions/UserDisplayName'
+          email:
+            $ref: '#/definitions/Email'
+          team_id:
+            $ref: '#/definitions/ID'
+        additionalProperties: false
+        required:
+        - name
+        - email
+        - team_id
+    additionalProperties: false
+    required:
+    - body
+  Invite:
+    type: object
+    properties:
+      id:
+        $ref: '#/definitions/ID'
+      type:
+        type: string
+        enum:
+        - invite
+      version:
+        type: integer
+        enum:
+        - 1
+      body:
+        type: object
+        properties:
+          name:
+            $ref: '#/definitions/UserDisplayName'
+          email:
+            $ref: '#/definitions/Email'
+          team_id:
+            $ref: '#/definitions/ID'
+          invited_by:
+            $ref: '#/definitions/ID'
+          token:
+            $ref: '#/definitions/LimitedLifeTokenBase32'
+        additionalProperties: false
+        required:
+        - token
+        - team_id
+        - name
+        - email
+    additionalProperties: false
+    required:
+    - id
+    - type
+    - version
+    - body
+  PublicInvite:
+    type: object
+    properties:
+      team:
+        $ref: '#/definitions/Team'
+      invited:
+        type: object
+        properties:
+          name:
+            $ref: '#/definitions/UserDisplayName'
+          email:
+            $ref: '#/definitions/Email'
+      invited_by:
+        type: object
+        properties:
+          name:
+            $ref: '#/definitions/UserDisplayName'
+          email:
+            $ref: '#/definitions/Email'
+    additionalProperties: false
+    required:
+    - team
+    - invited
+    - invited_by
   CreateTeam:
     type: object
     properties:
@@ -540,6 +978,53 @@ definitions:
     additionalProperties: false
     required:
     - body
+  TeamMembership:
+    type: object
+    properties:
+      id:
+        $ref: '#/definitions/ID'
+      type:
+        type: string
+        enum:
+        - team
+      version:
+        type: integer
+        enum:
+        - 1
+      body:
+        type: object
+        properties:
+          user_id:
+            $ref: '#/definitions/ID'
+          team_id:
+            $ref: '#/definitions/ID'
+        additionalProperties: false
+        required:
+        - user_id
+        - team_id
+    additionalProperties: false
+    required:
+    - id
+    - type
+    - version
+    - body
+  MemberProfile:
+    type: object
+    properties:
+      user_id:
+        $ref: '#/definitions/ID'
+      membership_id:
+        $ref: '#/definitions/ID'
+      email:
+        $ref: '#/definitions/Email'
+      name:
+        $ref: '#/definitions/UserDisplayName'
+    additionalProperties: false
+    required:
+    - user_id
+    - membership_id
+    - email
+    - name
   Team:
     type: object
     properties:
@@ -570,6 +1055,23 @@ definitions:
     - type
     - version
     - body
+  UpdateTeam:
+    type: object
+    properties:
+      body:
+        type: object
+        properties:
+          name:
+            $ref: '#/definitions/Name'
+          label:
+            $ref: '#/definitions/Label'
+        required:
+        - name
+        - label
+        additionalProperties: false
+    required:
+    - body
+    additionalProperties: false
   UpdateUser:
     type: object
     properties:
@@ -595,10 +1097,7 @@ definitions:
       email:
         $ref: '#/definitions/Email'
       token:
-        type: string
-        minLength: 43
-        maxLength: 43
-        pattern: ^[a-zA-Z0-9_-]{43}$
+        $ref: '#/definitions/LimitedLifeTokenBase64'
       public_key:
         $ref: '#/definitions/LoginPublicKey'
     additionalProperties: false
@@ -716,6 +1215,14 @@ definitions:
     - version
     - type
     - body
+  InternalToken:
+    type: object
+    properties:
+      token:
+        type: string
+    additionalProperties: false
+    required:
+    - token
   LoginTokenRequest:
     type: object
     properties:
@@ -775,3 +1282,13 @@ definitions:
     - version
     - type
     - body
+  LimitedLifeTokenBase32:
+    type: string
+    minLength: 52
+    maxLength: 52
+    pattern: ^[a-zA-Z0-9_-]{52}$
+  LimitedLifeTokenBase64:
+    type: string
+    minLength: 43
+    maxLength: 43
+    pattern: ^[a-zA-Z0-9_-]{43}$

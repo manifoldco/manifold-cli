@@ -19,6 +19,23 @@ securityDefinitions:
     in: header
 security:
 - jwtRequired: []
+responses:
+  BadRequest:
+    description: Invalid Request
+    schema:
+      $ref: '#/definitions/Error'
+  Unauthorized:
+    description: Invalid Auth Token
+    schema:
+      $ref: '#/definitions/Error'
+  InternalServerError:
+    description: Server Error
+    schema:
+      $ref: '#/definitions/Error'
+  Unexpected:
+    description: Unexpected Error
+    schema:
+      $ref: '#/definitions/Error'
 basePath: /v1
 paths:
   /resources/:
@@ -27,11 +44,20 @@ paths:
       tags:
       - Resource
       parameters:
+      - name: team_id
+        in: query
+        description: |
+          ID of the Team to filter Resources by, stored as a
+          base32 encoded 18 byte identifier.
+        type: string
+        pattern: ^[0-9abcdefghjkmnpqrtuvwxyz]{29}$
+        format: base32ID
+        required: false
       - name: product_id
         in: query
         description: |
           ID of the Product to filter Resources by, stored as a
-          base32encoded 18 byte identifier.
+          base32 encoded 18 byte identifier.
         type: string
         pattern: ^[0-9abcdefghjkmnpqrtuvwxyz]{29}$
         format: base32ID
@@ -43,16 +69,12 @@ paths:
             type: array
             items:
               $ref: '#/definitions/Resource'
-        500:
-          description: Server Error
-          schema:
-            $ref: '#/definitions/Error'
         401:
-          description: Invalid Auth Token
-          schema:
-            $ref: '#/definitions/Error'
+          $ref: '#/responses/Unauthorized'
+        500:
+          $ref: '#/responses/InternalServerError'
         default:
-          description: Unexpected Error
+          $ref: '#/responses/Unexpected'
   /resources/{id}:
     get:
       summary: Retrieve a resource
@@ -78,17 +100,11 @@ paths:
           schema:
             $ref: '#/definitions/Error'
         401:
-          description: Invalid Auth Token
-          schema:
-            $ref: '#/definitions/Error'
+          $ref: '#/responses/Unauthorized'
         500:
-          description: Server Error
-          schema:
-            $ref: '#/definitions/Error'
+          $ref: '#/responses/InternalServerError'
         default:
-          description: Unexpected Error
-          schema:
-            $ref: '#/definitions/Error'
+          $ref: '#/responses/Unexpected'
     patch:
       summary: |
         Update a resource name or other property that doesn't require
@@ -116,22 +132,114 @@ paths:
           description: An updated resource object.
           schema:
             $ref: '#/definitions/Resource'
+        400:
+          $ref: '#/responses/BadRequest'
         401:
-          description: Invalid Auth Token
+          $ref: '#/responses/Unauthorized'
+        500:
+          $ref: '#/responses/InternalServerError'
+        default:
+          $ref: '#/responses/Unexpected'
+  /resources/{id}/config:
+    get:
+      summary: Get the custom config for a resource
+      description: |
+        Get the custom config for a resource. Only resources with a `source` of
+        `custom` have custom configs. Requesting the custom config for a resource
+        of any other source will result in a `400` response.
+      tags:
+      - Credential
+      parameters:
+      - name: id
+        in: path
+        description: |
+          ID of the Resource to retrieve custom config for, stored as a
+          base32 encoded 18 byte identifier.
+        required: true
+        format: base32ID
+        type: string
+      responses:
+        200:
+          description: The custom config
+          schema:
+            type: object
+            description: |
+              Map of configuration variable names to values. Names must match
+              `^[a-zA-Z][a-zA-Z0-9_]{0,999}$`.
+            additionalProperties:
+              type: string
+        404:
+          description: No resource with the given ID exists.
           schema:
             $ref: '#/definitions/Error'
         400:
-          description: Invalid Request
+          $ref: '#/responses/BadRequest'
+        401:
+          $ref: '#/responses/Unauthorized'
+        500:
+          $ref: '#/responses/InternalServerError'
+        default:
+          $ref: '#/responses/Unexpected'
+    patch:
+      summary: Modify the custom config for a resource
+      description: |
+        Modify the custom config for a resource. Only resources with a `source`
+        of `custom` have custom configs. Attempting to modify the custom config
+        for a resource of any other source will result in a `400` response.
+
+        Custom config is modified via JSON merge patching. To change or modify a
+        key, include that key with the new value. To remove a key, include that
+        key in the request with a null value. Any keys not included in the
+        request are ignored and left unchanged.
+      tags:
+      - Credential
+      parameters:
+      - name: id
+        in: path
+        description: |
+          ID of the Resource to retrieve custom config for, stored as a
+          base32 encoded 18 byte identifier.
+        required: true
+        format: base32ID
+        type: string
+      - name: body
+        in: body
+        description: |
+          The JSON merge patch request for updating this resource's custom
+          config. It is a map of configuration variable names to values. Names
+          must match `^[a-zA-Z][a-zA-Z0-9_]{0,999}$`. Values must either be
+          strings, or null.
+        required: true
+        schema:
+          $ref: '#/definitions/ConfigPatch'
+      responses:
+        200:
+          description: The updated custom config
+          schema:
+            type: object
+            description: |
+              Map of configuration variable names to values. Names must match
+              `^[a-zA-Z][a-zA-Z0-9_]{0,999}$`.
+            additionalProperties:
+              type: string
+        404:
+          description: No resource with the given ID exists.
+          schema:
+            $ref: '#/definitions/Error'
+        400:
+          $ref: '#/responses/BadRequest'
+        401:
+          $ref: '#/responses/Unauthorized'
+        409:
+          description: |
+            Someone else has modified the custom configuration at the same
+            time.
           schema:
             $ref: '#/definitions/Error'
         500:
-          description: Server Error
-          schema:
-            $ref: '#/definitions/Error'
+          $ref: '#/responses/InternalServerError'
         default:
-          description: Unexpected Error
-          schema:
-            $ref: '#/definitions/Error'
+          $ref: '#/responses/Unexpected'
   /credentials:
     get:
       summary: List credentials
@@ -140,11 +248,13 @@ paths:
         in: query
         description: |
           ID of the Resource to filter Credentials by, stored as a
-          base32encoded 18 byte identifier.
-        type: string
-        pattern: ^[0-9abcdefghjkmnpqrtuvwxyz]{29}$
-        format: base32ID
+          base32 encoded 18 byte identifier.
+        collectionFormat: multi
+        type: array
         required: true
+        items:
+          format: base32ID
+          type: string
       tags:
       - Credential
       responses:
@@ -154,22 +264,14 @@ paths:
             type: array
             items:
               $ref: '#/definitions/Credential'
-        401:
-          description: Invalid Auth Token
-          schema:
-            $ref: '#/definitions/Error'
         400:
-          description: Invalid Request
-          schema:
-            $ref: '#/definitions/Error'
+          $ref: '#/responses/BadRequest'
+        401:
+          $ref: '#/responses/Unauthorized'
         500:
-          description: Server Error
-          schema:
-            $ref: '#/definitions/Error'
+          $ref: '#/responses/InternalServerError'
         default:
-          description: Unexpected Error
-          schema:
-            $ref: '#/definitions/Error'
+          $ref: '#/responses/Unexpected'
 definitions:
   ID:
     type: string
@@ -184,13 +286,13 @@ definitions:
   OptionalID:
     type: string
     description: A base32 encoded 18 byte identifier.
-    pattern: '^[0-9abcdefghjkmnpqrtuvwxyz]{29}$'
+    pattern: ^[0-9abcdefghjkmnpqrtuvwxyz]{29}$
     format: base32ID
     x-nullable: true
     x-go-type:
       type: ID
       import:
-        package: 'github.com/manifoldco/go-manifold'
+        package: github.com/manifoldco/go-manifold
         alias: manifold
   Label:
     type: string
@@ -232,57 +334,6 @@ definitions:
       import:
         package: github.com/manifoldco/go-manifold
         alias: manifold
-  CreateResource:
-    type: object
-    properties:
-      id:
-        $ref: '#/definitions/ID'
-      type:
-        type: string
-        enum:
-        - resource
-      version:
-        type: integer
-        enum:
-        - 1
-      body:
-        type: object
-        properties:
-          name:
-            $ref: '#/definitions/Name'
-          label:
-            $ref: '#/definitions/Label'
-          app_name:
-            $ref: '#/definitions/Name'
-          team_id:
-            $ref: '#/definitions/OptionalID'
-          user_id:
-            $ref: '#/definitions/OptionalID'
-          product_id:
-            $ref: '#/definitions/ID'
-          plan_id:
-            $ref: '#/definitions/ID'
-          region_id:
-            $ref: '#/definitions/ID'
-          created_at:
-            type: string
-            format: datetime
-          updated_at:
-            type: string
-            format: datetime
-        additionalProperties: false
-        required:
-        - name
-        - label
-        - product_id
-        - plan_id
-        - region_id
-    additionalProperties: false
-    required:
-    - id
-    - type
-    - version
-    - body
   Resource:
     type: object
     properties:
@@ -305,16 +356,22 @@ definitions:
             $ref: '#/definitions/Label'
           app_name:
             $ref: '#/definitions/Name'
-          team_id:
-            $ref: '#/definitions/OptionalID'
           user_id:
             $ref: '#/definitions/OptionalID'
+          team_id:
+            $ref: '#/definitions/OptionalID'
           product_id:
-            $ref: '#/definitions/ID'
+            $ref: '#/definitions/OptionalID'
           plan_id:
-            $ref: '#/definitions/ID'
+            $ref: '#/definitions/OptionalID'
           region_id:
-            $ref: '#/definitions/ID'
+            $ref: '#/definitions/OptionalID'
+          source:
+            type: string
+            enum:
+            - catalog
+            - custom
+            default: catalog
           created_at:
             type: string
             format: datetime
@@ -325,9 +382,7 @@ definitions:
         required:
         - name
         - label
-        - product_id
-        - plan_id
-        - region_id
+        - source
         - created_at
         - updated_at
     additionalProperties: false
@@ -350,7 +405,7 @@ definitions:
           app_name:
             x-nullable: true
             type: string
-            pattern: ^[a-zA-Z][a-z0-9A-Z \-]{2,128}$
+            pattern: ^$|[a-zA-Z][a-z0-9A-Z \-]{2,128}$
         additionalProperties: false
     additionalProperties: false
     required:
@@ -393,6 +448,8 @@ definitions:
             description: |
               Map of configuration variable names to values, names
               must IEEE 1003.1 - 2001 Standard (checked in code).
+            additionalProperties:
+              type: string
         additionalProperties: false
         required:
         - resource_id
@@ -426,6 +483,14 @@ definitions:
             description: |
               Map of configuration variable names to values, names
               must IEEE 1003.1 - 2001 Standard (checked in code).
+            additionalProperties:
+              type: string
+          source:
+            type: string
+            enum:
+            - catalog
+            - custom
+            default: catalog
           created_at:
             type: string
             format: datetime
@@ -436,6 +501,7 @@ definitions:
         required:
         - resource_id
         - values
+        - source
         - created_at
         - updated_at
     additionalProperties: false
@@ -444,3 +510,6 @@ definitions:
     - type
     - version
     - body
+  ConfigPatch:
+    type: object
+    additionalProperties: true

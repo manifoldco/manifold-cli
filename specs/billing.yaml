@@ -229,6 +229,15 @@ paths:
         type: string
         enum:
         - credit
+      - name: team_id
+        in: query
+        description: |
+          ID of the Team to filter Events by, stored as a
+          base32encoded 18 byte identifier. Falls back to current user.
+        type: string
+        pattern: ^[0-9abcdefghjkmnpqrtuvwxyz]{29}$
+        format: base32ID
+        required: false
       responses:
         200:
           description: The list of subscription events, ordered by event number.
@@ -248,6 +257,17 @@ definitions:
     description: A base32 encoded 18 byte identifier.
     pattern: ^[0-9abcdefghjkmnpqrtuvwxyz]{29}$
     format: base32ID
+    x-go-type:
+      type: ID
+      import:
+        package: github.com/manifoldco/go-manifold
+        alias: manifold
+  OptionalID:
+    type: string
+    description: A base32 encoded 18 byte identifier.
+    pattern: ^[0-9abcdefghjkmnpqrtuvwxyz]{29}$
+    format: base32ID
+    x-nullable: true
     x-go-type:
       type: ID
       import:
@@ -324,6 +344,90 @@ definitions:
     minLength: 1
     maxLength: 128
     pattern: ^[0-9A-Z]{1,128}$
+  Coupon:
+    description: Coupon details
+    type: object
+    required:
+    - id
+    - type
+    - version
+    - body
+    additionalProperties: false
+    properties:
+      id:
+        $ref: '#/definitions/ID'
+      version:
+        type: integer
+        enum:
+        - 1
+      type:
+        type: string
+        enum:
+        - payout_profile
+      body:
+        type: object
+        required:
+        - type
+        - code
+        - active
+        - claimed
+        - currency
+        additionalProperties: false
+        properties:
+          type:
+            type: string
+            enum:
+            - standard
+            - signup
+          code:
+            $ref: '#/definitions/CouponCode'
+          active:
+            type: boolean
+          amount:
+            description: Dollar value in cents
+            type: integer
+            minimum: 0
+          claimed:
+            description: |
+              Total claimed codes for this coupon.
+            type: integer
+          expires_at:
+            description: |
+              Expiry datetime for this coupon. If omitted, the coupon does not
+              expire.
+            type: string
+            format: date-time
+          total:
+            description: |
+              Total claimable codes for this coupon. If omitted, there are infinite
+              coupons.
+            type: integer
+            minimum: 1
+  UpdateCoupon:
+    type: object
+    description: Shape of request used to update a coupon
+    properties:
+      body:
+        type: object
+        properties:
+          code:
+            $ref: '#/definitions/CouponCode'
+          active:
+            type: boolean
+          amount:
+            description: Dollar value in cents
+            type: integer
+            minimum: 0
+          expires_at:
+            description: |
+              Expiry datetime for this coupon. If omitted, the coupon does not
+              expire.
+            type: string
+            format: date-time
+        additionalProperties: false
+    additionalProperties: false
+    required:
+    - body
   BillingCouponCreate:
     description: Information necessary to create a new coupon
     type: object
@@ -464,16 +568,15 @@ definitions:
       body:
         type: object
         properties:
-          team_id:
-            $ref: '#/definitions/ID'
           user_id:
-            $ref: '#/definitions/ID'
+            $ref: '#/definitions/OptionalID'
+          team_id:
+            $ref: '#/definitions/OptionalID'
           sources:
             type: array
             items:
               $ref: '#/definitions/Source'
         required:
-        - user_id
         - sources
     additionalProperties: false
     required:
@@ -484,10 +587,10 @@ definitions:
   ProfileCreateRequest:
     type: object
     properties:
-      team_id:
-        $ref: '#/definitions/ID'
       user_id:
-        $ref: '#/definitions/ID'
+        $ref: '#/definitions/OptionalID'
+      team_id:
+        $ref: '#/definitions/OptionalID'
       token:
         type: string
         minLength: 3
@@ -555,6 +658,8 @@ definitions:
     properties:
       code:
         $ref: '#/definitions/CouponCode'
+      team_id:
+        $ref: '#/definitions/OptionalID'
     required:
     - code
     additionalProperties: false
@@ -602,10 +707,10 @@ definitions:
       occurred_at:
         type: string
         format: date-time
-      team_id:
-        $ref: '#/definitions/ID'
       user_id:
-        $ref: '#/definitions/ID'
+        $ref: '#/definitions/OptionalID'
+      team_id:
+        $ref: '#/definitions/OptionalID'
       provider_id:
         $ref: '#/definitions/ID'
       resource_id:

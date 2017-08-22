@@ -92,7 +92,7 @@ func New(ctx context.Context, client *catalogClient.Catalog) (*Catalog, error) {
 
 func updateCatalog(ctx context.Context, cache *Catalog) (*Catalog, error) {
 	// Get products
-	products, err := cache.client.Product.GetProducts(nil)
+	products, err := cache.client.Product.GetProducts(nil, nil)
 	if err != nil {
 		return nil, hierr.Errorf(err, "Failed to fetch the latest products list")
 	}
@@ -109,7 +109,7 @@ func updateCatalog(ctx context.Context, cache *Catalog) (*Catalog, error) {
 	// Get plans for known productIDs
 	planParams := catalogClientPlan.NewGetPlansParamsWithContext(ctx)
 	planParams.SetProductID(productIDs)
-	plans, err := cache.client.Plan.GetPlans(planParams)
+	plans, err := cache.client.Plan.GetPlans(planParams, nil)
 	if err != nil {
 		return nil, hierr.Errorf(err,
 			"Failed to fetch the latest product plan data")

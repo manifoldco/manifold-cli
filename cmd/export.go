@@ -7,7 +7,6 @@ import (
 	"io"
 	"os"
 	"sort"
-	"strconv"
 	"strings"
 
 	"github.com/manifoldco/go-manifold"
@@ -24,8 +23,6 @@ import (
 	"github.com/manifoldco/manifold-cli/generated/marketplace/client/credential"
 	"github.com/manifoldco/manifold-cli/generated/marketplace/models"
 )
-
-var errCannotUnpack = fmt.Errorf("Could not unpack credential value")
 
 var formats = []string{"env", "bash", "powershell", "fish", "cmd", "json"}
 
@@ -148,16 +145,8 @@ func writeFormat(w io.Writer, rMap map[manifold.ID]*models.Resource,
 		resource := rMap[rID]
 		fmt.Fprintf(w, "# %s\n", resource.Body.Name)
 		for _, c := range credentials {
-			values := c.Body.Values.(map[string]interface{})
-			for name, value := range values {
-				switch v := value.(type) {
-				case string:
-					fmt.Fprintf(w, format, strings.ToUpper(name), v)
-				case int:
-					fmt.Fprintf(w, format, strings.ToUpper(name), strconv.Itoa(v))
-				default:
-					return errCannotUnpack
-				}
+			for name, value := range c.Body.Values {
+				fmt.Fprintf(w, format, name, value)
 			}
 		}
 
@@ -187,16 +176,8 @@ func flattenCMap(cMap map[manifold.ID][]*models.Credential) (map[string]string, 
 
 	for _, credentials := range cMap {
 		for _, c := range credentials {
-			values := c.Body.Values.(map[string]interface{})
-			for name, value := range values {
-				switch v := value.(type) {
-				case string:
-					out[strings.ToUpper(name)] = v
-				case int:
-					out[strings.ToUpper(name)] = strconv.Itoa(v)
-				default:
-					return nil, errCannotUnpack
-				}
+			for name, value := range c.Body.Values {
+				out[name] = value
 			}
 		}
 	}
@@ -234,7 +215,7 @@ func fetchCredentials(ctx context.Context, m *mClient.Marketplace, resources []*
 	// Issue: https://www.github.com/manifoldco/engineering#2536
 	cMap := make(map[manifold.ID][]*models.Credential)
 	for _, r := range resources {
-		p := credential.NewGetCredentialsParamsWithContext(ctx).WithResourceID(r.ID.String())
+		p := credential.NewGetCredentialsParamsWithContext(ctx).WithResourceID([]string{r.ID.String()})
 		c, err := m.Credential.GetCredentials(p, nil)
 		if err != nil {
 			return nil, err

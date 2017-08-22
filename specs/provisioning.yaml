@@ -53,6 +53,16 @@ paths:
       summary: Get a list of operations
       tags:
       - Operation
+      parameters:
+      - name: team_id
+        in: query
+        description: |
+          ID of the Team to filter Resources by, stored as a
+          base32encoded 18 byte identifier.
+        type: string
+        pattern: ^[0-9abcdefghjkmnpqrtuvwxyz]{29}$
+        format: base32ID
+        required: false
       responses:
         200:
           description: A list of operations.
@@ -169,13 +179,13 @@ definitions:
   OptionalID:
     type: string
     description: A base32 encoded 18 byte identifier.
-    pattern: '^[0-9abcdefghjkmnpqrtuvwxyz]{29}$'
+    pattern: ^[0-9abcdefghjkmnpqrtuvwxyz]{29}$
     format: base32ID
     x-nullable: true
     x-go-type:
       type: ID
       import:
-        package: 'github.com/manifoldco/go-manifold'
+        package: github.com/manifoldco/go-manifold
         alias: manifold
   Callback:
     type: object
@@ -233,10 +243,12 @@ definitions:
         description: Type of operation this object represents
       resource_id:
         $ref: '#/definitions/ID'
-      team_id:
-        $ref: '#/definitions/OptionalID'
       user_id:
         $ref: '#/definitions/OptionalID'
+        description: User owning the operation, cannot be supplied if team_id defined
+      team_id:
+        $ref: '#/definitions/OptionalID'
+        description: Team owning the operation, cannot be supplied if user_id defined
       message:
         type: string
         description: A message associated with the operation to display to the user.
@@ -282,17 +294,26 @@ definitions:
           type: string
         label:
           type: string
+        source:
+          description: |
+            The source of the resource to be created. If not provided,
+            `marketplace` is assumed. Resources of type `custom` must omit
+            the `product_id`, `plan_id`, and `region_id` fields. They must
+            be included for `catalog` resources.
+          type: string
+          enum:
+          - catalog
+          - custom
+          default: catalog
         app_name:
           description: Optional app name for resource grouping
           type: string
       additionalProperties: false
       required:
       - state
-      - product_id
-      - plan_id
-      - region_id
       - name
       - label
+      - source
   resize:
     type: object
     allOf:
