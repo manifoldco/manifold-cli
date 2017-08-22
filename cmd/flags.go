@@ -22,7 +22,7 @@ func nameFlag() cli.Flag {
 func appFlag() cli.Flag {
 	return cli.StringFlag{
 		Name:   "app, a",
-		Usage:  "Specify an app for filtering, and updatings",
+		Usage:  "Specify an app for filtering and updating",
 		Value:  "",
 		EnvVar: "MANIFOLD_APP",
 	}
@@ -34,6 +34,14 @@ func planFlag() cli.Flag {
 		Usage:  "Specify a plan",
 		Value:  "",
 		EnvVar: "MANIFOLD_PLAN",
+	}
+}
+
+func regionFlag() cli.Flag {
+	return cli.StringFlag{
+		Name:   "region",
+		Usage:  "Use this region",
+		EnvVar: "MANIFOLD_REGION",
 	}
 }
 

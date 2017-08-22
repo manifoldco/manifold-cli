@@ -285,11 +285,11 @@ definitions:
           - error
           - done
         product_id:
-          $ref: '#/definitions/ID'
+          $ref: '#/definitions/OptionalID'
         plan_id:
-          $ref: '#/definitions/ID'
+          $ref: '#/definitions/OptionalID'
         region_id:
-          $ref: '#/definitions/ID'
+          $ref: '#/definitions/OptionalID'
         name:
           type: string
         label:

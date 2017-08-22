@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+### Added
+- Allow creating custom resources. Custom resources have no backing product.
+  Instead, they hold custom user provided config.
+
 ### Fixed
 
 - Add a newline after signup output, so it won't mess up the prompt.
