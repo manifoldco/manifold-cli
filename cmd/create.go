@@ -37,8 +37,16 @@ func init() {
 		Flags: []cli.Flag{
 			appFlag(),
 			planFlag(),
+			regionFlag(),
+			cli.StringFlag{
+				Name:  "product",
+				Usage: "Create a resource for this product",
+			},
+			cli.BoolFlag{
+				Name:  "custom, c",
+				Usage: "Create a custom resource, for holding custom configuration",
+			},
 			skipFlag(),
-			// TODO: Support a region flag
 		},
 	}
 
@@ -50,42 +58,44 @@ func create(cliCtx *cli.Context) error {
 	args := cliCtx.Args()
 
 	dontWait := cliCtx.Bool("no-wait")
-	appName := cliCtx.String("app")
-	if appName != "" {
-		name := manifold.Name(appName)
-		if err := name.Validate(nil); err != nil {
-			return errs.NewUsageExitError(cliCtx, errs.ErrInvalidAppName)
-		}
+	appName, err := validateName(cliCtx, "app", errs.ErrInvalidAppName)
+	if err != nil {
+		return err
 	}
 
-	planLabel := cliCtx.String("plan")
-	if planLabel != "" {
-		l := manifold.Label(planLabel)
-		if err := l.Validate(nil); err != nil {
-			return errs.NewUsageExitError(cliCtx, errs.ErrInvalidPlanLabel)
-		}
+	planLabel, err := validateLabel(cliCtx, "plan", errs.ErrInvalidPlanLabel)
+	if err != nil {
+		return err
 	}
 
-	productLabel := ""
-	resourceName := ""
-	if len(args) > 3 {
+	productLabel, err := validateLabel(cliCtx, "product", errs.ErrInvalidProductLabel)
+	if err != nil {
+		return err
+	}
+
+	regionLabel, err := validateLabel(cliCtx, "region", errs.ErrInvalidRegionLabel)
+	if err != nil {
+		return err
+	}
+
+	if len(args) > 1 {
 		return errs.NewUsageExitError(cliCtx, errs.ErrTooManyArgs)
 	}
 
-	if len(args) > 0 {
-		productLabel = args[0]
-		l := manifold.Label(productLabel)
+	resourceName := ""
+	if len(args) == 1 {
+		resourceName = args[0]
+		l := manifold.Name(resourceName)
 		if err := l.Validate(nil); err != nil {
-			return errs.NewUsageExitError(cliCtx, errs.ErrInvalidProductLabel)
+			return errs.NewUsageExitError(cliCtx, errs.ErrInvalidResourceName)
 		}
+	}
 
-		if len(args) == 2 {
-			resourceName = args[1]
-			l := manifold.Name(resourceName)
-			if err := l.Validate(nil); err != nil {
-				return errs.NewUsageExitError(cliCtx, errs.ErrInvalidResourceName)
-			}
-		}
+	custom := cliCtx.Bool("custom")
+	if custom && (planLabel != "" || productLabel != "" || regionLabel != "") {
+		return errs.NewUsageExitError(cliCtx, cli.NewExitError(
+			"You cannot specify product options for a custom resource", -1,
+		))
 	}
 
 	cfg, err := config.Load()
@@ -124,22 +134,32 @@ func create(cliCtx *cli.Context) error {
 		return cli.NewExitError("Failed to fetch catalog data: "+err.Error(), -1)
 	}
 
-	products := catalog.Products()
-	productIdx, _, err := prompts.SelectProduct(products, productLabel)
-	if err != nil {
-		return prompts.HandleSelectError(err, "Could not select product.")
-	}
+	var product *cModels.Product
+	var plan *cModels.Plan
+	var region *cModels.Region
 
-	plans := filterPlansByProductID(catalog.Plans(), products[productIdx].ID)
-	planIdx, _, err := prompts.SelectPlan(plans, planLabel, false)
-	if err != nil {
-		return prompts.HandleSelectError(err, "Could not select plan.")
-	}
+	if !custom {
+		products := catalog.Products()
+		productIdx, _, err := prompts.SelectProduct(products, productLabel)
+		if err != nil {
+			return prompts.HandleSelectError(err, "Could not select product.")
+		}
 
-	regions := filterRegionsForPlan(catalog.Regions(), plans[planIdx].Body.Regions)
-	regionIdx, _, err := prompts.SelectRegion(regions)
-	if err != nil {
-		return prompts.HandleSelectError(err, "Could not select region.")
+		plans := filterPlansByProductID(catalog.Plans(), products[productIdx].ID)
+		planIdx, _, err := prompts.SelectPlan(plans, planLabel, false)
+		if err != nil {
+			return prompts.HandleSelectError(err, "Could not select plan.")
+		}
+
+		regions := filterRegionsForPlan(catalog.Regions(), plans[planIdx].Body.Regions)
+		regionIdx, _, err := prompts.SelectRegion(regions)
+		if err != nil {
+			return prompts.HandleSelectError(err, "Could not select region.")
+		}
+
+		product = products[productIdx]
+		plan = plans[planIdx]
+		region = regions[regionIdx]
 	}
 
 	// Get resources, so we can fetch the list of valid appnames
@@ -164,38 +184,44 @@ func create(cliCtx *cli.Context) error {
 		return cli.NewExitError("Could not name the resource: "+err.Error(), -1)
 	}
 
-	if dontWait {
-		op, err := createResource(ctx, cfg, s, pClient, products[productIdx], plans[planIdx],
-			regions[regionIdx], appName, resourceName, true)
-		if err != nil {
-			return cli.NewExitError("Could not create resource: "+err.Error(), -1)
+	spin := spinner.New(spinner.CharSets[38], 500*time.Millisecond)
+	if !dontWait {
+		descriptor := "a custom resource"
+		if !custom {
+			descriptor = "an instance of " + string(product.Body.Name)
 		}
+		fmt.Printf("\nWe're starting to create %s. This may take some time, please wait!\n\n",
+			descriptor)
 
-		provision := op.Body.(*pModels.Provision)
-		fmt.Printf("\nAn instance of %s named \"%s\" is being created!\n",
-			products[productIdx].Body.Name, *provision.Name)
-		return nil
+		spin.Start()
+		defer spin.Stop()
 	}
 
-	fmt.Printf("\nWe're starting to create an instance of %s."+
-		" This may take some time, please wait!\n\n", products[productIdx].Body.Name)
-
-	spin := spinner.New(spinner.CharSets[38], 500*time.Millisecond)
-	spin.Start()
-	op, err := createResource(ctx, cfg, s, pClient, products[productIdx], plans[planIdx],
-		regions[regionIdx], appName, resourceName, dontWait)
-	spin.Stop()
+	op, err := createResource(ctx, cfg, s, pClient, custom, product, plan, region,
+		appName, resourceName, dontWait)
 	if err != nil {
 		return cli.NewExitError("Could not create resource: "+err.Error(), -1)
 	}
 
 	provision := op.Body.(*pModels.Provision)
-	fmt.Printf("An instance named \"%s\" has been created!\n", *provision.Name)
+	if !dontWait {
+		spin.Stop()
+		fmt.Printf("An instance named \"%s\" has been created!\n", *provision.Name)
+		return nil
+	}
+
+	if custom {
+		fmt.Printf("\nA custom resource named \"%s\" is being created!\n", *provision.Name)
+	} else {
+		fmt.Printf("\nAn instance of %s named \"%s\" is being created!\n",
+			product.Body.Name, *provision.Name)
+	}
+
 	return nil
 }
 
 func createResource(ctx context.Context, cfg *config.Config, s session.Session,
-	pClient *provisioning.Provisioning, product *cModels.Product, plan *cModels.Plan,
+	pClient *provisioning.Provisioning, custom bool, product *cModels.Product, plan *cModels.Plan,
 	region *cModels.Region, appName, resourceName string, dontWait bool) (*pModels.Operation, error) {
 
 	a, err := analytics.New(cfg, s)
@@ -211,6 +237,15 @@ func createResource(ctx context.Context, cfg *config.Config, s session.Session,
 	resourceID, err := manifold.NewID(idtype.Resource)
 	if err != nil {
 		return nil, err
+	}
+
+	var planID, productID, regionID *manifold.ID
+	source := "custom"
+	if !custom {
+		planID = &plan.ID
+		productID = &product.ID
+		regionID = &region.ID
+		source = "catalog"
 	}
 
 	// TODO: Generate a label from the name if name provided..?
@@ -229,9 +264,10 @@ func createResource(ctx context.Context, cfg *config.Config, s session.Session,
 			AppName:   appName,
 			Label:     &empty,
 			Name:      &resourceName,
-			PlanID:    plan.ID,
-			ProductID: product.ID,
-			RegionID:  region.ID,
+			Source:    &source,
+			PlanID:    planID,
+			ProductID: productID,
+			RegionID:  regionID,
 			State:     &state,
 		},
 	}
@@ -263,11 +299,15 @@ func createResource(ctx context.Context, cfg *config.Config, s session.Session,
 		}
 	}
 
-	params := map[string]string{
-		"product": string(product.Body.Label),
-		"plan":    string(plan.Body.Label),
-		"price":   toPrice(*plan.Body.Cost),
-		"region":  string(*region.Body.Location),
+	params := map[string]string{"source": "custom"}
+	if !custom {
+		params = map[string]string{
+			"source":  "catalog",
+			"product": string(product.Body.Label),
+			"plan":    string(plan.Body.Label),
+			"price":   toPrice(*plan.Body.Cost),
+			"region":  string(*region.Body.Location),
+		}
 	}
 	a.Track(ctx, "Provision Operation", &params)
 	if dontWait {

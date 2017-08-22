@@ -118,26 +118,38 @@ func list(cliCtx *cli.Context) error {
 
 	// Write out the resources table
 	w := tabwriter.NewWriter(os.Stdout, 0, 0, 8, ' ', 0)
-	fmt.Fprintln(w, "RESOURCE NAME\tAPP NAME\tSTATUS\tPRODUCT\tPLAN\tREGION")
+	fmt.Fprintln(w, "RESOURCE NAME\tAPP NAME\tSTATUS\tPRODUCT\tPLAN\tREGION\tCUSTOM")
 	fmt.Fprintln(w, " \t \t \t \t \t \t")
 	for _, resource := range resources {
 		appName := string(resource.Body.AppName)
 
-		// Get catalog data
-		product, err := catalog.GetProduct(*resource.Body.ProductID)
-		if err != nil {
-			cli.NewExitError("Product referenced by resource does not exist: "+
-				err.Error(), -1)
-		}
-		plan, err := catalog.GetPlan(*resource.Body.PlanID)
-		if err != nil {
-			cli.NewExitError("Plan referenced by resource does not exist: "+
-				err.Error(), -1)
-		}
-		region, err := catalog.GetRegion(*resource.Body.RegionID)
-		if err != nil {
-			cli.NewExitError("Region referenced by resource does not exist: "+
-				err.Error(), -1)
+		productName := ""
+		planName := ""
+		regionName := ""
+		isCustom := 'Y'
+
+		if *resource.Body.Source != "custom" {
+			isCustom = 'N'
+			// Get catalog data
+			product, err := catalog.GetProduct(*resource.Body.ProductID)
+			if err != nil {
+				cli.NewExitError("Product referenced by resource does not exist: "+
+					err.Error(), -1)
+			}
+			plan, err := catalog.GetPlan(*resource.Body.PlanID)
+			if err != nil {
+				cli.NewExitError("Plan referenced by resource does not exist: "+
+					err.Error(), -1)
+			}
+			region, err := catalog.GetRegion(*resource.Body.RegionID)
+			if err != nil {
+				cli.NewExitError("Region referenced by resource does not exist: "+
+					err.Error(), -1)
+			}
+
+			productName = string(product.Body.Name)
+			planName = string(plan.Body.Name)
+			regionName = string(region.Body.Name)
 		}
 
 		status, ok := statuses[resource.ID]
@@ -145,8 +157,8 @@ func list(cliCtx *cli.Context) error {
 			status = "Ready"
 		}
 
-		fmt.Fprintf(w, "%s\t%s\t%s\t%s\t%s\t%s\n", resource.Body.Name,
-			appName, status, product.Body.Name, plan.Body.Name, region.Body.Name)
+		fmt.Fprintf(w, "%s\t%s\t%s\t%s\t%s\t%s\t%c\n", resource.Body.Name,
+			appName, status, productName, planName, regionName, isCustom)
 	}
 	w.Flush()
 	return nil
@@ -179,9 +191,10 @@ func buildResourceList(resources []*models.Resource, operations []*pModels.Opera
 					UpdatedAt: op.Body.UpdatedAt(),
 					Label:     manifold.Label(*body.Label),
 					Name:      manifold.Name(*body.Name),
-					PlanID:    &body.PlanID,
-					ProductID: &body.ProductID,
-					RegionID:  &body.RegionID,
+					Source:    body.Source,
+					PlanID:    body.PlanID,
+					ProductID: body.ProductID,
+					RegionID:  body.RegionID,
 					UserID:    op.Body.UserID(),
 				},
 			})
