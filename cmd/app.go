@@ -13,6 +13,7 @@ import (
 	"github.com/manifoldco/manifold-cli/generated/marketplace/client"
 	resClient "github.com/manifoldco/manifold-cli/generated/marketplace/client/resource"
 	"github.com/manifoldco/manifold-cli/generated/marketplace/models"
+	"github.com/manifoldco/manifold-cli/middleware"
 	"github.com/manifoldco/manifold-cli/prompts"
 )
 
@@ -28,7 +29,7 @@ func init() {
 				Flags: []cli.Flag{
 					appFlag(),
 				},
-				Action: chain(ensureSession, loadDirPrefs, appAddCmd),
+				Action: middleware.Chain(middleware.EnsureSession, middleware.LoadDirPrefs, appAddCmd),
 			},
 			{
 				Name:      "delete",
@@ -37,7 +38,7 @@ func init() {
 				Flags: []cli.Flag{
 					appFlag(),
 				},
-				Action: chain(ensureSession, deleteAppCmd),
+				Action: middleware.Chain(middleware.EnsureSession, deleteAppCmd),
 			},
 		},
 	}

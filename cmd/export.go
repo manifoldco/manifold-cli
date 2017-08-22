@@ -17,6 +17,7 @@ import (
 	"github.com/manifoldco/manifold-cli/clients"
 	"github.com/manifoldco/manifold-cli/config"
 	"github.com/manifoldco/manifold-cli/errs"
+	"github.com/manifoldco/manifold-cli/middleware"
 	"github.com/manifoldco/manifold-cli/session"
 
 	mClient "github.com/manifoldco/manifold-cli/generated/marketplace/client"
@@ -34,7 +35,7 @@ func init() {
 	exportCmd := cli.Command{
 		Name:   "export",
 		Usage:  "Exports all environment variables from all resource",
-		Action: chain(loadDirPrefs, export),
+		Action: middleware.Chain(middleware.LoadDirPrefs, export),
 		Flags: []cli.Flag{
 			formatFlag(formats[0], formatFlagStr),
 			appFlag(),

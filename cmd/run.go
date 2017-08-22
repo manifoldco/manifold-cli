@@ -16,6 +16,7 @@ import (
 	"github.com/manifoldco/manifold-cli/clients"
 	"github.com/manifoldco/manifold-cli/config"
 	"github.com/manifoldco/manifold-cli/errs"
+	"github.com/manifoldco/manifold-cli/middleware"
 	"github.com/manifoldco/manifold-cli/session"
 )
 
@@ -23,7 +24,7 @@ func init() {
 	runCmd := cli.Command{
 		Name:   "run",
 		Usage:  "Run a process and inject secrets into its environment",
-		Action: chain(loadDirPrefs, run),
+		Action: middleware.Chain(middleware.LoadDirPrefs, run),
 		Flags: []cli.Flag{
 			appFlag(),
 		},
