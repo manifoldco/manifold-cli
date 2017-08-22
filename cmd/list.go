@@ -124,17 +124,17 @@ func list(cliCtx *cli.Context) error {
 		appName := string(resource.Body.AppName)
 
 		// Get catalog data
-		product, err := catalog.GetProduct(resource.Body.ProductID)
+		product, err := catalog.GetProduct(*resource.Body.ProductID)
 		if err != nil {
 			cli.NewExitError("Product referenced by resource does not exist: "+
 				err.Error(), -1)
 		}
-		plan, err := catalog.GetPlan(resource.Body.PlanID)
+		plan, err := catalog.GetPlan(*resource.Body.PlanID)
 		if err != nil {
 			cli.NewExitError("Plan referenced by resource does not exist: "+
 				err.Error(), -1)
 		}
-		region, err := catalog.GetRegion(resource.Body.RegionID)
+		region, err := catalog.GetRegion(*resource.Body.RegionID)
 		if err != nil {
 			cli.NewExitError("Region referenced by resource does not exist: "+
 				err.Error(), -1)
@@ -179,9 +179,9 @@ func buildResourceList(resources []*models.Resource, operations []*pModels.Opera
 					UpdatedAt: op.Body.UpdatedAt(),
 					Label:     manifold.Label(*body.Label),
 					Name:      manifold.Name(*body.Name),
-					PlanID:    body.PlanID,
-					ProductID: body.ProductID,
-					RegionID:  body.RegionID,
+					PlanID:    &body.PlanID,
+					ProductID: &body.ProductID,
+					RegionID:  &body.RegionID,
 					UserID:    op.Body.UserID(),
 				},
 			})

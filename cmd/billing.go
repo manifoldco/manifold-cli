@@ -59,7 +59,7 @@ func add(_ *cli.Context) error {
 	p := profile.NewPostProfilesParamsWithContext(ctx)
 	p.SetBody(&bModels.ProfileCreateRequest{
 		Token:  token,
-		UserID: *userID,
+		UserID: userID,
 	})
 
 	_, err = bClient.Profile.PostProfiles(p, nil)

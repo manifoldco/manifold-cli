@@ -10,6 +10,15 @@ produces:
 - application/json
 consumes:
 - application/json
+securityDefinitions:
+  jwtRequired:
+    type: apiKey
+    name: Authorization
+    in: header
+  anonymous:
+    type: apiKey
+    name: Manifold-Anonymous
+    in: header
 basePath: /v1
 paths:
   /regions/:
@@ -122,9 +131,12 @@ paths:
             $ref: '#/definitions/Error'
   /products/:
     get:
+      security:
+      - xInternalAuthRequired: []
+      - jwtRequired: []
+      - anonymous: []
       summary: List all available products
       parameters:
-      - $ref: '#/parameters/Authorization'
       - name: provider_id
         in: query
         description: |
@@ -153,9 +165,12 @@ paths:
             $ref: '#/definitions/Error'
   /products/{id}:
     get:
+      security:
+      - xInternalAuthRequired: []
+      - jwtRequired: []
+      - anonymous: []
       summary: Get a product by ID
       parameters:
-      - $ref: '#/parameters/Authorization'
       - name: id
         in: path
         description: |
@@ -186,9 +201,12 @@ paths:
             $ref: '#/definitions/Error'
   /plans/{id}:
     get:
+      security:
+      - xInternalAuthRequired: []
+      - jwtRequired: []
+      - anonymous: []
       summary: Get a plan by ID
       parameters:
-      - $ref: '#/parameters/Authorization'
       - name: id
         in: path
         description: |
@@ -219,9 +237,12 @@ paths:
             $ref: '#/definitions/Error'
   /plans/:
     get:
+      security:
+      - xInternalAuthRequired: []
+      - jwtRequired: []
+      - anonymous: []
       summary: Get a list of plans.
       parameters:
-      - $ref: '#/parameters/Authorization'
       - name: product_id
         in: query
         description: Return the plans that are associated with this product.
@@ -254,12 +275,6 @@ paths:
           schema:
             $ref: '#/definitions/Error'
 parameters:
-  Authorization:
-    name: Authorization
-    in: header
-    description: |
-      This header authenticates the request.
-    type: string
   LabelFilter:
     name: label
     in: query

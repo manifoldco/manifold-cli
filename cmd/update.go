@@ -136,7 +136,7 @@ func updateResourceCmd(cliCtx *cli.Context) error {
 	}
 
 	// TODO: Move this+fetchUniqueAppNames from create.go into another file/package?
-	plans := filterPlansByProductID(catalog.Plans(), resource.Body.ProductID)
+	plans := filterPlansByProductID(catalog.Plans(), *resource.Body.ProductID)
 	planLabel := cliCtx.String("plan")
 	if planLabel != "" {
 		l := manifold.Label(planLabel)
@@ -144,7 +144,7 @@ func updateResourceCmd(cliCtx *cli.Context) error {
 			return errs.NewUsageExitError(cliCtx, errs.ErrInvalidPlanLabel)
 		}
 	} else {
-		plan, err := pickPlanByID(plans, resource.Body.PlanID)
+		plan, err := pickPlanByID(plans, *resource.Body.PlanID)
 		if err != nil {
 			return cli.NewExitError("Could not find provided plan", -1)
 		}
