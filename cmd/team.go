@@ -40,15 +40,20 @@ func init() {
 
 func createTeamCmd(cliCtx *cli.Context) error {
 	ctx := context.Background()
+	args := cliCtx.Args()
 
-	teamName := cliCtx.String("name")
-	if teamName != "" {
-		n := manifold.Name(teamName)
-		if err := n.Validate(nil); err != nil {
-			return errs.NewUsageExitError(cliCtx, errs.ErrInvalidTeamName)
+	teamName := ""
+	if len(args) == 1 {
+		teamName = args[0]
+		l := manifold.Name(teamName)
+		if err := l.Validate(nil); err != nil {
+			return cli.NewExitError("You've provided an nvalid team name", -1)
 		}
 	}
 
+	if len(args) > 1 {
+		return errs.ErrTooManyArgs
+	}
 	cfg, err := config.Load()
 	if err != nil {
 		return cli.NewExitError(fmt.Sprintf("Could not load configuration: %s", err), -1)
