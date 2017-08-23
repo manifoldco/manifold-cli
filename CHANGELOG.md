@@ -8,8 +8,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ## [Unreleased]
 
 ### Added
+
 - Allow creating custom resources. Custom resources have no backing product.
   Instead, they hold custom user provided config.
+- Introduce `config set` and `config unset` for adding/updating/removing custom
+  config on custom resources.
 
 ### Fixed
 
