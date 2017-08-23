@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
   Instead, they hold custom user provided config.
 - Introduce `config set` and `config unset` for adding/updating/removing custom
   config on custom resources.
+- Rename app command to apps
 
 ### Fixed
 
