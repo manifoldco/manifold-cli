@@ -45,6 +45,13 @@ func regionFlag() cli.Flag {
 	}
 }
 
+func resourceFlag() cli.Flag {
+	return cli.StringFlag{
+		Name:  "resource, r",
+		Usage: "Use this resource",
+	}
+}
+
 func skipFlag() cli.Flag {
 	return cli.BoolFlag{
 		Name:   "no-wait, w",

@@ -40,3 +40,14 @@ func validateLabel(cliCtx *cli.Context, option string) (string, error) {
 
 	return val, nil
 }
+
+func requiredLabel(cliCtx *cli.Context, option string) (string, error) {
+	val := cliCtx.String(option)
+	if val == "" {
+		return "", errs.NewUsageExitError(cliCtx, cli.NewExitError(
+			fmt.Sprintf("--%s is required", option), -1,
+		))
+	}
+
+	return validateLabel(cliCtx, option)
+}
