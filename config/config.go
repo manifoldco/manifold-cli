@@ -166,6 +166,29 @@ type ManifoldYaml struct {
 	Path    string                 `yaml:"-" json:"-"`
 }
 
+// GetPlugin retrieves plugins config for the given plugin name
+func (m ManifoldYaml) GetPlugin(name string, conf interface{}) error {
+	if _, ok := m.Plugins[name]; ok {
+		// TODO: Can this just be reflected into the interface?
+		str, err := yaml.Marshal(m.Plugins[name])
+		if err != nil {
+			return errors.New("Invalid configuration")
+		}
+		err = yaml.Unmarshal(str, conf)
+		if err != nil {
+			return errors.New("Failed to read configuration")
+		}
+		return nil
+	}
+	return errors.New("Plugin not found")
+}
+
+// SavePlugin writes the ManifoldYaml values for a specific plugin name
+func (m *ManifoldYaml) SavePlugin(name string, conf interface{}) error {
+	m.Plugins[name] = conf
+	return m.Save()
+}
+
 // Save writes the ManifoldYaml values to the file in the struct's Path
 // field
 func (m *ManifoldYaml) Save() error {
