@@ -1,5 +1,5 @@
-hash: 6836b1d194625476e07ca02149348ecea599dbe80c862c092dc5343d2e72fca9
-updated: 2017-08-08T10:41:40.972030717-03:00
+hash: 1d29e603ab16a710ffe0700ceb692bbf9a9c60887392df7af94464be2196ead2
+updated: 2017-08-22T19:50:42.951234967-03:00
 imports:
 - name: github.com/alecthomas/gometalinter
   version: bae2f1293d092fd8167939d5108d1b025eaef9de
@@ -89,14 +89,14 @@ imports:
 - name: github.com/rhymond/go-money
   version: b9b9af789ed62b7458e1f5c5f9a31eb0fc35f3c6
 - name: github.com/stripe/stripe-go
-  version: fe1c3cfcbb1da53afa0ba7f6b2dd33fd317f37bf
+  version: 924076d66af652a2a686a609dad8225f187a0f17
   subpackages:
   - orderitem
   - token
 - name: github.com/tsenart/deadcode
   version: 210d2dc333e90c7e3eedf4f2242507a8e83ed4ab
 - name: github.com/urfave/cli
-  version: 0bdeddeeb0f650497d603c4ad7b20cfe685682f6
+  version: cfb38830724cc34fedffe9a2a29fb54fa9169cd1
 - name: golang.org/x/crypto
   version: 9ef620b9ca2f82b55030ffd4f41327fa9e77a92c
   subpackages:
