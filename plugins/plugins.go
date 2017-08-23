@@ -1,7 +1,6 @@
 package plugins
 
 import (
-	"encoding/json"
 	"errors"
 	"fmt"
 	"io/ioutil"
@@ -11,15 +10,15 @@ import (
 	"os/user"
 	"path"
 	"strings"
+
+	"github.com/manifoldco/manifold-cli/config"
 )
 
 const (
-	directory              = ".manifold"
-	permissions            = 0700
-	pluginPrefix           = "manifold-cli-"
-	pluginConfigFilename   = ".config.json"
-	pluginConfigPermission = 0644
-	slash                  = "/"
+	directory    = ".manifold"
+	permissions  = 0700
+	pluginPrefix = "manifold-cli-"
+	slash        = "/"
 )
 
 // ErrFailedToRead is returned when you the plugins directory cannot be read
@@ -174,61 +173,11 @@ func Run(cmd string) (bool, error) {
 	return false, nil
 }
 
-// configPath returns the plugin config file path
-func configPath(plugin string) (string, error) {
-	pluginsDir, err := Path()
-	if err != nil {
-		return "", err
-	}
-
-	return path.Join(pluginsDir, pluginPrefix+plugin, pluginConfigFilename), nil
-}
-
 // Config returns the key value configuration found in the plugin directory
-func Config(plugin string) (map[string]string, string, error) {
-	// TODO: make this map[string]interface to allow for subkeys
-	conf := make(map[string]string)
-
-	confPath, err := configPath(plugin)
+func Config(pluginName string, conf interface{}) error {
+	manifoldYaml, err := config.LoadYaml(true)
 	if err != nil {
-		return conf, "", err
+		return err
 	}
-
-	// Create the .config.json if it doesn't exist
-	_, err = os.Stat(confPath)
-	if os.IsNotExist(err) {
-		_, err := os.Create(confPath)
-		return conf, confPath, err
-	}
-
-	// Read the config file contents
-	contents, err := ioutil.ReadFile(confPath)
-	if err != nil || len(contents) < 1 {
-		return conf, confPath, err
-	}
-
-	err = json.Unmarshal(contents, &conf)
-	return conf, confPath, err
-}
-
-// SetConfig sets a key on the config map
-func SetConfig(plugin, key, value string) (map[string]string, error) {
-	conf, confPath, err := Config(plugin)
-	if err != nil {
-		return conf, err
-	}
-
-	conf[key] = value
-	confJSON, _ := json.Marshal(conf)
-	file, err := os.OpenFile(confPath, os.O_RDWR, pluginConfigPermission)
-	defer file.Close()
-	if err != nil {
-		return conf, err
-	}
-	_, err = file.Write(confJSON)
-	if err != nil {
-		return conf, err
-	}
-
-	return conf, nil
+	return manifoldYaml.GetPlugin(pluginName, conf)
 }

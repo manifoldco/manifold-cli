@@ -10,7 +10,6 @@ import (
 	"gopkg.in/oleiade/reflections.v1"
 
 	"github.com/manifoldco/manifold-cli/config"
-	"github.com/manifoldco/manifold-cli/dirprefs"
 	"github.com/manifoldco/manifold-cli/errs"
 	"github.com/manifoldco/manifold-cli/session"
 )
@@ -33,12 +32,12 @@ func Chain(funcs ...func(*cli.Context) error) func(*cli.Context) error {
 
 // LoadDirPrefs loads argument values from the .torus.json file
 func LoadDirPrefs(ctx *cli.Context) error {
-	d, err := dirprefs.Load(true)
+	d, err := config.LoadYaml(true)
 	if err != nil {
 		return err
 	}
 
-	return reflectArgs(ctx, d, "json")
+	return reflectArgs(ctx, d, "flag")
 }
 
 // EnsureSession checks that the user has an active session

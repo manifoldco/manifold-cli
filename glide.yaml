@@ -39,3 +39,4 @@ import:
   version: ^1.0.0
 - package: github.com/stripe/stripe-go
   version: ^24.2.0
+- package: gopkg.in/yaml.v2

@@ -11,7 +11,6 @@ import (
 
 	"github.com/manifoldco/manifold-cli/clients"
 	"github.com/manifoldco/manifold-cli/config"
-	"github.com/manifoldco/manifold-cli/dirprefs"
 	"github.com/manifoldco/manifold-cli/errs"
 	"github.com/manifoldco/manifold-cli/middleware"
 	"github.com/manifoldco/manifold-cli/prompts"
@@ -39,13 +38,13 @@ func initDir(cliCtx *cli.Context) error {
 	ctx := context.Background()
 	appName := cliCtx.String("app")
 
-	dPrefs, err := dirprefs.Load(false)
+	mYaml, err := config.LoadYaml(false)
 	if err != nil {
 		return err
 	}
 
-	if dPrefs != nil && dPrefs.Path != "" && !cliCtx.Bool("force") {
-		return cli.NewExitError(fmt.Sprintf("This directory is already linked to application `%s`.", dPrefs.App), -1)
+	if mYaml != nil && mYaml.Path != "" && !cliCtx.Bool("force") {
+		return cli.NewExitError(fmt.Sprintf("This directory is already linked to application `%s`.", mYaml.App), -1)
 	}
 
 	cfg, err := config.Load()
@@ -91,10 +90,10 @@ func initDir(cliCtx *cli.Context) error {
 	if err != nil {
 		return err
 	}
-	dPrefs.App = appName
-	dPrefs.Path = filepath.Join(cwd, ".manifold.json")
+	mYaml.App = appName
+	mYaml.Path = filepath.Join(cwd, config.YamlFilename)
 
-	err = dPrefs.Save()
+	err = mYaml.Save()
 	if err != nil {
 		return err
 	}

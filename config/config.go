@@ -2,12 +2,15 @@ package config
 
 import (
 	"errors"
+	"io/ioutil"
 	"os"
 	"os/user"
 	"path"
+	"path/filepath"
 
 	"github.com/go-ini/ini"
 	"github.com/stripe/stripe-go"
+	"gopkg.in/yaml.v2"
 )
 
 // Version represents the version of the cli. This variable is updated at build
@@ -28,6 +31,9 @@ const (
 	defaultScheme       = "https"
 	defaultAnalytics    = true
 	rcFilename          = ".manifoldrc"
+	rootPathLength      = 1
+	// YamlFilename is where dirprefs are stored
+	YamlFilename = ".manifold.yml"
 )
 
 // ErrMissingHomeDir represents an error when a home directory could not be found
@@ -150,4 +156,109 @@ func (c *Config) Write() error {
 
 	_, err = cfg.WriteTo(f)
 	return err
+}
+
+// ManifoldYaml represents the standard project config object
+type ManifoldYaml struct {
+	App     string                 `yaml:"app,omitempty" flag:"app,omitempty"`
+	Team    string                 `yaml:"team,omitempty" flag:"team,omitempty"`
+	Plugins map[string]interface{} `yaml:"plugins,omitempty"`
+	Path    string                 `yaml:"-" json:"-"`
+}
+
+// GetPlugin retrieves plugins config for the given plugin name
+func (m ManifoldYaml) GetPlugin(name string, conf interface{}) error {
+	if _, ok := m.Plugins[name]; ok {
+		// TODO: Can this just be reflected into the interface?
+		str, err := yaml.Marshal(m.Plugins[name])
+		if err != nil {
+			return errors.New("Invalid configuration")
+		}
+		err = yaml.Unmarshal(str, conf)
+		if err != nil {
+			return errors.New("Failed to read configuration")
+		}
+		return nil
+	}
+	return errors.New("Plugin not found")
+}
+
+// SavePlugin writes the ManifoldYaml values for a specific plugin name
+func (m *ManifoldYaml) SavePlugin(name string, conf interface{}) error {
+	m.Plugins[name] = conf
+	return m.Save()
+}
+
+// Save writes the ManifoldYaml values to the file in the struct's Path
+// field
+func (m *ManifoldYaml) Save() error {
+	yml, err := yaml.Marshal(m)
+	if err != nil {
+		return err
+	}
+	err = ioutil.WriteFile(m.Path, yml, requiredPermissions)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+// Remove removes the backing file for this ManifoldYaml
+func (m *ManifoldYaml) Remove() error {
+	return os.Remove(m.Path)
+}
+
+// LoadYaml loads ManifoldYaml. It starts in the current working directory,
+// looking for a readable '.manifold.yml' file, and walks up the directory
+// hierarchy until it finds one, or reaches the root of the fs.
+//
+// It returns an empty ManifoldYaml is no '.manifold.yml' files are found.
+// It returns an error if a malformed file is found, or if any errors occur
+// during file system access.
+func LoadYaml(recurse bool) (*ManifoldYaml, error) {
+	path, err := os.Getwd()
+	if err != nil {
+		return nil, err
+	}
+
+	prefs := &ManifoldYaml{}
+
+	var f *os.File
+	for {
+		f, err = os.Open(filepath.Join(path, YamlFilename))
+		if err != nil {
+			if isSystemRoot(path) || !recurse {
+				return prefs, nil
+			}
+
+			path = filepath.Dir(path)
+			continue
+		}
+
+		break
+	}
+
+	defer f.Close()
+	contents, err := ioutil.ReadAll(f)
+	if err != nil {
+		return nil, err
+	}
+
+	err = yaml.Unmarshal(contents, prefs)
+	if err != nil {
+		return nil, err
+	}
+
+	prefs.Path = f.Name()
+	return prefs, nil
+}
+
+// isSystemRoot validates if the given path is the root of the system for the
+// OS the application is running on.
+func isSystemRoot(path string) bool {
+	if len(path) != rootPathLength {
+		return false
+	}
+
+	return os.PathSeparator == path[rootPathLength-1]
 }
