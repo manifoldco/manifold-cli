@@ -19,7 +19,7 @@ import (
 
 func init() {
 	appCmd := cli.Command{
-		Name:  "app",
+		Name:  "apps",
 		Usage: "Manages an App in Manifold",
 		Subcommands: []cli.Command{
 			{
