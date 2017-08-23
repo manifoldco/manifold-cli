@@ -137,13 +137,12 @@ func updateResourceCmd(cliCtx *cli.Context) error {
 
 	// TODO: Move this+fetchUniqueAppNames from create.go into another file/package?
 	plans := filterPlansByProductID(catalog.Plans(), *resource.Body.ProductID)
-	planLabel := cliCtx.String("plan")
-	if planLabel != "" {
-		l := manifold.Label(planLabel)
-		if err := l.Validate(nil); err != nil {
-			return errs.NewUsageExitError(cliCtx, errs.ErrInvalidPlanLabel)
-		}
-	} else {
+	planLabel, err := validateLabel(cliCtx, "plan")
+	if err != nil {
+		return err
+	}
+
+	if planLabel == "" {
 		plan, err := pickPlanByID(plans, *resource.Body.PlanID)
 		if err != nil {
 			return cli.NewExitError("Could not find provided plan", -1)
@@ -156,13 +155,12 @@ func updateResourceCmd(cliCtx *cli.Context) error {
 		return prompts.HandleSelectError(err, "Could not select plan")
 	}
 
-	appName := cliCtx.String("app")
-	if appName != "" {
-		n := manifold.Name(appName)
-		if err := n.Validate(nil); err != nil {
-			return errs.NewUsageExitError(cliCtx, errs.ErrInvalidAppName)
-		}
-	} else {
+	appName, err := validateName(cliCtx, "app")
+	if err != nil {
+		return err
+	}
+
+	if appName == "" {
 		appName = string(resource.Body.AppName)
 	}
 
