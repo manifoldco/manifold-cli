@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - Introduce `config set` and `config unset` for adding/updating/removing custom
   config on custom resources.
 - Rename app command to apps
+- Add 'team create' to create a Team
 
 ### Fixed
 
