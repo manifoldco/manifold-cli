@@ -9,7 +9,6 @@ import (
 	"strings"
 	"syscall"
 
-	"github.com/manifoldco/go-manifold"
 	"github.com/urfave/cli"
 
 	"github.com/manifoldco/manifold-cli/analytics"
@@ -43,12 +42,9 @@ func run(cliCtx *cli.Context) error {
 		args = strings.Split(args[0], " ")
 	}
 
-	appName := cliCtx.String("app")
-	if appName != "" {
-		name := manifold.Name(appName)
-		if err := name.Validate(nil); err != nil {
-			return errs.NewUsageExitError(cliCtx, errs.ErrInvalidAppName)
-		}
+	appName, err := validateName(cliCtx, "app")
+	if err != nil {
+		return err
 	}
 
 	cfg, err := config.Load()

@@ -45,12 +45,9 @@ func init() {
 func export(cliCtx *cli.Context) error {
 	ctx := context.Background()
 
-	appName := cliCtx.String("app")
-	if appName != "" {
-		name := manifold.Name(appName)
-		if err := name.Validate(nil); err != nil {
-			return errs.NewUsageExitError(cliCtx, errs.ErrInvalidAppName)
-		}
+	appName, err := validateName(cliCtx, "app")
+	if err != nil {
+		return err
 	}
 
 	format := cliCtx.String("format")

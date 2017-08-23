@@ -1,12 +1,15 @@
 package main
 
 import (
+	"fmt"
+
 	"github.com/manifoldco/go-manifold"
-	"github.com/manifoldco/manifold-cli/errs"
 	"github.com/urfave/cli"
+
+	"github.com/manifoldco/manifold-cli/errs"
 )
 
-func validateName(cliCtx *cli.Context, option string, err error) (string, error) {
+func validateName(cliCtx *cli.Context, option string) (string, error) {
 	val := cliCtx.String(option)
 	if val == "" {
 		return val, nil
@@ -14,13 +17,15 @@ func validateName(cliCtx *cli.Context, option string, err error) (string, error)
 
 	name := manifold.Name(val)
 	if err := name.Validate(nil); err != nil {
-		return "", errs.NewUsageExitError(cliCtx, err)
+		return "", errs.NewUsageExitError(cliCtx, cli.NewExitError(
+			fmt.Sprintf("You've provided an invalid %s name!", option), -1,
+		))
 	}
 
 	return val, nil
 }
 
-func validateLabel(cliCtx *cli.Context, option string, err error) (string, error) {
+func validateLabel(cliCtx *cli.Context, option string) (string, error) {
 	val := cliCtx.String(option)
 	if val == "" {
 		return val, nil
@@ -28,7 +33,9 @@ func validateLabel(cliCtx *cli.Context, option string, err error) (string, error
 
 	label := manifold.Label(val)
 	if err := label.Validate(nil); err != nil {
-		return "", errs.NewUsageExitError(cliCtx, err)
+		return "", errs.NewUsageExitError(cliCtx, cli.NewExitError(
+			fmt.Sprintf("You've provided an invalid %s!", option), -1,
+		))
 	}
 
 	return val, nil

@@ -58,22 +58,22 @@ func create(cliCtx *cli.Context) error {
 	args := cliCtx.Args()
 
 	dontWait := cliCtx.Bool("no-wait")
-	appName, err := validateName(cliCtx, "app", errs.ErrInvalidAppName)
+	appName, err := validateName(cliCtx, "app")
 	if err != nil {
 		return err
 	}
 
-	planLabel, err := validateLabel(cliCtx, "plan", errs.ErrInvalidPlanLabel)
+	planLabel, err := validateLabel(cliCtx, "plan")
 	if err != nil {
 		return err
 	}
 
-	productLabel, err := validateLabel(cliCtx, "product", errs.ErrInvalidProductLabel)
+	productLabel, err := validateLabel(cliCtx, "product")
 	if err != nil {
 		return err
 	}
 
-	regionLabel, err := validateLabel(cliCtx, "region", errs.ErrInvalidRegionLabel)
+	regionLabel, err := validateLabel(cliCtx, "region")
 	if err != nil {
 		return err
 	}

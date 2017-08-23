@@ -22,25 +22,9 @@ var ErrAlreadyLoggedOut = cli.NewExitError("You're already logged out!", -1)
 // ErrNotLoggedIn represents an error where a user must log in to continue
 var ErrNotLoggedIn = cli.NewExitError("You are not logged in!", -1)
 
-// ErrInvalidAppName represents an error where a user has provided an invalid
-// app name
-var ErrInvalidAppName = cli.NewExitError("You've provided an invalid app name!", -1)
-
 // ErrInvalidResourceName represents an error where a user has provided an
 // invalid resource name
 var ErrInvalidResourceName = cli.NewExitError("You've provided an invalid resource name!", -1)
-
-// ErrInvalidPlanLabel represents an error where a user has provided an invalid
-// plan label
-var ErrInvalidPlanLabel = cli.NewExitError("You've provided an invalid plan!", -1)
-
-// ErrInvalidRegionLabel represents an error where a user has provided an
-// invalid region label
-var ErrInvalidRegionLabel = cli.NewExitError("You've provided an invalid region!", -1)
-
-// ErrInvalidProductLabel represents an error where a user has provided an
-// invalid product name
-var ErrInvalidProductLabel = cli.NewExitError("You've provided an invalid product!", -1)
 
 // ErrProductNotFound represents an error where the provided user's product
 // label does not exist.
