@@ -38,6 +38,9 @@ var ErrPlanNotFound = cli.NewExitError("The provided plan does not exist!", -1)
 // does not exist
 var ErrResourceNotFound = cli.NewExitError("The provided resource does not exist!", -1)
 
+// ErrTeamNotFound represents an error where the provided user's team label does not exist
+var ErrTeamNotFound = cli.NewExitError("The provided team does not exist!", -1)
+
 // ErrRegionNotFound represents an error where the provided user's region label
 // does not exist
 var ErrRegionNotFound = cli.NewExitError("The provided region does not exist!", -1)

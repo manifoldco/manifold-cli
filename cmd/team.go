@@ -27,10 +27,15 @@ func init() {
 			{
 				Name:      "create",
 				ArgsUsage: "[name]",
+				Action:    middleware.Chain(middleware.EnsureSession, createTeamCmd),
+			},
+			{
+				Name:      "update",
+				ArgsUsage: "[label]",
 				Flags: []cli.Flag{
 					nameFlag(),
 				},
-				Action: middleware.Chain(middleware.EnsureSession, createTeamCmd),
+				Action: middleware.Chain(middleware.EnsureSession, updateTeamCmd),
 			},
 		},
 	}
@@ -74,6 +79,61 @@ func createTeamCmd(cliCtx *cli.Context) error {
 	return nil
 }
 
+func updateTeamCmd(cliCtx *cli.Context) error {
+	ctx := context.Background()
+
+	if err := maxOptionalArgsLength(cliCtx, 1); err != nil {
+		return err
+	}
+
+	teamName, err := optionalArgLabel(cliCtx, 0, "team")
+	if err != nil {
+		return err
+	}
+
+	newTeamName, err := validateName(cliCtx, "name", "team")
+	if err != nil {
+		return err
+	}
+
+	cfg, err := config.Load()
+	if err != nil {
+		return cli.NewExitError(fmt.Sprintf("Could not load configuration: %s", err), -1)
+	}
+
+	identityClient, err := clients.NewIdentity(cfg)
+	if err != nil {
+		return cli.NewExitError(fmt.Sprintf("Failed to create Identity client: %s", err), -1)
+	}
+
+	teams, err := clients.FetchTeams(ctx, identityClient)
+	if err != nil {
+		return cli.NewExitError(fmt.Sprintf("Failed to fetch list of teams: %s", err), -1)
+	}
+
+	if len(teams) == 0 {
+		return cli.NewExitError("No teams found", -1)
+	}
+
+	teamIdx, _, err := prompts.SelectTeam(teams, teamName)
+	if err != nil {
+		return prompts.HandleSelectError(err, "Could not select team")
+	}
+
+	autoSelect := newTeamName != ""
+	newTeamName, err = prompts.TeamName(newTeamName, autoSelect)
+	if err != nil {
+		return prompts.HandleSelectError(err, "Could not validate name")
+	}
+
+	if err := updateTeam(ctx, teams[teamIdx], newTeamName, identityClient); err != nil {
+		return cli.NewExitError(fmt.Sprintf("Could not update team: %s", err), -1)
+	}
+
+	fmt.Printf("Your team \"%s\" has been updated\n", newTeamName)
+	return nil
+}
+
 func createTeam(ctx context.Context, teamName string, identityClient *client.Identity) error {
 
 	createTeam := &models.CreateTeam{
@@ -88,6 +148,7 @@ func createTeam(ctx context.Context, teamName string, identityClient *client.Ide
 
 	_, err := identityClient.Team.PostTeams(c, nil)
 	if err != nil {
+
 		switch e := err.(type) {
 		case *teamClient.PostTeamsBadRequest:
 			return e.Payload
@@ -96,6 +157,33 @@ func createTeam(ctx context.Context, teamName string, identityClient *client.Ide
 		case *teamClient.PostTeamsConflict:
 			return e.Payload
 		case *teamClient.PostTeamsInternalServerError:
+			return errs.ErrSomethingWentHorriblyWrong
+		default:
+			return err
+		}
+	}
+
+	return nil
+}
+
+func updateTeam(ctx context.Context, team *models.Team, teamName string, identityClient *client.Identity) error {
+	updateTeam := &models.UpdateTeam{
+		Body: &models.UpdateTeamBody{
+			Name:  manifold.Name(teamName),
+			Label: manifold.Label(strings.Replace(strings.ToLower(teamName), " ", "-", -1)),
+		},
+	}
+
+	c := teamClient.NewPatchTeamsIDParamsWithContext(ctx)
+	c.SetBody(updateTeam)
+	c.SetID(team.ID.String())
+
+	_, err := identityClient.Team.PatchTeamsID(c, nil)
+	if err != nil {
+		switch e := err.(type) {
+		case *teamClient.PatchTeamsIDBadRequest:
+			return e.Payload
+		case *teamClient.PatchTeamsIDInternalServerError:
 			return errs.ErrSomethingWentHorriblyWrong
 		default:
 			return err
