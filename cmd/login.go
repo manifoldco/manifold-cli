@@ -16,7 +16,7 @@ import (
 func init() {
 	loginCmd := cli.Command{
 		Name:   "login",
-		Usage:  "Allows a user to login to their account",
+		Usage:  "Allow a user to login to their account",
 		Action: login,
 	}
 

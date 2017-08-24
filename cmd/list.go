@@ -38,8 +38,8 @@ func (r resourcesSortByName) Less(i, j int) bool {
 func init() {
 	listCmd := cli.Command{
 		Name: "list",
-		Usage: "Allows a user to list the status of their provisioned Manifold " +
-			"resources.",
+		Usage: "Allow a user to list the status of their provisioned Manifold " +
+			"resources",
 		Action: middleware.Chain(middleware.LoadDirPrefs, list),
 		Flags: []cli.Flag{
 			appFlag(),

@@ -27,7 +27,7 @@ func init() {
 	deleteCmd := cli.Command{
 		Name:      "delete",
 		ArgsUsage: "[name]",
-		Usage:     "Deletes a resource in Manifold.",
+		Usage:     "Delete a resource in Manifold",
 		Action:    middleware.Chain(middleware.EnsureSession, deleteCmd),
 		Flags: []cli.Flag{
 			skipFlag(),

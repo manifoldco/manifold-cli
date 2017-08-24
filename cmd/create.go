@@ -32,7 +32,7 @@ func init() {
 	createCmd := cli.Command{
 		Name:      "create",
 		ArgsUsage: "[name]",
-		Usage:     "Allows a user to create a new resource through Manifold.",
+		Usage:     "Allow a user to create a new resource through Manifold",
 		Action:    middleware.Chain(middleware.LoadDirPrefs, create),
 		Flags: []cli.Flag{
 			appFlag(),
