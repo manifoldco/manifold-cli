@@ -15,6 +15,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
   config on custom resources.
 - Rename app command to apps
 - Add 'team create' to create a Team
+- Add 'team update' to update a Team
 
 ### Fixed
 
