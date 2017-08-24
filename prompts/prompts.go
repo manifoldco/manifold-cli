@@ -15,6 +15,7 @@ import (
 	"github.com/manifoldco/manifold-cli/errs"
 
 	cModels "github.com/manifoldco/manifold-cli/generated/catalog/models"
+	iModels "github.com/manifoldco/manifold-cli/generated/identity/models"
 	mModels "github.com/manifoldco/manifold-cli/generated/marketplace/models"
 )
 
@@ -208,6 +209,47 @@ func SelectRegion(regions []*cModels.Region) (int, string, error) {
 
 	prompt := promptui.Select{
 		Label: "Select Region",
+		Items: labels,
+	}
+
+	return prompt.Run()
+}
+
+// SelectTeam prompts the user to select a team from the given list
+func SelectTeam(teams []*iModels.Team, label string) (int, string, error) {
+	line := func(t *iModels.Team) string {
+		return fmt.Sprintf("%s (%s)", t.Body.Name, t.Body.Label)
+	}
+
+	var idx int
+	if label != "" {
+		found := false
+		for i, t := range teams {
+			if string(t.Body.Label) == label {
+				idx = i
+				found = true
+				break
+			}
+		}
+
+		t := teams[idx]
+
+		if !found {
+			fmt.Println(promptui.FailedValue("Team", label))
+			return 0, "", errs.ErrTeamNotFound
+		}
+
+		fmt.Println(promptui.SuccessfulValue("Team", line(t)))
+		return idx, label, nil
+	}
+
+	labels := make([]string, len(teams))
+	for i, t := range teams {
+		labels[i] = line(t)
+	}
+
+	prompt := promptui.Select{
+		Label: "Select Team",
 		Items: labels,
 	}
 
