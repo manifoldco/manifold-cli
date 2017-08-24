@@ -15,7 +15,7 @@ import (
 func init() {
 	logoutCmd := cli.Command{
 		Name:   "logout",
-		Usage:  "Allows a user to logout of their Manifold session",
+		Usage:  "Allow a user to logout of their Manifold session",
 		Action: logout,
 	}
 
