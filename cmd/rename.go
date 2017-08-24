@@ -25,7 +25,6 @@ func init() {
 		Usage:     "Rename a resource label",
 		Flags: []cli.Flag{
 			appFlag(),
-			nameFlag(),
 		},
 		Action: middleware.Chain(middleware.EnsureSession, middleware.LoadDirPrefs, rename),
 	}
@@ -35,7 +34,20 @@ func init() {
 
 func rename(cliCtx *cli.Context) error {
 	ctx := context.Background()
-	args := cliCtx.Args()
+
+	if err := maxOptionalArgsLength(cliCtx, 2); err != nil {
+		return err
+	}
+
+	resourceLabel, err := optionalArgLabel(cliCtx, 0, "resource")
+	if err != nil {
+		return err
+	}
+
+	newResourceLabel, err := optionalArgLabel(cliCtx, 1, "resource")
+	if err != nil {
+		return err
+	}
 
 	appName, err := validateName(cliCtx, "app")
 	if err != nil {
@@ -51,24 +63,6 @@ func rename(cliCtx *cli.Context) error {
 	if err != nil {
 		return cli.NewExitError(
 			fmt.Sprintf("Failed to create Maketplace API client: %s", err), -1)
-	}
-
-	resourceLabel := ""
-	if len(args) > 0 {
-		resourceLabel = args[0]
-		l := manifold.Label(resourceLabel)
-		if err := l.Validate(nil); err != nil {
-			return errs.NewUsageExitError(cliCtx, errs.ErrInvalidResourceName)
-		}
-	}
-
-	newResourceLabel := ""
-	if len(args) > 1 {
-		newResourceLabel = args[1]
-		l := manifold.Label(newResourceLabel)
-		if err := l.Validate(nil); err != nil {
-			return errs.NewUsageExitError(cliCtx, errs.ErrInvalidResourceName)
-		}
 	}
 
 	res, err := clients.FetchResources(ctx, marketplaceClient)

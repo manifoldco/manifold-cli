@@ -49,23 +49,17 @@ func init() {
 
 func updateResourceCmd(cliCtx *cli.Context) error {
 	ctx := context.Background()
-	args := cliCtx.Args()
+
+	if err := maxOptionalArgsLength(cliCtx, 1); err != nil {
+		return err
+	}
+
+	resourceLabel, err := optionalArgLabel(cliCtx, 0, "resource")
+	if err != nil {
+		return err
+	}
 
 	dontWait := cliCtx.Bool("no-wait")
-
-	resourceLabel := ""
-
-	if len(args) > 2 {
-		return errs.NewUsageExitError(cliCtx, errs.ErrTooManyArgs)
-	}
-
-	if len(args) > 0 {
-		resourceLabel = args[0]
-		l := manifold.Label(resourceLabel)
-		if err := l.Validate(nil); err != nil {
-			return errs.NewUsageExitError(cliCtx, errs.ErrInvalidResourceName)
-		}
-	}
 
 	cfg, err := config.Load()
 	if err != nil {
