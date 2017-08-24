@@ -51,3 +51,49 @@ func requiredLabel(cliCtx *cli.Context, option string) (string, error) {
 
 	return validateLabel(cliCtx, option)
 }
+
+func optionalArgLabel(cliCtx *cli.Context, idx int, name string) (string, error) {
+	args := cliCtx.Args()
+
+	if len(args) < idx+1 {
+		return "", nil
+	}
+
+	val := args[idx]
+	l := manifold.Label(val)
+	if err := l.Validate(nil); err != nil {
+		return "", errs.NewUsageExitError(cliCtx, cli.NewExitError(
+			fmt.Sprintf("You've provided an invalid %s!", name), -1,
+		))
+	}
+
+	return val, nil
+}
+
+func optionalArgName(cliCtx *cli.Context, idx int, name string) (string, error) {
+	args := cliCtx.Args()
+
+	if len(args) < idx+1 {
+		return "", nil
+	}
+
+	val := args[idx]
+	n := manifold.Name(val)
+	if err := n.Validate(nil); err != nil {
+		return "", errs.NewUsageExitError(cliCtx, cli.NewExitError(
+			fmt.Sprintf("You've provided an invalid %s name", name), -1,
+		))
+	}
+
+	return val, nil
+}
+
+func maxOptionalArgsLength(cliCtx *cli.Context, size int) error {
+	args := cliCtx.Args()
+
+	if len(args) > size {
+		return errs.ErrTooManyArgs
+	}
+
+	return nil
+}

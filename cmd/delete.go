@@ -39,21 +39,16 @@ func init() {
 
 func deleteCmd(cliCtx *cli.Context) error {
 	ctx := context.Background()
-	args := cliCtx.Args()
 
 	dontWait := cliCtx.Bool("no-wait")
 
-	resourceLabel := ""
-	if len(args) > 1 {
-		return errs.NewUsageExitError(cliCtx, errs.ErrTooManyArgs)
+	if err := maxOptionalArgsLength(cliCtx, 1); err != nil {
+		return err
 	}
 
-	if len(args) > 0 {
-		resourceLabel = args[0]
-		l := manifold.Label(resourceLabel)
-		if err := l.Validate(nil); err != nil {
-			return errs.NewUsageExitError(cliCtx, errs.ErrInvalidResourceName)
-		}
+	resourceLabel, err := optionalArgLabel(cliCtx, 0, "resource")
+	if err != nil {
+		return err
 	}
 
 	cfg, err := config.Load()

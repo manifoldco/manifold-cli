@@ -6,7 +6,6 @@ import (
 
 	"github.com/urfave/cli"
 
-	"github.com/manifoldco/go-manifold"
 	"github.com/manifoldco/manifold-cli/clients"
 	"github.com/manifoldco/manifold-cli/config"
 	"github.com/manifoldco/manifold-cli/errs"
@@ -49,6 +48,15 @@ func init() {
 func appAddCmd(cliCtx *cli.Context) error {
 	ctx := context.Background()
 
+	if err := maxOptionalArgsLength(cliCtx, 1); err != nil {
+		return err
+	}
+
+	resourceLabel, err := optionalArgLabel(cliCtx, 0, "resource")
+	if err != nil {
+		return err
+	}
+
 	appName, err := validateName(cliCtx, "app")
 	if err != nil {
 		return err
@@ -64,7 +72,7 @@ func appAddCmd(cliCtx *cli.Context) error {
 		return cli.NewExitError(fmt.Sprintf("Failed to create Marketplace client: %s", err), -1)
 	}
 
-	resource, res, err := getResource(ctx, cliCtx, cfg, marketplaceClient, false)
+	resource, res, err := getResource(ctx, resourceLabel, marketplaceClient, false)
 	if err != nil {
 		return cli.NewExitError(err, -1)
 	}
@@ -90,6 +98,15 @@ func appAddCmd(cliCtx *cli.Context) error {
 func deleteAppCmd(cliCtx *cli.Context) error {
 	ctx := context.Background()
 
+	if err := maxOptionalArgsLength(cliCtx, 1); err != nil {
+		return err
+	}
+
+	resourceLabel, err := optionalArgLabel(cliCtx, 0, "resource")
+	if err != nil {
+		return err
+	}
+
 	cfg, err := config.Load()
 	if err != nil {
 		return cli.NewExitError(fmt.Sprintf("Could not load configuration: %s", err), -1)
@@ -100,7 +117,7 @@ func deleteAppCmd(cliCtx *cli.Context) error {
 		return cli.NewExitError(fmt.Sprintf("Failed to create Marketplace client: %s", err), -1)
 	}
 
-	resource, _, err := getResource(ctx, cliCtx, cfg, marketplaceClient, true)
+	resource, _, err := getResource(ctx, resourceLabel, marketplaceClient, true)
 	if err != nil {
 		return cli.NewExitError(err, -1)
 	}
@@ -117,23 +134,9 @@ func deleteAppCmd(cliCtx *cli.Context) error {
 	return nil
 }
 
-func getResource(ctx context.Context, cliCtx *cli.Context, cfg *config.Config,
-	marketplaceClient *client.Marketplace, withAppsOnly bool,
+func getResource(ctx context.Context, resourceLabel string, marketplaceClient *client.Marketplace,
+	withAppsOnly bool,
 ) (*models.Resource, []*models.Resource, error) {
-	args := cliCtx.Args()
-
-	resourceLabel := ""
-	if len(args) > 1 {
-		return nil, nil, errs.NewUsageExitError(cliCtx, errs.ErrTooManyArgs)
-	}
-	if len(args) > 0 {
-		resourceLabel = args[0]
-		l := manifold.Label(resourceLabel)
-		if err := l.Validate(nil); err != nil {
-			return nil, nil, errs.NewUsageExitError(cliCtx, errs.ErrInvalidResourceName)
-		}
-	}
-
 	res, err := clients.FetchResources(ctx, marketplaceClient)
 	if err != nil {
 		return nil, nil, cli.NewExitError(

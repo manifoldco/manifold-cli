@@ -55,7 +55,15 @@ func init() {
 
 func create(cliCtx *cli.Context) error {
 	ctx := context.Background()
-	args := cliCtx.Args()
+
+	if err := maxOptionalArgsLength(cliCtx, 1); err != nil {
+		return err
+	}
+
+	resourceName, err := optionalArgName(cliCtx, 0, "resource")
+	if err != nil {
+		return err
+	}
 
 	dontWait := cliCtx.Bool("no-wait")
 	appName, err := validateName(cliCtx, "app")
@@ -76,19 +84,6 @@ func create(cliCtx *cli.Context) error {
 	regionLabel, err := validateLabel(cliCtx, "region")
 	if err != nil {
 		return err
-	}
-
-	if len(args) > 1 {
-		return errs.NewUsageExitError(cliCtx, errs.ErrTooManyArgs)
-	}
-
-	resourceName := ""
-	if len(args) == 1 {
-		resourceName = args[0]
-		l := manifold.Name(resourceName)
-		if err := l.Validate(nil); err != nil {
-			return errs.NewUsageExitError(cliCtx, errs.ErrInvalidResourceName)
-		}
 	}
 
 	custom := cliCtx.Bool("custom")
