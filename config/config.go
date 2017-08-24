@@ -122,6 +122,7 @@ type Config struct {
 	AuthToken       string `ini:"auth_token"`
 	TransportScheme string `ini:"scheme"`
 	Analytics       bool   `ini:"analytics"`
+	Team            string `ini:"team"`
 }
 
 // Write writes the contents of the Config struct to ~/.manifoldrc and sets the

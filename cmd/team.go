@@ -112,10 +112,10 @@ func updateTeamCmd(cliCtx *cli.Context) error {
 	}
 
 	if len(teams) == 0 {
-		return cli.NewExitError("No teams found", -1)
+		return errs.ErrNoTeams
 	}
 
-	teamIdx, _, err := prompts.SelectTeam(teams, teamName)
+	teamIdx, _, err := prompts.SelectTeam(teams, teamName, true)
 	if err != nil {
 		return prompts.HandleSelectError(err, "Could not select team")
 	}

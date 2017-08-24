@@ -216,7 +216,7 @@ func SelectRegion(regions []*cModels.Region) (int, string, error) {
 }
 
 // SelectTeam prompts the user to select a team from the given list
-func SelectTeam(teams []*iModels.Team, label string) (int, string, error) {
+func SelectTeam(teams []*iModels.Team, label string, includeNoTeam bool) (int, string, error) {
 	line := func(t *iModels.Team) string {
 		return fmt.Sprintf("%s (%s)", t.Body.Name, t.Body.Label)
 	}
@@ -243,9 +243,13 @@ func SelectTeam(teams []*iModels.Team, label string) (int, string, error) {
 		return idx, label, nil
 	}
 
-	labels := make([]string, len(teams))
+	labels := make([]string, len(teams)+1)
 	for i, t := range teams {
 		labels[i] = line(t)
+	}
+
+	if includeNoTeam {
+		labels = append([]string{"Don't use a team"}, labels...)
 	}
 
 	prompt := promptui.Select{

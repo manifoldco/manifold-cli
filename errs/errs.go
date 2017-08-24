@@ -48,6 +48,10 @@ var ErrRegionNotFound = cli.NewExitError("The provided region does not exist!", 
 // ErrNoApps represents an error where the action requires a resource app but none exist
 var ErrNoApps = cli.NewExitError("There are no resources with apps", -1)
 
+// ErrNoTeams represents an error where at least one team is required for an action, but none are
+// available
+var ErrNoTeams = cli.NewExitError("No teams found", -1)
+
 // ErrTooManyArgs represents an error where a user has provided too many
 // command line arguments
 var ErrTooManyArgs = cli.NewExitError("You've provided too many command line arguments!", -1)

@@ -19,6 +19,13 @@ func nameFlag() cli.Flag {
 	}
 }
 
+func meFlag() cli.Flag {
+	return cli.BoolFlag{
+		Name:  "me, m",
+		Usage: "Specify the action should not be done with a team",
+	}
+}
+
 func appFlag() cli.Flag {
 	return cli.StringFlag{
 		Name:   "app, a",
