@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"github.com/manifoldco/go-manifold"
@@ -38,10 +39,19 @@ func init() {
 				Action: middleware.Chain(middleware.EnsureSession, updateTeamCmd),
 			},
 			{
-				Name:        "leave",
-				Description: "Remove yourself from a team",
-				ArgsUsage:   "[name]",
-				Action:      middleware.Chain(middleware.EnsureSession, leaveTeamCmd),
+				Name:      "invite",
+				ArgsUsage: "[email] [name]",
+				Usage:     "Invite a new user to join your team",
+				Flags: []cli.Flag{
+					teamFlag(),
+				},
+				Action: middleware.Chain(middleware.EnsureSession, inviteToTeamCmd),
+			},
+			{
+				Name:      "leave",
+				ArgsUsage: "[name]",
+				Usage:     "Remove yourself from a team",
+				Action:    middleware.Chain(middleware.EnsureSession, leaveTeamCmd),
 			},
 		},
 	}
@@ -137,6 +147,70 @@ func updateTeamCmd(cliCtx *cli.Context) error {
 	}
 
 	fmt.Printf("Your team \"%s\" has been updated\n", newTeamName)
+	return nil
+}
+
+func inviteToTeamCmd(cliCtx *cli.Context) error {
+	ctx := context.Background()
+
+	email, err := optionalArgEmail(cliCtx, 0, "user")
+	if err != nil {
+		return err
+	}
+
+	args := cliCtx.Args().Tail()
+	name := strings.Join(args, " ")
+
+	teamName, err := validateName(cliCtx, "team")
+	if err != nil {
+		return err
+	}
+
+	cfg, err := config.Load()
+	if err != nil {
+		return cli.NewExitError(fmt.Sprintf("Could not load configuration: %s", err), -1)
+	}
+
+	identityClient, err := clients.NewIdentity(cfg)
+	if err != nil {
+		return cli.NewExitError(fmt.Sprintf("Failed to create Identity client: %s", err), -1)
+	}
+
+	teams, err := clients.FetchTeams(ctx, identityClient)
+	if err != nil {
+		return cli.NewExitError(fmt.Sprintf("Failed to fetch list of teams: %s", err), -1)
+	}
+
+	if len(teams) == 0 {
+		return errs.ErrNoTeams
+	}
+
+	teamIdx, _, err := prompts.SelectTeam(teams, teamName, false)
+	if err != nil {
+		return prompts.HandleSelectError(err, "Could not select team")
+	}
+
+	if email == "" {
+		email, err = prompts.Email("")
+		if err != nil {
+			return err
+		}
+	}
+
+	if name == "" {
+		name, err = prompts.FullName("")
+		if err != nil {
+			return err
+		}
+	}
+
+	team := teams[teamIdx]
+
+	if err := inviteToTeam(ctx, team, email, name, identityClient); err != nil {
+		return cli.NewExitError(fmt.Sprintf("Could not invite to team: %s", err), -1)
+	}
+
+	fmt.Printf("An invite has been sent to %s <%s>\n", name, email)
 	return nil
 }
 
@@ -260,6 +334,12 @@ func updateTeam(ctx context.Context, team *models.Team, teamName string, identit
 	}
 
 	return nil
+}
+
+func inviteToTeam(ctx context.Context, team *models.Team, email string, name string, identityClient *client.Identity) error {
+
+	// TODO - luiz
+	return errors.New("not implemented")
 }
 
 func leaveTeam(ctx context.Context, membershipID manifold.ID, identityClient *client.Identity) error {

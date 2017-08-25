@@ -95,6 +95,24 @@ func optionalArgName(cliCtx *cli.Context, idx int, name string) (string, error) 
 	return val, nil
 }
 
+func optionalArgEmail(cliCtx *cli.Context, idx int, name string) (string, error) {
+	args := cliCtx.Args()
+
+	if len(args) < idx+1 {
+		return "", nil
+	}
+
+	val := args[idx]
+	n := manifold.Email(val)
+	if err := n.Validate(nil); err != nil {
+		return "", errs.NewUsageExitError(cliCtx, cli.NewExitError(
+			fmt.Sprintf("You've provided an invalid %s email", name), -1,
+		))
+	}
+
+	return val, nil
+}
+
 func maxOptionalArgsLength(cliCtx *cli.Context, size int) error {
 	args := cliCtx.Args()
 
