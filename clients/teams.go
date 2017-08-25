@@ -23,3 +23,21 @@ func FetchTeams(ctx context.Context, c *iClient.Identity) ([]*iModels.Team, erro
 
 	return results, nil
 }
+
+// FetchMemberships returns all memberships for the authenticated user
+func FetchMemberships(ctx context.Context, c *iClient.Identity) ([]iModels.TeamMembership, error) {
+	params := team.NewGetMembershipsParamsWithContext(ctx)
+	res, err := c.Team.GetMemberships(params, nil)
+
+	if err != nil {
+		return nil, err
+	}
+
+	var results []iModels.TeamMembership
+
+	for _, m := range res.Payload {
+		results = append(results, *m)
+	}
+
+	return results, nil
+}

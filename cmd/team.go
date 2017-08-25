@@ -37,6 +37,12 @@ func init() {
 				},
 				Action: middleware.Chain(middleware.EnsureSession, updateTeamCmd),
 			},
+			{
+				Name:        "leave",
+				Description: "Remove yourself from a team",
+				ArgsUsage:   "[name]",
+				Action:      middleware.Chain(middleware.EnsureSession, leaveTeamCmd),
+			},
 		},
 	}
 
@@ -134,6 +140,69 @@ func updateTeamCmd(cliCtx *cli.Context) error {
 	return nil
 }
 
+func leaveTeamCmd(cliCtx *cli.Context) error {
+	ctx := context.Background()
+
+	if err := maxOptionalArgsLength(cliCtx, 1); err != nil {
+		return err
+	}
+
+	teamName, err := optionalArgLabel(cliCtx, 0, "team")
+	if err != nil {
+		return err
+	}
+
+	cfg, err := config.Load()
+	if err != nil {
+		return cli.NewExitError(fmt.Sprintf("Could not load configuration: %s", err), -1)
+	}
+
+	identityClient, err := clients.NewIdentity(cfg)
+	if err != nil {
+		return cli.NewExitError(fmt.Sprintf("Failed to create Identity client: %s", err), -1)
+	}
+
+	teams, err := clients.FetchTeams(ctx, identityClient)
+	if err != nil {
+		return cli.NewExitError(fmt.Sprintf("Failed to fetch list of teams: %s", err), -1)
+	}
+
+	if len(teams) == 0 {
+		return errs.ErrNoTeams
+	}
+
+	teamIdx, _, err := prompts.SelectTeam(teams, teamName, false)
+	if err != nil {
+		return prompts.HandleSelectError(err, "Could not select team")
+	}
+
+	team := teams[teamIdx]
+
+	memberships, err := clients.FetchMemberships(ctx, identityClient)
+	if err != nil {
+		return cli.NewExitError(fmt.Sprintf("Failed to fetch user memberships: %s", err), -1)
+	}
+
+	var membershipID manifold.ID
+
+	for _, m := range memberships {
+		if m.Body.TeamID == team.ID {
+			membershipID = m.ID
+		}
+	}
+
+	if membershipID.IsEmpty() {
+		return cli.NewExitError("No memberships found", -1)
+	}
+
+	if err := leaveTeam(ctx, membershipID, identityClient); err != nil {
+		return cli.NewExitError(fmt.Sprintf("Could not leave team: %s", err), -1)
+	}
+
+	fmt.Printf("You have left the team \"%s\"\n", team.Body.Name)
+	return nil
+}
+
 func createTeam(ctx context.Context, teamName string, identityClient *client.Identity) error {
 
 	createTeam := &models.CreateTeam{
@@ -191,4 +260,24 @@ func updateTeam(ctx context.Context, team *models.Team, teamName string, identit
 	}
 
 	return nil
+}
+
+func leaveTeam(ctx context.Context, membershipID manifold.ID, identityClient *client.Identity) error {
+	c := teamClient.NewDeleteMembershipsIDParamsWithContext(ctx)
+	c.SetID(membershipID.String())
+
+	_, err := identityClient.Team.DeleteMembershipsID(c, nil)
+
+	if err == nil {
+		return nil
+	}
+
+	switch e := err.(type) {
+	case *teamClient.DeleteMembershipsIDUnauthorized:
+		return e.Payload
+	case *teamClient.DeleteMembershipsIDInternalServerError:
+		return errs.ErrSomethingWentHorriblyWrong
+	default:
+		return err
+	}
 }
