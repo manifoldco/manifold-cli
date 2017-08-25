@@ -6,6 +6,8 @@ import (
 	"github.com/manifoldco/manifold-cli/placeholder"
 )
 
+var teamFlags = []cli.Flag{teamFlag(), meFlag()}
+
 func formatFlag(defaultValue, description string) cli.Flag {
 	return placeholder.New("format, f", "FORMAT", description, defaultValue, "MANIFOLD_FORMAT", false)
 }
@@ -23,6 +25,15 @@ func meFlag() cli.Flag {
 	return cli.BoolFlag{
 		Name:  "me, m",
 		Usage: "Specify the action should not be done with a team",
+	}
+}
+
+func teamFlag() cli.Flag {
+	return cli.StringFlag{
+		Name:   "team, t",
+		Usage:  "Specify a team name",
+		Value:  "",
+		EnvVar: "MANIFOLD_TEAM",
 	}
 }
 
@@ -56,14 +67,6 @@ func resourceFlag() cli.Flag {
 	return cli.StringFlag{
 		Name:  "resource, r",
 		Usage: "Use this resource",
-	}
-}
-
-func teamFlag() cli.Flag {
-	return cli.StringFlag{
-		Name:  "team",
-		Usage: "Specify a team",
-		Value: "",
 	}
 }
 

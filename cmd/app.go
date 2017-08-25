@@ -25,19 +25,21 @@ func init() {
 				Name:      "add",
 				ArgsUsage: "[label]",
 				Usage:     "Add a resource to an app",
-				Flags: []cli.Flag{
+                Flags: append(teamFlags, []cli.Flag{
 					appFlag(),
-				},
-				Action: middleware.Chain(middleware.EnsureSession, middleware.LoadDirPrefs, appAddCmd),
+				}...),
+				Action: middleware.Chain(middleware.EnsureSession, middleware.LoadDirPrefs,
+					middleware.LoadTeamPrefs, appAddCmd),
 			},
 			{
 				Name:      "delete",
 				ArgsUsage: "[label]",
 				Usage:     "Removes a resource from an app",
-				Flags: []cli.Flag{
+                Flags: append(teamFlags, []cli.Flag{
 					appFlag(),
-				},
-				Action: middleware.Chain(middleware.EnsureSession, deleteAppCmd),
+				}...),
+				Action: middleware.Chain(middleware.EnsureSession, middleware.LoadTeamPrefs,
+					deleteAppCmd),
 			},
 		},
 	}
