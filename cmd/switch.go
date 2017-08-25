@@ -68,10 +68,9 @@ func switchTeamCmd(cliCtx *cli.Context) error {
 			return prompts.HandleSelectError(err, "Could not select team")
 		}
 
-		if teamIdx == 0 {
+		if teamIdx == -1 {
 			me = true
 		} else {
-			teamIdx = teamIdx - 1
 			team = teams[teamIdx]
 			teamLabel = string(team.Body.Label)
 		}

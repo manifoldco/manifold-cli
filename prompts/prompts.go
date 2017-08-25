@@ -215,7 +215,8 @@ func SelectRegion(regions []*cModels.Region) (int, string, error) {
 	return prompt.Run()
 }
 
-// SelectTeam prompts the user to select a team from the given list
+// SelectTeam prompts the user to select a team from the given list. -1 as the first return value
+// indicates no team has been selected
 func SelectTeam(teams []*iModels.Team, label string, includeNoTeam bool) (int, string, error) {
 	line := func(t *iModels.Team) string {
 		return fmt.Sprintf("%s (%s)", t.Body.Name, t.Body.Label)
