@@ -257,7 +257,13 @@ func SelectTeam(teams []*iModels.Team, label string, includeNoTeam bool) (int, s
 		Items: labels,
 	}
 
-	return prompt.Run()
+	teamIdx, name, err := prompt.Run()
+
+	if includeNoTeam {
+		return teamIdx - 1, name, err
+	}
+
+	return teamIdx, name, err
 }
 
 // SelectCreateAppName prompts the user to select or create an application
