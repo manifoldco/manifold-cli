@@ -47,22 +47,22 @@ func switchTeamCmd(cliCtx *cli.Context) error {
 
 	me := cliCtx.Bool("me")
 
-	identityClient, err := clients.NewIdentity(cfg)
-	if err != nil {
-		return cli.NewExitError(fmt.Sprintf("Failed to create Identity client: %s", err), -1)
-	}
-
-	teams, err := clients.FetchTeams(ctx, identityClient)
-	if err != nil {
-		return err
-	}
-
-	if len(teams) == 0 {
-		return errs.ErrNoTeams
-	}
-
 	var team *models.Team
 	if !me {
+		identityClient, err := clients.NewIdentity(cfg)
+		if err != nil {
+			return cli.NewExitError(fmt.Sprintf("Failed to create Identity client: %s", err), -1)
+		}
+
+		teams, err := clients.FetchTeams(ctx, identityClient)
+		if err != nil {
+			return err
+		}
+
+		if len(teams) == 0 {
+			return errs.ErrNoTeams
+		}
+
 		teamIdx, _, err := prompts.SelectTeam(teams, teamLabel, true)
 		if err != nil {
 			return prompts.HandleSelectError(err, "Could not select team")
