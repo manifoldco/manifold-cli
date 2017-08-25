@@ -16,6 +16,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - Rename app command to apps
 - Add 'team create' to create a Team
 - Add 'team update' to update a Team
+- Add 'switch' to switch Teams, so interact with a team's resources
 
 ### Fixed
 
