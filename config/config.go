@@ -39,6 +39,9 @@ const (
 // ErrMissingHomeDir represents an error when a home directory could not be found
 var ErrMissingHomeDir = errors.New("Could not find Home Directory")
 
+// ErrPluginNotFound is returned if a particular plugin doesn't exist in the yaml when requested
+var ErrPluginNotFound = errors.New("Plugin not found")
+
 // ErrWrongConfigPermissions represents an error when the config permissions
 // are incorrect.
 var ErrWrongConfigPermissions = errors.New(
@@ -169,6 +172,9 @@ type ManifoldYaml struct {
 
 // GetPlugin retrieves plugins config for the given plugin name
 func (m ManifoldYaml) GetPlugin(name string, conf interface{}) error {
+	if m.Plugins == nil {
+		return ErrPluginNotFound
+	}
 	if _, ok := m.Plugins[name]; ok {
 		// TODO: Can this just be reflected into the interface?
 		str, err := yaml.Marshal(m.Plugins[name])
@@ -181,11 +187,14 @@ func (m ManifoldYaml) GetPlugin(name string, conf interface{}) error {
 		}
 		return nil
 	}
-	return errors.New("Plugin not found")
+	return ErrPluginNotFound
 }
 
 // SavePlugin writes the ManifoldYaml values for a specific plugin name
 func (m *ManifoldYaml) SavePlugin(name string, conf interface{}) error {
+	if m.Plugins == nil {
+		m.Plugins = make(map[string]interface{})
+	}
 	m.Plugins[name] = conf
 	return m.Save()
 }

@@ -25,6 +25,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 - Add a newline after signup output, so it won't mess up the prompt.
 - Credit Card number can be between 12 and 19 digits and cvv either 3 or 4.
+- Plugin config initializes map before setting if it doesn't exist
 
 ## [0.2.6] - 2017-08-16
 
