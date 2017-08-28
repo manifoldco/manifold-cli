@@ -16,7 +16,7 @@ import (
 func init() {
 	signupCmd := cli.Command{
 		Name:   "signup",
-		Usage:  "Allow a user to create a new account",
+		Usage:  "Create a new account",
 		Action: signup,
 	}
 

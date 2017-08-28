@@ -34,7 +34,7 @@ func init() {
 	updateCmd := cli.Command{
 		Name:      "update",
 		ArgsUsage: "[label]",
-		Usage:     "Allow a user to update a resource in Manifold",
+		Usage:     "Update a resource",
 		Action:    middleware.Chain(middleware.EnsureSession, middleware.LoadDirPrefs, updateResourceCmd),
 		Flags: []cli.Flag{
 			nameFlag(),

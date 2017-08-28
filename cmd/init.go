@@ -25,7 +25,7 @@ func init() {
 			appFlag(),
 			cli.BoolFlag{
 				Name:  "force, f",
-				Usage: "Overwrite existing app.",
+				Usage: "Overwrite existing app",
 			},
 		},
 		Action: middleware.Chain(middleware.LoadDirPrefs, initDir),
