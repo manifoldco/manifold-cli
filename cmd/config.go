@@ -26,7 +26,7 @@ func init() {
 			{
 				Name:      "set",
 				ArgsUsage: "<key=value...>",
-				Usage:     "Set one or more config values on a custom resource.",
+				Usage:     "Set one or more config values on a custom resource",
 				Flags: []cli.Flag{
 					resourceFlag(),
 				},
@@ -35,7 +35,7 @@ func init() {
 			{
 				Name:      "unset",
 				ArgsUsage: "<key...>",
-				Usage:     "Unset one or more config values on a custom resource.",
+				Usage:     "Unset one or more config values on a custom resource",
 				Flags: []cli.Flag{
 					resourceFlag(),
 				},

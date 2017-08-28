@@ -22,16 +22,18 @@ import (
 func init() {
 	appCmd := cli.Command{
 		Name:  "teams",
-		Usage: "Manage Teams in Manifold",
+		Usage: "Manage your teams",
 		Subcommands: []cli.Command{
 			{
-				Name:      "create",
-				ArgsUsage: "[name]",
-				Action:    middleware.Chain(middleware.EnsureSession, createTeamCmd),
+				Name:        "create",
+				Description: "Create a new team",
+				ArgsUsage:   "[name]",
+				Action:      middleware.Chain(middleware.EnsureSession, createTeamCmd),
 			},
 			{
-				Name:      "update",
-				ArgsUsage: "[label]",
+				Name:        "update",
+				Description: "Update an existing team",
+				ArgsUsage:   "[label]",
 				Flags: []cli.Flag{
 					nameFlag(),
 				},

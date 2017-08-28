@@ -24,7 +24,7 @@ func init() {
 		Subcommands: []cli.Command{
 			{
 				Name:   "add",
-				Usage:  "Add a credit",
+				Usage:  "Add a credit card",
 				Action: add,
 			},
 			{
