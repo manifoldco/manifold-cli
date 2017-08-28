@@ -14,9 +14,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - Introduce `config set` and `config unset` for adding/updating/removing custom
   config on custom resources.
 - Rename app command to apps
-- Add 'team create' to create a Team
-- Add 'team update' to update a Team
-- Add 'team leave' to leave a Team
+- Add 'teams create' to create a Team
+- Add 'teams update' to update a Team
+- Add 'teams leave' to leave a Team
+- Add 'teams invite' to invite to a Team
 - Add 'switch' to switch Teams, so interact with a team's resources
 
 ### Fixed

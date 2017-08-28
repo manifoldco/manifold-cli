@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"errors"
 	"fmt"
 
 	"github.com/manifoldco/go-manifold"
@@ -14,6 +13,7 @@ import (
 	"github.com/manifoldco/manifold-cli/config"
 	"github.com/manifoldco/manifold-cli/errs"
 	"github.com/manifoldco/manifold-cli/generated/identity/client"
+	inviteClient "github.com/manifoldco/manifold-cli/generated/identity/client/invite"
 	teamClient "github.com/manifoldco/manifold-cli/generated/identity/client/team"
 	"github.com/manifoldco/manifold-cli/generated/identity/models"
 	iModels "github.com/manifoldco/manifold-cli/generated/identity/models"
@@ -29,6 +29,7 @@ func init() {
 			{
 				Name:      "create",
 				ArgsUsage: "[name]",
+				Usage:     "Create a new team",
 				Action:    middleware.Chain(middleware.EnsureSession, createTeamCmd),
 			},
 			{
@@ -37,12 +38,13 @@ func init() {
 				Flags: []cli.Flag{
 					nameFlag(),
 				},
+				Usage:  "Update an existing team name",
 				Action: middleware.Chain(middleware.EnsureSession, updateTeamCmd),
 			},
 			{
 				Name:      "invite",
 				ArgsUsage: "[email] [name]",
-				Usage:     "Invite a new user to join your team",
+				Usage:     "Invite a user to join a team",
 				Flags: []cli.Flag{
 					teamFlag(),
 				},
@@ -143,6 +145,7 @@ func inviteToTeamCmd(cliCtx *cli.Context) error {
 	args := cliCtx.Args().Tail()
 	name := strings.Join(args, " ")
 
+	// read team as an optional flag
 	teamName, err := validateName(cliCtx, "team")
 	if err != nil {
 		return err
@@ -158,15 +161,15 @@ func inviteToTeamCmd(cliCtx *cli.Context) error {
 		return err
 	}
 
-	if email == "" {
-		email, err = prompts.Email("")
+	if name == "" {
+		name, err = prompts.FullName("")
 		if err != nil {
 			return err
 		}
 	}
 
-	if name == "" {
-		name, err = prompts.FullName("")
+	if email == "" {
+		email, err = prompts.Email("")
 		if err != nil {
 			return err
 		}
@@ -285,13 +288,38 @@ func updateTeam(ctx context.Context, team *models.Team, teamName string, identit
 	return nil
 }
 
-func inviteToTeam(ctx context.Context, team *models.Team, email string, name string, identityClient *client.Identity) error {
+func inviteToTeam(ctx context.Context, team *models.Team, email string,
+	name string, identityClient *client.Identity) error {
+	c := inviteClient.NewPostInvitesParamsWithContext(ctx)
 
-	// TODO - luiz
-	return errors.New("not implemented")
+	params := &iModels.CreateInvite{
+		Body: &iModels.CreateInviteBody{
+			Email:  manifold.Email(email),
+			Name:   iModels.UserDisplayName(name),
+			TeamID: team.ID,
+		},
+	}
+
+	c.SetBody(params)
+
+	_, _, err := identityClient.Invite.PostInvites(c, nil)
+
+	if err == nil {
+		return nil
+	}
+
+	switch e := err.(type) {
+	case *teamClient.PostTeamsUnauthorized:
+		return e.Payload
+	case *teamClient.PostTeamsInternalServerError:
+		return errs.ErrSomethingWentHorriblyWrong
+	default:
+		return err
+	}
 }
 
-func leaveTeam(ctx context.Context, membershipID manifold.ID, identityClient *client.Identity) error {
+func leaveTeam(ctx context.Context, membershipID manifold.ID,
+	identityClient *client.Identity) error {
 	c := teamClient.NewDeleteMembershipsIDParamsWithContext(ctx)
 	c.SetID(membershipID.String())
 
