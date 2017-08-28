@@ -59,6 +59,14 @@ func resourceFlag() cli.Flag {
 	}
 }
 
+func teamFlag() cli.Flag {
+	return cli.StringFlag{
+		Name:  "team",
+		Usage: "Specify a team",
+		Value: "",
+	}
+}
+
 func skipFlag() cli.Flag {
 	return cli.BoolFlag{
 		Name:   "no-wait, w",
