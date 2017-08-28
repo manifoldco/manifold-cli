@@ -16,6 +16,7 @@ import (
 	"github.com/manifoldco/manifold-cli/generated/identity/client"
 	teamClient "github.com/manifoldco/manifold-cli/generated/identity/client/team"
 	"github.com/manifoldco/manifold-cli/generated/identity/models"
+	iModels "github.com/manifoldco/manifold-cli/generated/identity/models"
 	"github.com/manifoldco/manifold-cli/middleware"
 	"github.com/manifoldco/manifold-cli/prompts"
 )
@@ -71,14 +72,9 @@ func createTeamCmd(cliCtx *cli.Context) error {
 		return err
 	}
 
-	cfg, err := config.Load()
+	identityClient, err := loadIdentityClient()
 	if err != nil {
-		return cli.NewExitError(fmt.Sprintf("Could not load configuration: %s", err), -1)
-	}
-
-	identityClient, err := clients.NewIdentity(cfg)
-	if err != nil {
-		return cli.NewExitError(fmt.Sprintf("Failed to create Identity client: %s", err), -1)
+		return err
 	}
 
 	autoSelect := teamName != ""
@@ -112,28 +108,14 @@ func updateTeamCmd(cliCtx *cli.Context) error {
 		return err
 	}
 
-	cfg, err := config.Load()
+	identityClient, err := loadIdentityClient()
 	if err != nil {
-		return cli.NewExitError(fmt.Sprintf("Could not load configuration: %s", err), -1)
+		return err
 	}
 
-	identityClient, err := clients.NewIdentity(cfg)
+	team, err := selectTeam(ctx, teamName, identityClient)
 	if err != nil {
-		return cli.NewExitError(fmt.Sprintf("Failed to create Identity client: %s", err), -1)
-	}
-
-	teams, err := clients.FetchTeams(ctx, identityClient)
-	if err != nil {
-		return cli.NewExitError(fmt.Sprintf("Failed to fetch list of teams: %s", err), -1)
-	}
-
-	if len(teams) == 0 {
-		return errs.ErrNoTeams
-	}
-
-	teamIdx, _, err := prompts.SelectTeam(teams, teamName, false)
-	if err != nil {
-		return prompts.HandleSelectError(err, "Could not select team")
+		return err
 	}
 
 	autoSelect := newTeamName != ""
@@ -142,7 +124,7 @@ func updateTeamCmd(cliCtx *cli.Context) error {
 		return prompts.HandleSelectError(err, "Could not validate name")
 	}
 
-	if err := updateTeam(ctx, teams[teamIdx], newTeamName, identityClient); err != nil {
+	if err := updateTeam(ctx, team, newTeamName, identityClient); err != nil {
 		return cli.NewExitError(fmt.Sprintf("Could not update team: %s", err), -1)
 	}
 
@@ -166,28 +148,14 @@ func inviteToTeamCmd(cliCtx *cli.Context) error {
 		return err
 	}
 
-	cfg, err := config.Load()
+	identityClient, err := loadIdentityClient()
 	if err != nil {
-		return cli.NewExitError(fmt.Sprintf("Could not load configuration: %s", err), -1)
+		return err
 	}
 
-	identityClient, err := clients.NewIdentity(cfg)
+	team, err := selectTeam(ctx, teamName, identityClient)
 	if err != nil {
-		return cli.NewExitError(fmt.Sprintf("Failed to create Identity client: %s", err), -1)
-	}
-
-	teams, err := clients.FetchTeams(ctx, identityClient)
-	if err != nil {
-		return cli.NewExitError(fmt.Sprintf("Failed to fetch list of teams: %s", err), -1)
-	}
-
-	if len(teams) == 0 {
-		return errs.ErrNoTeams
-	}
-
-	teamIdx, _, err := prompts.SelectTeam(teams, teamName, false)
-	if err != nil {
-		return prompts.HandleSelectError(err, "Could not select team")
+		return err
 	}
 
 	if email == "" {
@@ -203,8 +171,6 @@ func inviteToTeamCmd(cliCtx *cli.Context) error {
 			return err
 		}
 	}
-
-	team := teams[teamIdx]
 
 	if err := inviteToTeam(ctx, team, email, name, identityClient); err != nil {
 		return cli.NewExitError(fmt.Sprintf("Could not invite to team: %s", err), -1)
@@ -226,31 +192,15 @@ func leaveTeamCmd(cliCtx *cli.Context) error {
 		return err
 	}
 
-	cfg, err := config.Load()
+	identityClient, err := loadIdentityClient()
 	if err != nil {
-		return cli.NewExitError(fmt.Sprintf("Could not load configuration: %s", err), -1)
+		return err
 	}
 
-	identityClient, err := clients.NewIdentity(cfg)
+	team, err := selectTeam(ctx, teamName, identityClient)
 	if err != nil {
-		return cli.NewExitError(fmt.Sprintf("Failed to create Identity client: %s", err), -1)
+		return err
 	}
-
-	teams, err := clients.FetchTeams(ctx, identityClient)
-	if err != nil {
-		return cli.NewExitError(fmt.Sprintf("Failed to fetch list of teams: %s", err), -1)
-	}
-
-	if len(teams) == 0 {
-		return errs.ErrNoTeams
-	}
-
-	teamIdx, _, err := prompts.SelectTeam(teams, teamName, false)
-	if err != nil {
-		return prompts.HandleSelectError(err, "Could not select team")
-	}
-
-	team := teams[teamIdx]
 
 	memberships, err := clients.FetchMemberships(ctx, identityClient)
 	if err != nil {
@@ -278,7 +228,6 @@ func leaveTeamCmd(cliCtx *cli.Context) error {
 }
 
 func createTeam(ctx context.Context, teamName string, identityClient *client.Identity) error {
-
 	createTeam := &models.CreateTeam{
 		Body: &models.CreateTeamBody{
 			Name:  manifold.Name(teamName),
@@ -360,4 +309,41 @@ func leaveTeam(ctx context.Context, membershipID manifold.ID, identityClient *cl
 	default:
 		return err
 	}
+}
+
+// loadIdentityClient returns an identify client based on the configuration file.
+func loadIdentityClient() (*client.Identity, error) {
+	cfg, err := config.Load()
+	if err != nil {
+		return nil, cli.NewExitError(fmt.Sprintf("Could not load configuration: %s", err), -1)
+	}
+
+	identityClient, err := clients.NewIdentity(cfg)
+	if err != nil {
+		return nil, cli.NewExitError(fmt.Sprintf("Failed to create Identity client: %s", err), -1)
+	}
+
+	return identityClient, nil
+}
+
+// fetchTeams retrieves all user's team and prompt to select which team the cmd
+// will be applied to.
+func selectTeam(ctx context.Context, teamName string, identityClient *client.Identity) (*iModels.Team, error) {
+	teams, err := clients.FetchTeams(ctx, identityClient)
+	if err != nil {
+		return nil, cli.NewExitError(fmt.Sprintf("Failed to fetch list of teams: %s", err), -1)
+	}
+
+	if len(teams) == 0 {
+		return nil, errs.ErrNoTeams
+	}
+
+	idx, _, err := prompts.SelectTeam(teams, teamName, false)
+	if err != nil {
+		return nil, prompts.HandleSelectError(err, "Could not select team")
+	}
+
+	team := teams[idx]
+
+	return team, nil
 }
