@@ -19,12 +19,12 @@ import (
 func init() {
 	appCmd := cli.Command{
 		Name:  "apps",
-		Usage: "Manage an App in Manifold",
+		Usage: "Manage your apps",
 		Subcommands: []cli.Command{
 			{
 				Name:      "add",
 				ArgsUsage: "[label]",
-				Usage:     "Add a resource to an app in Manifold.",
+				Usage:     "Add a resource to an app",
 				Flags: []cli.Flag{
 					appFlag(),
 				},
@@ -33,7 +33,7 @@ func init() {
 			{
 				Name:      "delete",
 				ArgsUsage: "[label]",
-				Usage:     "Removes a resource from an app in Manifold.",
+				Usage:     "Removes a resource from an app",
 				Flags: []cli.Flag{
 					appFlag(),
 				},
