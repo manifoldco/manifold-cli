@@ -10,6 +10,7 @@ import (
 	"github.com/manifoldco/manifold-cli/clients"
 	"github.com/manifoldco/manifold-cli/config"
 	"github.com/manifoldco/manifold-cli/errs"
+	"github.com/manifoldco/manifold-cli/middleware"
 	"github.com/manifoldco/manifold-cli/prompts"
 	"github.com/manifoldco/manifold-cli/session"
 
@@ -23,14 +24,18 @@ func init() {
 		Usage: "Manage your billing information",
 		Subcommands: []cli.Command{
 			{
-				Name:   "add",
-				Usage:  "Add a credit card",
-				Action: addBillingProfile,
+				Name:  "add",
+				Usage: "Add a credit card",
+				Flags: teamFlags,
+				Action: middleware.Chain(middleware.EnsureSession,
+					middleware.LoadTeamPrefs, addBillingProfile),
 			},
 			{
-				Name:   "update",
-				Usage:  "Change the credit card on file",
-				Action: updateBillingProfile,
+				Name:  "update",
+				Usage: "Change the credit card on file",
+				Flags: teamFlags,
+				Action: middleware.Chain(middleware.EnsureSession,
+					middleware.LoadTeamPrefs, updateBillingProfile),
 			},
 		},
 	}
@@ -38,11 +43,16 @@ func init() {
 	cmds = append(cmds, billingCmd)
 }
 
-func addBillingProfile(_ *cli.Context) error {
+func addBillingProfile(cliCtx *cli.Context) error {
 	ctx := context.Background()
 	cfg, err := config.Load()
 	if err != nil {
 		return cli.NewExitError("Could not load config: "+err.Error(), -1)
+	}
+
+	teamID, err := validateTeamID(cliCtx)
+	if err != nil {
+		return err
 	}
 
 	userID, token, err := inputAndTokenize(ctx, cfg)
@@ -57,10 +67,18 @@ func addBillingProfile(_ *cli.Context) error {
 	}
 
 	p := profile.NewPostProfilesParamsWithContext(ctx)
-	p.SetBody(&bModels.ProfileCreateRequest{
-		Token:  token,
-		UserID: userID,
-	})
+
+	if teamID.IsEmpty() {
+		p.SetBody(&bModels.ProfileCreateRequest{
+			Token:  token,
+			UserID: userID,
+		})
+	} else {
+		p.SetBody(&bModels.ProfileCreateRequest{
+			Token:  token,
+			TeamID: teamID,
+		})
+	}
 
 	_, err = bClient.Profile.PostProfiles(p, nil)
 	if err != nil {
@@ -71,11 +89,16 @@ func addBillingProfile(_ *cli.Context) error {
 	return nil
 }
 
-func updateBillingProfile(_ *cli.Context) error {
+func updateBillingProfile(cliCtx *cli.Context) error {
 	ctx := context.Background()
 	cfg, err := config.Load()
 	if err != nil {
 		return cli.NewExitError("Could not load config: "+err.Error(), -1)
+	}
+
+	teamID, err := validateTeamID(cliCtx)
+	if err != nil {
+		return err
 	}
 
 	userID, token, err := inputAndTokenize(ctx, cfg)
@@ -90,7 +113,13 @@ func updateBillingProfile(_ *cli.Context) error {
 	}
 
 	p := profile.NewPatchProfilesIDParamsWithContext(ctx)
-	p.SetID(userID.String())
+
+	if teamID.IsEmpty() {
+		p.SetID(userID.String())
+	} else {
+		p.SetID(teamID.String())
+	}
+
 	p.SetBody(&bModels.ProfileUpdateRequest{
 		Token: token,
 	})
