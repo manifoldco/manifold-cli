@@ -25,12 +25,12 @@ func init() {
 			{
 				Name:   "add",
 				Usage:  "Add a credit card",
-				Action: add,
+				Action: addBillingProfile,
 			},
 			{
 				Name:   "update",
 				Usage:  "Change the credit card on file",
-				Action: update,
+				Action: updateBillingProfile,
 			},
 		},
 	}
@@ -38,7 +38,7 @@ func init() {
 	cmds = append(cmds, billingCmd)
 }
 
-func add(_ *cli.Context) error {
+func addBillingProfile(_ *cli.Context) error {
 	ctx := context.Background()
 	cfg, err := config.Load()
 	if err != nil {
@@ -71,7 +71,7 @@ func add(_ *cli.Context) error {
 	return nil
 }
 
-func update(_ *cli.Context) error {
+func updateBillingProfile(_ *cli.Context) error {
 	ctx := context.Background()
 	cfg, err := config.Load()
 	if err != nil {
