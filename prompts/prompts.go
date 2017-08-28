@@ -522,7 +522,7 @@ func getPlanCost(p *cModels.Plan) string {
 }
 
 func isCard(raw string) error {
-	if govalidator.StringLength(raw, "16", "16") && govalidator.IsNumeric(raw) {
+	if govalidator.StringLength(raw, "12", "19") && govalidator.IsNumeric(raw) {
 		return nil
 	}
 
@@ -538,7 +538,7 @@ func isExpiry(raw string) error {
 }
 
 func isCVV(raw string) error {
-	if govalidator.StringLength(raw, "3", "3") && govalidator.IsNumeric(raw) {
+	if govalidator.StringLength(raw, "3", "4") && govalidator.IsNumeric(raw) {
 		return nil
 	}
 
