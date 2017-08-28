@@ -62,16 +62,17 @@ func LoadTeamPrefs(cliCtx *cli.Context) error {
 		teamName = cfg.Team
 	}
 
-	if !me && teamName == "" {
-		identityClient, err := clients.NewIdentity(cfg)
-		if err != nil {
-			return cli.NewExitError(fmt.Sprintf("Could not load identity client: %s", err), -1)
-		}
+	identityClient, err := clients.NewIdentity(cfg)
+	if err != nil {
+		return cli.NewExitError(fmt.Sprintf("Could not load identity client: %s", err), -1)
+	}
 
-		teams, err := clients.FetchTeams(ctx, identityClient)
-		if err != nil {
-			return cli.NewExitError(fmt.Sprintf("Could not load teams: %s", err), -1)
-		}
+	teams, err := clients.FetchTeams(ctx, identityClient)
+	if err != nil {
+		return cli.NewExitError(fmt.Sprintf("Could not load teams: %s", err), -1)
+	}
+
+	if !me && teamName == "" {
 		if len(teams) == 0 {
 			return cli.NewExitError(errs.ErrNoTeams, -1)
 		}
@@ -85,6 +86,18 @@ func LoadTeamPrefs(cliCtx *cli.Context) error {
 			cliCtx.Set("me", "true")
 		} else {
 			teamName = string(teams[teamIdx].Body.Label)
+			cliCtx.Set("team-id", teams[teamIdx].ID.String())
+		}
+
+	} else if teamName != "" {
+		for _, t := range teams {
+			if string(t.Body.Label) == teamName {
+				cliCtx.Set("team-id", t.ID.String())
+			}
+		}
+
+		if !isSet(cliCtx, "team-id") {
+			return cli.NewExitError(fmt.Sprintf("Team \"%s\" not found", teamName), -1)
 		}
 	}
 

@@ -6,7 +6,7 @@ import (
 	"github.com/manifoldco/manifold-cli/placeholder"
 )
 
-var teamFlags = []cli.Flag{teamFlag(), meFlag()}
+var teamFlags = []cli.Flag{teamFlag(), teamIdFlag(), meFlag()}
 
 func formatFlag(defaultValue, description string) cli.Flag {
 	return placeholder.New("format, f", "FORMAT", description, defaultValue, "MANIFOLD_FORMAT", false)
@@ -34,6 +34,14 @@ func teamFlag() cli.Flag {
 		Usage:  "Specify a team name",
 		Value:  "",
 		EnvVar: "MANIFOLD_TEAM",
+	}
+}
+
+func teamIdFlag() cli.Flag {
+	return cli.StringFlag{
+		Name:   "team-id",
+		Hidden: true,
+		Value:  "",
 	}
 }
 
