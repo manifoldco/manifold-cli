@@ -6,6 +6,7 @@ import (
 
 	"github.com/urfave/cli"
 
+	"github.com/manifoldco/go-manifold"
 	"github.com/manifoldco/manifold-cli/clients"
 	"github.com/manifoldco/manifold-cli/config"
 	"github.com/manifoldco/manifold-cli/errs"
@@ -25,7 +26,7 @@ func init() {
 				Name:      "add",
 				ArgsUsage: "[label]",
 				Usage:     "Add a resource to an app",
-                Flags: append(teamFlags, []cli.Flag{
+				Flags: append(teamFlags, []cli.Flag{
 					appFlag(),
 				}...),
 				Action: middleware.Chain(middleware.EnsureSession, middleware.LoadDirPrefs,
@@ -35,7 +36,7 @@ func init() {
 				Name:      "delete",
 				ArgsUsage: "[label]",
 				Usage:     "Removes a resource from an app",
-                Flags: append(teamFlags, []cli.Flag{
+				Flags: append(teamFlags, []cli.Flag{
 					appFlag(),
 				}...),
 				Action: middleware.Chain(middleware.EnsureSession, middleware.LoadTeamPrefs,
@@ -59,6 +60,11 @@ func appAddCmd(cliCtx *cli.Context) error {
 		return err
 	}
 
+	teamID, err := validateTeamID(cliCtx)
+	if err != nil {
+		return err
+	}
+
 	appName, err := validateName(cliCtx, "app")
 	if err != nil {
 		return err
@@ -74,7 +80,7 @@ func appAddCmd(cliCtx *cli.Context) error {
 		return cli.NewExitError(fmt.Sprintf("Failed to create Marketplace client: %s", err), -1)
 	}
 
-	resource, res, err := getResource(ctx, resourceLabel, marketplaceClient, false)
+	resource, res, err := getResource(ctx, resourceLabel, teamID, marketplaceClient, false)
 	if err != nil {
 		return cli.NewExitError(err, -1)
 	}
@@ -109,6 +115,11 @@ func deleteAppCmd(cliCtx *cli.Context) error {
 		return err
 	}
 
+	teamID, err := validateTeamID(cliCtx)
+	if err != nil {
+		return err
+	}
+
 	cfg, err := config.Load()
 	if err != nil {
 		return cli.NewExitError(fmt.Sprintf("Could not load configuration: %s", err), -1)
@@ -119,7 +130,7 @@ func deleteAppCmd(cliCtx *cli.Context) error {
 		return cli.NewExitError(fmt.Sprintf("Failed to create Marketplace client: %s", err), -1)
 	}
 
-	resource, _, err := getResource(ctx, resourceLabel, marketplaceClient, true)
+	resource, _, err := getResource(ctx, resourceLabel, teamID, marketplaceClient, true)
 	if err != nil {
 		return cli.NewExitError(err, -1)
 	}
@@ -136,10 +147,10 @@ func deleteAppCmd(cliCtx *cli.Context) error {
 	return nil
 }
 
-func getResource(ctx context.Context, resourceLabel string, marketplaceClient *client.Marketplace,
-	withAppsOnly bool,
+func getResource(ctx context.Context, resourceLabel string, teamID *manifold.ID,
+	marketplaceClient *client.Marketplace, withAppsOnly bool,
 ) (*models.Resource, []*models.Resource, error) {
-	res, err := clients.FetchResources(ctx, marketplaceClient)
+	res, err := clients.FetchResources(ctx, marketplaceClient, teamID)
 	if err != nil {
 		return nil, nil, cli.NewExitError(
 			fmt.Sprintf("Failed to fetch the list of provisioned resources: %s", err), -1)
@@ -150,6 +161,10 @@ func getResource(ctx context.Context, resourceLabel string, marketplaceClient *c
 		if err != nil {
 			return nil, nil, err
 		}
+	}
+
+	if len(res) == 0 {
+		return nil, nil, errs.ErrNoResources
 	}
 
 	resourceIdx, _, err := prompts.SelectResource(res, resourceLabel)

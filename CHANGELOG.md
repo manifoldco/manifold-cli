@@ -19,6 +19,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - Add 'teams leave' to leave a Team
 - Add 'teams invite' to invite to a Team
 - Add 'switch' to switch Teams, so interact with a team's resources
+- Add --team and --me flags for operating under your account, or a team's
 
 ### Fixed
 
