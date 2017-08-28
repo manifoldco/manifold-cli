@@ -52,6 +52,9 @@ var ErrNoApps = cli.NewExitError("There are no resources with apps", -1)
 // available
 var ErrNoTeams = cli.NewExitError("No teams found", -1)
 
+// ErrNoResources represents an error where no resources exist to preform some action on
+var ErrNoResources = cli.NewExitError("No resources found", -1)
+
 // ErrTooManyArgs represents an error where a user has provided too many
 // command line arguments
 var ErrTooManyArgs = cli.NewExitError("You've provided too many command line arguments!", -1)

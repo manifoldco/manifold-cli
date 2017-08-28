@@ -9,8 +9,10 @@ import (
 	"github.com/urfave/cli"
 	"gopkg.in/oleiade/reflections.v1"
 
+	"github.com/manifoldco/manifold-cli/clients"
 	"github.com/manifoldco/manifold-cli/config"
 	"github.com/manifoldco/manifold-cli/errs"
+	"github.com/manifoldco/manifold-cli/prompts"
 	"github.com/manifoldco/manifold-cli/session"
 )
 
@@ -38,6 +40,68 @@ func LoadDirPrefs(ctx *cli.Context) error {
 	}
 
 	return reflectArgs(ctx, d, "flag")
+}
+
+// LoadTeamPrefs loads the team from the configuration, and then --team arguments
+func LoadTeamPrefs(cliCtx *cli.Context) error {
+	ctx := context.Background()
+
+	cfg, err := config.Load()
+	if err != nil {
+		return err
+	}
+
+	teamName := cliCtx.String("team")
+	me := cliCtx.Bool("me")
+
+	if teamName != "" && me {
+		return cli.NewExitError("Cannot use --me with --team", -1)
+	}
+
+	if teamName == "" {
+		teamName = cfg.Team
+	}
+
+	identityClient, err := clients.NewIdentity(cfg)
+	if err != nil {
+		return cli.NewExitError(fmt.Sprintf("Could not load identity client: %s", err), -1)
+	}
+
+	teams, err := clients.FetchTeams(ctx, identityClient)
+	if err != nil {
+		return cli.NewExitError(fmt.Sprintf("Could not load teams: %s", err), -1)
+	}
+
+	if !me && teamName == "" {
+		if len(teams) == 0 {
+			return cli.NewExitError(errs.ErrNoTeams, -1)
+		}
+
+		teamIdx, _, err := prompts.SelectTeam(teams, "", true)
+		if err != nil {
+			prompts.HandleSelectError(err, "Could not select team")
+		}
+
+		if teamIdx == -1 {
+			cliCtx.Set("me", "true")
+		} else {
+			teamName = string(teams[teamIdx].Body.Label)
+			cliCtx.Set("team-id", teams[teamIdx].ID.String())
+		}
+
+	} else if teamName != "" {
+		for _, t := range teams {
+			if string(t.Body.Label) == teamName {
+				cliCtx.Set("team-id", t.ID.String())
+			}
+		}
+
+		if !isSet(cliCtx, "team-id") {
+			return cli.NewExitError(fmt.Sprintf("Team \"%s\" not found", teamName), -1)
+		}
+	}
+
+	return cliCtx.Set("team", teamName)
 }
 
 // EnsureSession checks that the user has an active session

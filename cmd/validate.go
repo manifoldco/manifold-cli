@@ -122,3 +122,18 @@ func maxOptionalArgsLength(cliCtx *cli.Context, size int) error {
 
 	return nil
 }
+
+func validateTeamID(cliCtx *cli.Context) (*manifold.ID, error) {
+	var teamID *manifold.ID
+	cliTeamID := cliCtx.String("team-id")
+	if cliTeamID != "" {
+		id, err := manifold.DecodeIDFromString(cliTeamID)
+		if err != nil {
+			return nil, cli.NewExitError(fmt.Sprintf("Invalid team ID: %s", err), -1)
+		}
+
+		teamID = &id
+	}
+
+	return teamID, nil
+}
