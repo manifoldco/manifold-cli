@@ -9,6 +9,7 @@ import (
 	"github.com/urfave/cli"
 	"gopkg.in/oleiade/reflections.v1"
 
+	"github.com/manifoldco/go-manifold"
 	"github.com/manifoldco/manifold-cli/clients"
 	"github.com/manifoldco/manifold-cli/config"
 	"github.com/manifoldco/manifold-cli/errs"
@@ -51,6 +52,7 @@ func LoadTeamPrefs(cliCtx *cli.Context) error {
 		return err
 	}
 
+	var teamID string
 	teamName := cliCtx.String("team")
 	me := cliCtx.Bool("me")
 
@@ -59,7 +61,12 @@ func LoadTeamPrefs(cliCtx *cli.Context) error {
 	}
 
 	if teamName == "" {
-		teamName = cfg.Team
+		teamID = cfg.Team
+		// try to decode an ID, otherwise assume a label
+		if _, err := manifold.DecodeIDFromString(teamID); err != nil {
+			teamName = cfg.Team
+			teamID = ""
+		}
 	}
 
 	identityClient, err := clients.NewIdentity(cfg)
@@ -72,7 +79,7 @@ func LoadTeamPrefs(cliCtx *cli.Context) error {
 		return cli.NewExitError(fmt.Sprintf("Could not load teams: %s", err), -1)
 	}
 
-	if !me && teamName == "" {
+	if !me && teamName == "" && teamID == "" {
 		if len(teams) == 0 {
 			return cli.NewExitError(errs.ErrNoTeams, -1)
 		}
@@ -99,6 +106,8 @@ func LoadTeamPrefs(cliCtx *cli.Context) error {
 		if !isSet(cliCtx, "team-id") {
 			return cli.NewExitError(fmt.Sprintf("Team \"%s\" not found", teamName), -1)
 		}
+	} else if teamID != "" {
+		cliCtx.Set("team-id", teamID)
 	}
 
 	return cliCtx.Set("team", teamName)

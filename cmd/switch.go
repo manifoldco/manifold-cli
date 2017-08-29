@@ -6,6 +6,7 @@ import (
 
 	"github.com/urfave/cli"
 
+	"github.com/manifoldco/go-manifold"
 	"github.com/manifoldco/manifold-cli/clients"
 	"github.com/manifoldco/manifold-cli/config"
 	"github.com/manifoldco/manifold-cli/errs"
@@ -48,6 +49,7 @@ func switchTeamCmd(cliCtx *cli.Context) error {
 	me := cliCtx.Bool("me")
 
 	var team *models.Team
+	var teamID *manifold.ID
 	if !me {
 		identityClient, err := clients.NewIdentity(cfg)
 		if err != nil {
@@ -72,13 +74,13 @@ func switchTeamCmd(cliCtx *cli.Context) error {
 			me = true
 		} else {
 			team = teams[teamIdx]
-			teamLabel = string(team.Body.Label)
+			teamID = &team.ID
 		}
 	} else {
-		teamLabel = ""
+		teamID = nil
 	}
 
-	if err := switchTeam(cfg, teamLabel); err != nil {
+	if err := switchTeam(cfg, teamID); err != nil {
 		return cli.NewExitError(err, -1)
 	}
 
@@ -91,8 +93,12 @@ func switchTeamCmd(cliCtx *cli.Context) error {
 	return nil
 }
 
-func switchTeam(cfg *config.Config, label string) error {
-	cfg.Team = label
+func switchTeam(cfg *config.Config, teamID *manifold.ID) error {
+	cfg.Team = ""
+	if teamID != nil {
+		cfg.Team = teamID.String()
+	}
+
 	if err := cfg.Write(); err != nil {
 		return fmt.Errorf("Could not switch teams context: %s", err)
 	}
