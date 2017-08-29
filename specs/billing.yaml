@@ -712,11 +712,11 @@ definitions:
       team_id:
         $ref: '#/definitions/OptionalID'
       provider_id:
-        $ref: '#/definitions/ID'
+        $ref: '#/definitions/OptionalID'
       resource_id:
-        $ref: '#/definitions/ID'
+        $ref: '#/definitions/OptionalID'
       rollover_id:
-        $ref: '#/definitions/ID'
+        $ref: '#/definitions/OptionalID'
     additionalProperties: false
     required:
     - event_type
