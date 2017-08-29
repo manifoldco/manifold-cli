@@ -30,6 +30,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - Credit Card number can be between 12 and 19 digits and cvv either 3 or 4.
 - Plugin config initializes map before setting if it doesn't exist
 - Plugin config defines the .manifold.yml path prior to saving if not defined
+- Optional params for redeeming coupons
 
 ## [0.2.6] - 2017-08-16
 
