@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+## [0.3.0] - 2017-08-29
+
 ### Added
 
 - Allow creating custom resources. Custom resources have no backing product.
