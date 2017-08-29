@@ -32,11 +32,11 @@ func init() {
 	exportCmd := cli.Command{
 		Name:   "export",
 		Usage:  "Export all environment variables from all resources",
-		Action: middleware.Chain(middleware.LoadDirPrefs, export),
-		Flags: []cli.Flag{
+		Action: middleware.Chain(middleware.LoadDirPrefs, middleware.LoadTeamPrefs, export),
+		Flags: append(teamFlags, []cli.Flag{
 			formatFlag(formats[0], formatFlagStr),
 			appFlag(),
-		},
+		}...),
 	}
 
 	cmds = append(cmds, exportCmd)
@@ -53,6 +53,11 @@ func export(cliCtx *cli.Context) error {
 	format := cliCtx.String("format")
 	if !validFormat(format) {
 		return cli.NewExitError("You provided an invalid format!", -1)
+	}
+
+	teamID, err := validateTeamID(cliCtx)
+	if err != nil {
+		return err
 	}
 
 	cfg, err := config.Load()
@@ -74,7 +79,7 @@ func export(cliCtx *cli.Context) error {
 		return cli.NewExitError("Could not create marketplace client: "+err.Error(), -1)
 	}
 
-	r, err := clients.FetchResources(ctx, marketplace)
+	r, err := clients.FetchResources(ctx, marketplace, teamID)
 	if err != nil {
 		return cli.NewExitError("Could not retrieve resources: "+err.Error(), -1)
 	}

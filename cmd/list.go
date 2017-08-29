@@ -39,10 +39,10 @@ func init() {
 	listCmd := cli.Command{
 		Name:   "list",
 		Usage:  "List the status of your provisioned resources",
-		Action: middleware.Chain(middleware.LoadDirPrefs, list),
-		Flags: []cli.Flag{
+		Action: middleware.Chain(middleware.LoadDirPrefs, middleware.LoadTeamPrefs, list),
+		Flags: append(teamFlags, []cli.Flag{
 			appFlag(),
-		},
+		}...),
 	}
 
 	cmds = append(cmds, listCmd)
@@ -52,6 +52,11 @@ func list(cliCtx *cli.Context) error {
 	ctx := context.Background()
 
 	appName, err := validateName(cliCtx, "app")
+	if err != nil {
+		return err
+	}
+
+	teamID, err := validateTeamID(cliCtx)
 	if err != nil {
 		return err
 	}
@@ -94,14 +99,14 @@ func list(cliCtx *cli.Context) error {
 	}
 
 	// Get resources
-	res, err := clients.FetchResources(ctx, marketplaceClient)
+	res, err := clients.FetchResources(ctx, marketplaceClient, teamID)
 	if err != nil {
 		return cli.NewExitError("Failed to fetch the list of provisioned "+
 			"resources: "+err.Error(), -1)
 	}
 
 	// Get operations
-	oRes, err := clients.FetchOperations(ctx, pClient)
+	oRes, err := clients.FetchOperations(ctx, pClient, nil)
 	if err != nil {
 		return cli.NewExitError("Failed to fetch the list of operations: "+err.Error(), -1)
 	}

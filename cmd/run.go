@@ -23,10 +23,10 @@ func init() {
 	runCmd := cli.Command{
 		Name:   "run",
 		Usage:  "Run a process and inject secrets into its environment",
-		Action: middleware.Chain(middleware.LoadDirPrefs, run),
-		Flags: []cli.Flag{
+		Action: middleware.Chain(middleware.LoadDirPrefs, middleware.LoadTeamPrefs, run),
+		Flags: append(teamFlags, []cli.Flag{
 			appFlag(),
-		},
+		}...),
 	}
 
 	cmds = append(cmds, runCmd)
@@ -43,6 +43,11 @@ func run(cliCtx *cli.Context) error {
 	}
 
 	appName, err := validateName(cliCtx, "app")
+	if err != nil {
+		return err
+	}
+
+	teamID, err := validateTeamID(cliCtx)
 	if err != nil {
 		return err
 	}
@@ -66,7 +71,7 @@ func run(cliCtx *cli.Context) error {
 		return cli.NewExitError("Could not create marketplace client: "+err.Error(), -1)
 	}
 
-	r, err := clients.FetchResources(ctx, marketplace)
+	r, err := clients.FetchResources(ctx, marketplace, teamID)
 	if err != nil {
 		return cli.NewExitError("Could not retrieve resources: "+err.Error(), -1)
 	}

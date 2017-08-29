@@ -27,10 +27,11 @@ func init() {
 				Name:      "set",
 				ArgsUsage: "<key=value...>",
 				Usage:     "Set one or more config values on a custom resource",
-				Flags: []cli.Flag{
+				Flags: append(teamFlags, []cli.Flag{
 					resourceFlag(),
-				},
-				Action: middleware.Chain(middleware.EnsureSession, configSetCmd),
+				}...),
+				Action: middleware.Chain(middleware.EnsureSession, middleware.LoadTeamPrefs,
+					configSetCmd),
 			},
 			{
 				Name:      "unset",
@@ -39,7 +40,8 @@ func init() {
 				Flags: []cli.Flag{
 					resourceFlag(),
 				},
-				Action: middleware.Chain(middleware.EnsureSession, configUnsetCmd),
+				Action: middleware.Chain(middleware.EnsureSession, middleware.LoadTeamPrefs,
+					configUnsetCmd),
 			},
 		},
 	}
@@ -61,6 +63,11 @@ func patchConfig(cliCtx *cli.Context, req map[string]*string) error {
 		return err
 	}
 
+	teamID, err := validateTeamID(cliCtx)
+	if err != nil {
+		return err
+	}
+
 	cfg, err := config.Load()
 	if err != nil {
 		return cli.NewExitError("Could not load config: "+err.Error(), -1)
@@ -71,7 +78,7 @@ func patchConfig(cliCtx *cli.Context, req map[string]*string) error {
 		return cli.NewExitError("Could not create marketplace client: "+err.Error(), -1)
 	}
 
-	resources, err := clients.FetchResources(ctx, marketplace)
+	resources, err := clients.FetchResources(ctx, marketplace, teamID)
 	if err != nil {
 		return cli.NewExitError("Could not retrieve resources: "+err.Error(), -1)
 	}
