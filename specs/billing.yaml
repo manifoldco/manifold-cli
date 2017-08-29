@@ -182,6 +182,8 @@ paths:
           $ref: '#/responses/BadRequest'
         401:
           $ref: '#/responses/Unauthorized'
+        409:
+          $ref: '#/responses/Conflict'
         500:
           $ref: '#/responses/Internal'
   /subscription-events:
