@@ -206,7 +206,16 @@ func (m *ManifoldYaml) Save() error {
 	if err != nil {
 		return err
 	}
-	err = ioutil.WriteFile(m.Path, yml, requiredPermissions)
+	path := m.Path
+	if path == "" {
+		// Set the yaml in the current directory if path is not known
+		wd, err := os.Getwd()
+		if err != nil {
+			return err
+		}
+		path = filepath.Join(wd, YamlFilename)
+	}
+	err = ioutil.WriteFile(path, yml, requiredPermissions)
 	if err != nil {
 		return err
 	}
