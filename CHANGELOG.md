@@ -17,6 +17,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 - Optional params for redeeming coupons
 - Updated spinners
+- Update resource selects to be label-focused
 
 ## [0.3.0] - 2017-08-29
 

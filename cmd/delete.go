@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/briandowns/spinner"
 	"github.com/go-openapi/strfmt"
 	"github.com/urfave/cli"
 
@@ -107,11 +106,8 @@ func deleteCmd(cliCtx *cli.Context) error {
 		return cli.NewExitError("Resource not deleted", -1)
 	}
 
-	spin := spinner.New(spinner.CharSets[38], 500*time.Millisecond)
+	spin := prompts.NewSpinner(fmt.Sprintf("Deleting resource \"%s\"", resource.Body.Label))
 	if !dontWait {
-		fmt.Printf("\nWe're starting to delete the resource \"%s\". This may take some time, please wait!\n\n",
-			resource.Body.Label,
-		)
 		spin.Start()
 	}
 
