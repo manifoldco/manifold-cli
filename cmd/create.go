@@ -6,7 +6,6 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/briandowns/spinner"
 	"github.com/go-openapi/strfmt"
 	"github.com/manifoldco/go-manifold"
 	"github.com/manifoldco/go-manifold/idtype"
@@ -184,15 +183,12 @@ func create(cliCtx *cli.Context) error {
 		return cli.NewExitError("Could not name the resource: "+err.Error(), -1)
 	}
 
-	spin := spinner.New(spinner.CharSets[38], 500*time.Millisecond)
+	descriptor := "a custom resource"
+	if !custom {
+		descriptor = "an instance of " + string(product.Body.Name)
+	}
+	spin := newSpinner(fmt.Sprintf("Creating %s", descriptor))
 	if !dontWait {
-		descriptor := "a custom resource"
-		if !custom {
-			descriptor = "an instance of " + string(product.Body.Name)
-		}
-		fmt.Printf("\nWe're starting to create %s. This may take some time, please wait!\n\n",
-			descriptor)
-
 		spin.Start()
 		defer spin.Stop()
 	}

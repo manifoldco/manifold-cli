@@ -6,7 +6,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/briandowns/spinner"
 	"github.com/go-openapi/strfmt"
 	"github.com/urfave/cli"
 
@@ -171,12 +170,10 @@ func updateResourceCmd(cliCtx *cli.Context) error {
 		return prompts.HandleSelectError(err, "Could not select apps")
 	}
 
-	spin := spinner.New(spinner.CharSets[38], 500*time.Millisecond)
+	spin := newSpinner(fmt.Sprintf("Updating resource \"%s\"", resource.Body.Label))
 	if !dontWait {
-		fmt.Printf("\nWe're starting to update the resource \"%s\". This may take some time, please wait!\n\n",
-			resource.Body.Label,
-		)
 		spin.Start()
+		defer spin.Stop()
 	}
 
 	_, mrb, err := updateResource(ctx, cfg, teamID, s, resource, marketplaceClient, provisioningClient,
