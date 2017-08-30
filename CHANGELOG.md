@@ -31,6 +31,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - Add 'switch' to switch Teams, so interact with a team's resources
 - Add --team and --me flags for operating under your account, or a team's
 - Add --team and --me flags for billing
+- Add `billing redeem` command to redeem coupon codes
 
 ### Fixed
 
