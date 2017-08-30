@@ -13,12 +13,7 @@ import (
 )
 
 // FetchOperations returns the resources for the authenticated user
-// TODO: teamID should be *manifold.ID not ...*manifold.ID but this would break existing API while we work  on adding teams support throughout
-func FetchOperations(ctx context.Context, c *pClient.Provisioning, teamID ...*manifold.ID) ([]*pModels.Operation, error) {
-	if len(teamID) > 1 {
-		panic("Only one team can be provided!")
-	}
-
+func FetchOperations(ctx context.Context, c *pClient.Provisioning, teamID *manifold.ID) ([]*pModels.Operation, error) {
 	res, err := c.Operation.GetOperations(
 		operation.NewGetOperationsParamsWithContext(ctx), nil)
 	if err != nil {
@@ -27,20 +22,16 @@ func FetchOperations(ctx context.Context, c *pClient.Provisioning, teamID ...*ma
 
 	var results []*pModels.Operation
 	for _, o := range res.Payload {
-		if teamID != nil && o.Body.TeamID() != teamID[0] {
-			continue
+		if teamID != nil && o.Body.TeamID() != nil && teamID.String() == o.Body.TeamID().String() ||
+			teamID == nil && o.Body.TeamID() == nil {
+			results = append(results, o)
 		}
-		results = append(results, o)
 	}
 	return results, nil
 }
 
 // FetchResources returns the resources for the authenticated user
-// TODO teamID should be *manifold.ID not ...*manifold.ID but this would break existing API while we work on adding teams support throughout
-func FetchResources(ctx context.Context, c *mClient.Marketplace, teamID ...*manifold.ID) ([]*mModels.Resource, error) {
-	if len(teamID) > 1 {
-		panic("Only one team can be provided!")
-	}
+func FetchResources(ctx context.Context, c *mClient.Marketplace, teamID *manifold.ID) ([]*mModels.Resource, error) {
 	res, err := c.Resource.GetResources(
 		resource.NewGetResourcesParamsWithContext(ctx), nil)
 	if err != nil {
@@ -49,11 +40,10 @@ func FetchResources(ctx context.Context, c *mClient.Marketplace, teamID ...*mani
 
 	var results []*mModels.Resource
 	for _, r := range res.Payload {
-		// TODO: remove this once CLI has first-class Teams support
-		if teamID != nil && r.Body.TeamID != teamID[0] {
-			continue
+		if teamID != nil && r.Body.TeamID != nil && teamID.String() == r.Body.TeamID.String() ||
+			teamID == nil && r.Body.TeamID == nil {
+			results = append(results, r)
 		}
-		results = append(results, r)
 	}
 	return results, nil
 }

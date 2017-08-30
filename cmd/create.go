@@ -33,8 +33,8 @@ func init() {
 		Name:      "create",
 		ArgsUsage: "[name]",
 		Usage:     "Create a new resource",
-		Action:    middleware.Chain(middleware.LoadDirPrefs, create),
-		Flags: []cli.Flag{
+		Action:    middleware.Chain(middleware.LoadDirPrefs, middleware.LoadTeamPrefs, create),
+		Flags: append(teamFlags, []cli.Flag{
 			appFlag(),
 			planFlag(),
 			regionFlag(),
@@ -47,7 +47,7 @@ func init() {
 				Usage: "Create a custom resource, for holding custom configuration",
 			},
 			skipFlag(),
-		},
+		}...),
 	}
 
 	cmds = append(cmds, createCmd)
@@ -61,6 +61,11 @@ func create(cliCtx *cli.Context) error {
 	}
 
 	resourceName, err := optionalArgName(cliCtx, 0, "resource")
+	if err != nil {
+		return err
+	}
+
+	teamID, err := validateTeamID(cliCtx)
 	if err != nil {
 		return err
 	}
@@ -158,7 +163,7 @@ func create(cliCtx *cli.Context) error {
 	}
 
 	// Get resources, so we can fetch the list of valid appnames
-	res, err := clients.FetchResources(ctx, mClient)
+	res, err := clients.FetchResources(ctx, mClient, teamID)
 	if err != nil {
 		return cli.NewExitError("Failed to fetch resource list: "+err.Error(), -1)
 	}
@@ -192,7 +197,7 @@ func create(cliCtx *cli.Context) error {
 		defer spin.Stop()
 	}
 
-	op, err := createResource(ctx, cfg, s, pClient, custom, product, plan, region,
+	op, err := createResource(ctx, cfg, teamID, s, pClient, custom, product, plan, region,
 		appName, resourceName, dontWait)
 	if err != nil {
 		return cli.NewExitError("Could not create resource: "+err.Error(), -1)
@@ -215,7 +220,7 @@ func create(cliCtx *cli.Context) error {
 	return nil
 }
 
-func createResource(ctx context.Context, cfg *config.Config, s session.Session,
+func createResource(ctx context.Context, cfg *config.Config, teamID *manifold.ID, s session.Session,
 	pClient *provisioning.Provisioning, custom bool, product *cModels.Product, plan *cModels.Plan,
 	region *cModels.Region, appName, resourceName string, dontWait bool) (*pModels.Operation, error) {
 
@@ -270,7 +275,11 @@ func createResource(ctx context.Context, cfg *config.Config, s session.Session,
 	op.Body.SetCreatedAt(&curTime)
 	op.Body.SetUpdatedAt(&curTime)
 	op.Body.SetResourceID(resourceID)
-	op.Body.SetUserID(&s.User().ID)
+	if teamID == nil {
+		op.Body.SetUserID(&s.User().ID)
+	} else {
+		op.Body.SetTeamID(teamID)
+	}
 
 	p := operation.NewPutOperationsIDParamsWithContext(ctx)
 	p.SetBody(op)

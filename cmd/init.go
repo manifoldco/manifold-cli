@@ -21,14 +21,14 @@ func init() {
 	initCmd := cli.Command{
 		Name:  "init",
 		Usage: "Initialize the current directory for a specified app",
-		Flags: []cli.Flag{
+		Flags: append(teamFlags, []cli.Flag{
 			appFlag(),
 			cli.BoolFlag{
 				Name:  "force, f",
 				Usage: "Overwrite existing app",
 			},
-		},
-		Action: middleware.Chain(middleware.LoadDirPrefs, initDir),
+		}...),
+		Action: middleware.Chain(middleware.LoadDirPrefs, middleware.LoadTeamPrefs, initDir),
 	}
 
 	cmds = append(cmds, initCmd)
@@ -37,6 +37,11 @@ func init() {
 func initDir(cliCtx *cli.Context) error {
 	ctx := context.Background()
 	appName := cliCtx.String("app")
+
+	teamID, err := validateTeamID(cliCtx)
+	if err != nil {
+		return err
+	}
 
 	mYaml, err := config.LoadYaml(false)
 	if err != nil {
@@ -66,7 +71,7 @@ func initDir(cliCtx *cli.Context) error {
 			err.Error(), -1)
 	}
 
-	res, err := clients.FetchResources(ctx, mClient)
+	res, err := clients.FetchResources(ctx, mClient, teamID)
 	if err != nil {
 		return cli.NewExitError("Failed to fetch resource list: "+err.Error(), -1)
 	}

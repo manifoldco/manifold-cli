@@ -35,13 +35,14 @@ func init() {
 		Name:      "update",
 		ArgsUsage: "[label]",
 		Usage:     "Update a resource",
-		Action:    middleware.Chain(middleware.EnsureSession, middleware.LoadDirPrefs, updateResourceCmd),
-		Flags: []cli.Flag{
+		Action: middleware.Chain(middleware.EnsureSession, middleware.LoadDirPrefs,
+			middleware.LoadTeamPrefs, updateResourceCmd),
+		Flags: append(teamFlags, []cli.Flag{
 			nameFlag(),
 			appFlag(),
 			planFlag(),
 			skipFlag(),
-		},
+		}...),
 	}
 
 	cmds = append(cmds, updateCmd)
@@ -55,6 +56,11 @@ func updateResourceCmd(cliCtx *cli.Context) error {
 	}
 
 	resourceLabel, err := optionalArgLabel(cliCtx, 0, "resource")
+	if err != nil {
+		return err
+	}
+
+	teamID, err := validateTeamID(cliCtx)
 	if err != nil {
 		return err
 	}
@@ -86,7 +92,7 @@ func updateResourceCmd(cliCtx *cli.Context) error {
 		return cli.NewExitError(fmt.Sprintf("Failed to create Provisioning Client: %s", err), -1)
 	}
 
-	res, err := clients.FetchResources(ctx, marketplaceClient)
+	res, err := clients.FetchResources(ctx, marketplaceClient, teamID)
 	if err != nil {
 		return cli.NewExitError(
 			fmt.Sprintf("Failed to fetch the list of provisioned resources: %s", err), -1)
@@ -173,7 +179,7 @@ func updateResourceCmd(cliCtx *cli.Context) error {
 		spin.Start()
 	}
 
-	_, mrb, err := updateResource(ctx, cfg, s, resource, marketplaceClient, provisioningClient,
+	_, mrb, err := updateResource(ctx, cfg, teamID, s, resource, marketplaceClient, provisioningClient,
 		plans[planIdx], appName, newResourceName, dontWait,
 	)
 	if err != nil {
@@ -213,9 +219,10 @@ func pickPlanByID(plans []*cModels.Plan, id manifold.ID) (*cModels.Plan, error) 
 	return nil, errs.ErrPlanNotFound
 }
 
-func updateResource(ctx context.Context, cfg *config.Config, s session.Session, resource *mModels.Resource,
-	marketplaceClient *mClient.Marketplace, provisioningClient *pClient.Provisioning, plan *cModels.Plan,
-	appName, resourceName string, dontWait bool,
+func updateResource(ctx context.Context, cfg *config.Config, teamID *manifold.ID, s session.Session,
+	resource *mModels.Resource, marketplaceClient *mClient.Marketplace,
+	provisioningClient *pClient.Provisioning, plan *cModels.Plan, appName, resourceName string,
+	dontWait bool,
 ) (*pModels.Operation, *mModels.Resource, error) {
 	a, err := analytics.New(cfg, s)
 	if err != nil {
@@ -269,7 +276,11 @@ func updateResource(ctx context.Context, cfg *config.Config, s session.Session, 
 	op.Body.SetCreatedAt(&curTime)
 	op.Body.SetUpdatedAt(&curTime)
 	op.Body.SetResourceID(resource.ID)
-	op.Body.SetUserID(&s.User().ID)
+	if teamID == nil {
+		op.Body.SetUserID(&s.User().ID)
+	} else {
+		op.Body.SetTeamID(teamID)
+	}
 
 	p := operation.NewPutOperationsIDParamsWithContext(ctx)
 	p.SetBody(op)

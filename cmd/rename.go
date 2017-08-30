@@ -23,10 +23,11 @@ func init() {
 		Name:      "rename",
 		ArgsUsage: "[name] [new-name]",
 		Usage:     "Rename a resource label",
-		Flags: []cli.Flag{
+		Flags: append(teamFlags, []cli.Flag{
 			appFlag(),
-		},
-		Action: middleware.Chain(middleware.EnsureSession, middleware.LoadDirPrefs, rename),
+		}...),
+		Action: middleware.Chain(middleware.EnsureSession, middleware.LoadTeamPrefs,
+			middleware.LoadDirPrefs, rename),
 	}
 
 	cmds = append(cmds, renameCmd)
@@ -54,6 +55,11 @@ func rename(cliCtx *cli.Context) error {
 		return err
 	}
 
+	teamID, err := validateTeamID(cliCtx)
+	if err != nil {
+		return err
+	}
+
 	cfg, err := config.Load()
 	if err != nil {
 		return errs.NewErrorExitError("Could not load config: %s", err)
@@ -65,7 +71,7 @@ func rename(cliCtx *cli.Context) error {
 			fmt.Sprintf("Failed to create Maketplace API client: %s", err), -1)
 	}
 
-	res, err := clients.FetchResources(ctx, marketplaceClient)
+	res, err := clients.FetchResources(ctx, marketplaceClient, teamID)
 	if err != nil {
 		return cli.NewExitError(
 			fmt.Sprintf("Failed to fetch list of provisioned resources: %s", err), -1)

@@ -28,10 +28,10 @@ func init() {
 		Name:      "delete",
 		ArgsUsage: "[name]",
 		Usage:     "Delete a resource",
-		Action:    middleware.Chain(middleware.EnsureSession, deleteCmd),
-		Flags: []cli.Flag{
+		Action:    middleware.Chain(middleware.EnsureSession, middleware.LoadTeamPrefs, deleteCmd),
+		Flags: append(teamFlags, []cli.Flag{
 			skipFlag(),
-		},
+		}...),
 	}
 
 	cmds = append(cmds, deleteCmd)
@@ -47,6 +47,11 @@ func deleteCmd(cliCtx *cli.Context) error {
 	}
 
 	resourceLabel, err := optionalArgLabel(cliCtx, 0, "resource")
+	if err != nil {
+		return err
+	}
+
+	teamID, err := validateTeamID(cliCtx)
 	if err != nil {
 		return err
 	}
@@ -71,10 +76,14 @@ func deleteCmd(cliCtx *cli.Context) error {
 		return cli.NewExitError(fmt.Sprintf("Failed to create Provision Client: %s", err), -1)
 	}
 
-	res, err := clients.FetchResources(ctx, marketplaceClient)
+	res, err := clients.FetchResources(ctx, marketplaceClient, teamID)
 	if err != nil {
 		return cli.NewExitError(
 			fmt.Sprintf("Failed to fetch the list of provisioned resources: %s", err), -1)
+	}
+
+	if len(res) == 0 {
+		return errs.ErrNoResources
 	}
 
 	var resource *mModels.Resource
@@ -106,7 +115,7 @@ func deleteCmd(cliCtx *cli.Context) error {
 		spin.Start()
 	}
 
-	err = deleteResource(ctx, cfg, s, resource, provisioningClient, dontWait)
+	err = deleteResource(ctx, teamID, s, resource, provisioningClient, dontWait)
 	if err != nil {
 		return cli.NewExitError(fmt.Sprintf("Failed to delete resource: %s", err), -1)
 	}
@@ -120,7 +129,7 @@ func deleteCmd(cliCtx *cli.Context) error {
 	return nil
 }
 
-func deleteResource(ctx context.Context, cfg *config.Config, s session.Session, resource *mModels.Resource,
+func deleteResource(ctx context.Context, teamID *manifold.ID, s session.Session, resource *mModels.Resource,
 	provisioningClient *pClient.Provisioning, dontWait bool,
 ) error {
 
@@ -144,7 +153,11 @@ func deleteResource(ctx context.Context, cfg *config.Config, s session.Session, 
 
 	op.Body.SetCreatedAt(&curTime)
 	op.Body.SetUpdatedAt(&curTime)
-	op.Body.SetUserID(&s.User().ID)
+	if teamID == nil {
+		op.Body.SetUserID(&s.User().ID)
+	} else {
+		op.Body.SetTeamID(teamID)
+	}
 	op.Body.SetResourceID(resource.ID)
 
 	d := operation.NewPutOperationsIDParamsWithContext(ctx)
