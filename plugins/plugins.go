@@ -9,6 +9,7 @@ import (
 	"os/exec"
 	"os/user"
 	"path"
+	"runtime"
 	"strings"
 
 	"github.com/manifoldco/manifold-cli/config"
@@ -19,6 +20,8 @@ const (
 	permissions  = 0700
 	pluginPrefix = "manifold-cli-"
 	slash        = "/"
+	goarch       = runtime.GOARCH
+	goos         = runtime.GOOS
 )
 
 // ErrFailedToRead is returned when you the plugins directory cannot be read
@@ -50,10 +53,7 @@ func Executable(cmd string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-
-	// TODO: we need to infer the architecture being user
-	// and call the proper binary in the plugin repository
-	return path.Join(pluginsDir, cmd, "bin", strings.Replace(cmd, pluginPrefix, "", 1)), nil
+	return path.Join(pluginsDir, cmd, "build", goos+"_"+goarch, "bin/", Shortname(cmd)), nil
 }
 
 // List returns a list of available plugin commands
@@ -84,11 +84,16 @@ func List() ([]string, error) {
 	return plugs, nil
 }
 
+// Shortname returns the shortened name of the plugin
+func Shortname(name string) string {
+	return strings.Replace(name, pluginPrefix, "", 1)
+}
+
 // NormalizeURL returns a normalized git url
 func NormalizeURL(pluginURL string) string {
 	u, err := url.Parse(pluginURL)
 	if err != nil {
-		return ""
+		return pluginURL
 	}
 	if strings.HasSuffix(u.Path, slash) {
 		u.Path = u.Path[:len(u.Path)-1]

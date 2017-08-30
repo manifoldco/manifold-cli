@@ -10,6 +10,7 @@ import (
 
 	"github.com/manifoldco/manifold-cli/errs"
 	"github.com/manifoldco/manifold-cli/plugins"
+	"github.com/manifoldco/manifold-cli/prompts"
 )
 
 func init() {
@@ -45,7 +46,9 @@ func install(cliCtx *cli.Context) error {
 	if err != nil {
 		return cli.NewExitError(err.Error(), -1)
 	}
-	fmt.Printf("Installing plugin `%s`.\n", name)
+	spin := prompts.NewSpinner(fmt.Sprintf("Installing plugin `%s`", name))
+	spin.Start()
+	defer spin.Stop()
 
 	// Abort if already exists
 	destinationDir := path.Join(pluginsDir, name)
@@ -68,9 +71,14 @@ func install(cliCtx *cli.Context) error {
 	}
 	newFile.Close()
 
-	fmt.Println("Done.")
-	fmt.Println("")
+	spin.Stop()
 
 	// Finally output the Help text
-	return plugins.Help(name)
+	exe := plugins.Shortname(name)
+	fmt.Printf("Plugin installed. Use `manifold %s` to execute.\n\n", exe)
+	err = plugins.Help(name)
+	if err != nil {
+		return cli.NewExitError("Failed to display plugin help output: "+err.Error(), -1)
+	}
+	return nil
 }
