@@ -99,14 +99,14 @@ func list(cliCtx *cli.Context) error {
 	}
 
 	// Get resources
-	res, err := clients.FetchResources(ctx, marketplaceClient, teamID)
+	res, err := clients.FetchResources(ctx, marketplaceClient, teamID, false)
 	if err != nil {
 		return cli.NewExitError("Failed to fetch the list of provisioned "+
 			"resources: "+err.Error(), -1)
 	}
 
 	// Get operations
-	oRes, err := clients.FetchOperations(ctx, pClient, nil)
+	oRes, err := clients.FetchOperations(ctx, pClient, nil, false)
 	if err != nil {
 		return cli.NewExitError("Failed to fetch the list of operations: "+err.Error(), -1)
 	}
