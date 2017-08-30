@@ -272,6 +272,37 @@ paths:
           $ref: '#/responses/InternalServerError'
         default:
           $ref: '#/responses/Unexpected'
+  /projects:
+    post:
+      summary: Create a new project
+      tags:
+        - Project
+      parameters:
+        - name: body
+          in: body
+          description: |
+            Project create request.
+          required: true
+          schema: { $ref: '#/definitions/CreateProject' }
+      responses:
+        201:
+          description: Complete project object
+          schema: { $ref: '#/definitions/Project' }
+        400:
+          description: Validation failed for request.
+          schema: { $ref: '#/definitions/Error' }
+        401:
+          description: Authentication failed for the request.
+          schema: { $ref: '#/definitions/Error' }
+        409:
+          description: A project with this label already exists.
+          schema: { $ref: '#/definitions/Error' }
+        500:
+          description: Request failed due to an internal server error.
+          schema: { $ref: '#/definitions/Error' }
+        default:
+          description: Unexpected error
+          schema: { $ref: '#/definitions/Error' }
 definitions:
   ID:
     type: string
@@ -513,3 +544,46 @@ definitions:
   ConfigPatch:
     type: object
     additionalProperties: true
+
+  Project:
+    type: object
+    properties:
+      id: { $ref: '#/definitions/ID' }
+      type: { type: string, enum: ['project'] }
+      version: { type: integer, enum: [1] }
+      body:
+        type: object
+        properties:
+          user_id: { $ref: '#/definitions/OptionalID' }
+          team_id: { $ref: '#/definitions/OptionalID' }
+          name: { $ref: '#/definitions/Name' }
+          label: { $ref: '#/definitions/Label' }
+          description: { type: string, minLength: 1, maxLength: 1000 }
+        additionalProperties: false
+        required:
+          - name
+          - label
+    additionalProperties: false
+    required:
+      - id
+      - type
+      - version
+      - body
+  CreateProject:
+    type: object
+    properties:
+      body:
+        type: object
+        properties:
+          user_id: { $ref: '#/definitions/OptionalID' }
+          team_id: { $ref: '#/definitions/OptionalID' }
+          name: { $ref: '#/definitions/Name' }
+          label: { $ref: '#/definitions/Label' }
+          description: { type: string, minLength: 1, maxLength: 1000 }
+        additionalProperties: false
+        required:
+          - name
+          - label
+    additionalProperties: false
+    required:
+      - body
