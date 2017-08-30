@@ -19,7 +19,10 @@ import (
 	mModels "github.com/manifoldco/manifold-cli/generated/marketplace/models"
 )
 
-const namePattern = "^[a-zA-Z\\s,\\.'\\-pL]{1,64}$"
+const (
+	namePattern   = "^[a-zA-Z\\s,\\.'\\-pL]{1,64}$"
+	couponPattern = "^[0-9A-Z]{1,128}$"
+)
 
 // NumberMask is the character used to mask number inputs
 const NumberMask = '#'
@@ -462,6 +465,21 @@ func FullName(defaultValue string) (string, error) {
 	}
 	if defaultValue != "" {
 		p.Default = defaultValue
+	}
+
+	return p.Run()
+}
+
+// CouponCode prompts the user to input an alphanumeric coupon code.
+func CouponCode() (string, error) {
+	p := promptui.Prompt{
+		Label: "Code",
+		Validate: func(input string) error {
+			if govalidator.StringMatches(input, couponPattern) {
+				return nil
+			}
+			return promptui.NewValidationError("Please enter a valid code")
+		},
 	}
 
 	return p.Run()

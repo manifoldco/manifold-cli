@@ -43,8 +43,28 @@ func LoadDirPrefs(ctx *cli.Context) error {
 	return reflectArgs(ctx, d, "flag")
 }
 
-// LoadTeamPrefs loads the team from the configuration, and then --team arguments
-func LoadTeamPrefs(cliCtx *cli.Context) error {
+// LoadTeamPrefs tries to load team from config or flag. If none is present,
+// sets --me to true
+func LoadTeamPrefs(ctx *cli.Context) error {
+	cfg, err := config.Load()
+	if err != nil {
+		return err
+	}
+
+	teamName := ctx.String("team")
+	teamID := cfg.Team
+
+	if teamName == "" && teamID == "" {
+		ctx.Set("me", "true")
+		return nil
+	}
+
+	return EnsureTeamPrefs(ctx)
+}
+
+// EnsureTeamPrefs ensures a team is set from the configuration or --team
+// arguments. --me flag can be used to disable team verification.
+func EnsureTeamPrefs(cliCtx *cli.Context) error {
 	ctx := context.Background()
 
 	cfg, err := config.Load()

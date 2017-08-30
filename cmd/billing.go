@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/manifoldco/go-manifold"
 	"github.com/urfave/cli"
@@ -14,6 +15,8 @@ import (
 	"github.com/manifoldco/manifold-cli/prompts"
 	"github.com/manifoldco/manifold-cli/session"
 
+	"github.com/manifoldco/manifold-cli/generated/billing/client"
+	"github.com/manifoldco/manifold-cli/generated/billing/client/discount"
 	"github.com/manifoldco/manifold-cli/generated/billing/client/profile"
 	bModels "github.com/manifoldco/manifold-cli/generated/billing/models"
 )
@@ -28,14 +31,22 @@ func init() {
 				Usage: "Add a credit card",
 				Flags: teamFlags,
 				Action: middleware.Chain(middleware.EnsureSession,
-					middleware.LoadTeamPrefs, addBillingProfile),
+					middleware.LoadTeamPrefs, addBillingProfileCmd),
 			},
 			{
 				Name:  "update",
 				Usage: "Change the credit card on file",
 				Flags: teamFlags,
 				Action: middleware.Chain(middleware.EnsureSession,
-					middleware.LoadTeamPrefs, updateBillingProfile),
+					middleware.LoadTeamPrefs, updateBillingProfileCmd),
+			},
+			{
+				Name:      "redeem",
+				Usage:     "Redeem a coupon code",
+				Flags:     teamFlags,
+				ArgsUsage: "[code]",
+				Action: middleware.Chain(middleware.EnsureSession,
+					middleware.LoadTeamPrefs, redeemCouponCmd),
 			},
 		},
 	}
@@ -43,11 +54,12 @@ func init() {
 	cmds = append(cmds, billingCmd)
 }
 
-func addBillingProfile(cliCtx *cli.Context) error {
+func addBillingProfileCmd(cliCtx *cli.Context) error {
 	ctx := context.Background()
-	cfg, err := config.Load()
+
+	userID, err := loadUserID(ctx)
 	if err != nil {
-		return cli.NewExitError("Could not load config: "+err.Error(), -1)
+		return err
 	}
 
 	teamID, err := validateTeamID(cliCtx)
@@ -55,32 +67,31 @@ func addBillingProfile(cliCtx *cli.Context) error {
 		return err
 	}
 
-	userID, token, err := inputAndTokenize(ctx, cfg)
+	token, err := creditCardInput(ctx)
 	if err != nil {
 		return err
 	}
 
-	bClient, err := clients.NewBilling(cfg)
+	bClient, err := loadBillingClient()
 	if err != nil {
-		return cli.NewExitError("Failed to create a Billing API client: "+
-			err.Error(), -1)
+		return err
 	}
 
-	p := profile.NewPostProfilesParamsWithContext(ctx)
+	params := profile.NewPostProfilesParamsWithContext(ctx)
 
 	if teamID.IsEmpty() {
-		p.SetBody(&bModels.ProfileCreateRequest{
-			Token:  token,
+		params.SetBody(&bModels.ProfileCreateRequest{
+			Token:  &token,
 			UserID: userID,
 		})
 	} else {
-		p.SetBody(&bModels.ProfileCreateRequest{
-			Token:  token,
+		params.SetBody(&bModels.ProfileCreateRequest{
+			Token:  &token,
 			TeamID: teamID,
 		})
 	}
 
-	_, err = bClient.Profile.PostProfiles(p, nil)
+	_, err = bClient.Profile.PostProfiles(params, nil)
 	if err != nil {
 		return cli.NewExitError("Failed to add billing profile: "+err.Error(), -1)
 	}
@@ -89,11 +100,12 @@ func addBillingProfile(cliCtx *cli.Context) error {
 	return nil
 }
 
-func updateBillingProfile(cliCtx *cli.Context) error {
+func updateBillingProfileCmd(cliCtx *cli.Context) error {
 	ctx := context.Background()
-	cfg, err := config.Load()
+
+	userID, err := loadUserID(ctx)
 	if err != nil {
-		return cli.NewExitError("Could not load config: "+err.Error(), -1)
+		return err
 	}
 
 	teamID, err := validateTeamID(cliCtx)
@@ -101,30 +113,29 @@ func updateBillingProfile(cliCtx *cli.Context) error {
 		return err
 	}
 
-	userID, token, err := inputAndTokenize(ctx, cfg)
+	token, err := creditCardInput(ctx)
 	if err != nil {
 		return err
 	}
 
-	bClient, err := clients.NewBilling(cfg)
+	bClient, err := loadBillingClient()
 	if err != nil {
-		return cli.NewExitError("Failed to create a Billing API client: "+
-			err.Error(), -1)
+		return err
 	}
 
-	p := profile.NewPatchProfilesIDParamsWithContext(ctx)
+	params := profile.NewPatchProfilesIDParamsWithContext(ctx)
 
 	if teamID.IsEmpty() {
-		p.SetID(userID.String())
+		params.SetID(userID.String())
 	} else {
-		p.SetID(teamID.String())
+		params.SetID(teamID.String())
 	}
 
-	p.SetBody(&bModels.ProfileUpdateRequest{
-		Token: token,
+	params.SetBody(&bModels.ProfileUpdateRequest{
+		Token: &token,
 	})
 
-	_, err = bClient.Profile.PatchProfilesID(p, nil)
+	_, err = bClient.Profile.PatchProfilesID(params, nil)
 	if err != nil {
 		return cli.NewExitError("Failed to update billing profile: "+err.Error(), -1)
 	}
@@ -133,20 +144,103 @@ func updateBillingProfile(cliCtx *cli.Context) error {
 	return nil
 }
 
-func inputAndTokenize(ctx context.Context, cfg *config.Config) (*manifold.ID, *string, error) {
+func redeemCouponCmd(cliCtx *cli.Context) error {
+	ctx := context.Background()
+
+	if err := maxOptionalArgsLength(cliCtx, 1); err != nil {
+		return err
+	}
+
+	var err error
+	code := cliCtx.Args().First()
+
+	if code == "" {
+		code, err = prompts.CouponCode()
+		if err != nil {
+			return err
+		}
+	}
+
+	teamID, err := validateTeamID(cliCtx)
+	if err != nil {
+		return err
+	}
+
+	bClient, err := loadBillingClient()
+	if err != nil {
+		return err
+	}
+
+	body := &bModels.DiscountCreateRequest{
+		Code: bModels.CouponCode(code),
+	}
+
+	me := cliCtx.Bool("me")
+
+	if !me && !teamID.IsEmpty() {
+		body.TeamID = teamID
+	}
+
+	params := discount.NewPostDiscountsParamsWithContext(ctx)
+	params.SetBody(body)
+
+	_, err = bClient.Discount.PostDiscounts(params, nil)
+
+	if err != nil {
+		switch e := err.(type) {
+		case *discount.PostDiscountsBadRequest:
+			msg := strings.Join(e.Payload.Message, "\n")
+			return cli.NewExitError("Failed to redeem coupon code: "+msg, -1)
+		case *discount.PostDiscountsConflict:
+			return cli.NewExitError("This coupon code has been used before.", -1)
+		case *discount.PostDiscountsInternalServerError:
+			return errs.ErrSomethingWentHorriblyWrong
+		default:
+			return cli.NewExitError("Failed to redeem coupon code: "+err.Error(), -1)
+		}
+	}
+
+	fmt.Println("Coupon credit has been applied to your account.")
+	return nil
+}
+
+// loadUserID retrieves the user id based on the session.
+func loadUserID(ctx context.Context) (*manifold.ID, error) {
+	cfg, err := config.Load()
+	if err != nil {
+		return nil, cli.NewExitError("Could not load config: "+err.Error(), -1)
+	}
+
 	s, err := session.Retrieve(ctx, cfg)
 	if err != nil {
-		return nil, nil, cli.NewExitError("Could not retrieve session: "+err.Error(), -1)
+		return nil, cli.NewExitError("Could not retrieve session: "+err.Error(), -1)
 	}
 
-	if !s.Authenticated() {
-		return nil, nil, errs.ErrMustLogin
-	}
+	return &s.User().ID, nil
+}
 
+// creditCardInput prompts for the user credit card information and returns
+// the user id and the Stripe payment source token.
+func creditCardInput(ctx context.Context) (string, error) {
 	token, err := prompts.CreditCard()
 	if err != nil {
-		return nil, nil, cli.NewExitError("Failed to tokenize credit card: "+err.Error(), -1)
+		return "", cli.NewExitError("Failed to tokenize credit card: "+err.Error(), -1)
 	}
 
-	return &s.User().ID, &token.ID, nil
+	return token.ID, nil
+}
+
+func loadBillingClient() (*client.Billing, error) {
+	cfg, err := config.Load()
+	if err != nil {
+		return nil, cli.NewExitError("Could not load config: "+err.Error(), -1)
+	}
+
+	bClient, err := clients.NewBilling(cfg)
+	if err != nil {
+		return nil, cli.NewExitError("Failed to create a Billing API client: "+
+			err.Error(), -1)
+	}
+
+	return bClient, nil
 }

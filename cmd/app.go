@@ -30,7 +30,7 @@ func init() {
 					appFlag(),
 				}...),
 				Action: middleware.Chain(middleware.EnsureSession, middleware.LoadDirPrefs,
-					middleware.LoadTeamPrefs, appAddCmd),
+					middleware.EnsureTeamPrefs, appAddCmd),
 			},
 			{
 				Name:      "delete",
@@ -39,7 +39,7 @@ func init() {
 				Flags: append(teamFlags, []cli.Flag{
 					appFlag(),
 				}...),
-				Action: middleware.Chain(middleware.EnsureSession, middleware.LoadTeamPrefs,
+				Action: middleware.Chain(middleware.EnsureSession, middleware.EnsureTeamPrefs,
 					deleteAppCmd),
 			},
 		},
