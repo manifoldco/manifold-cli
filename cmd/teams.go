@@ -200,7 +200,7 @@ func listTeamCmd(cliCtx *cli.Context) error {
 		return err
 	}
 
-	teams, err := clients.FetchTeamsMembersCount(ctx, identityClient)
+	teams, err := clients.FetchTeamsMembersCount(ctx, identityClient, true)
 	if err != nil {
 		return cli.NewExitError(fmt.Sprintf("Failed to fetch list of teams: %s", err), -1)
 	}
@@ -245,7 +245,7 @@ func leaveTeamCmd(cliCtx *cli.Context) error {
 		return err
 	}
 
-	memberships, err := clients.FetchMemberships(ctx, identityClient)
+	memberships, err := clients.FetchMemberships(ctx, identityClient, false)
 	if err != nil {
 		return cli.NewExitError(fmt.Sprintf("Failed to fetch user memberships: %s", err), -1)
 	}
@@ -397,7 +397,7 @@ func loadIdentityClient() (*client.Identity, error) {
 // fetchTeams retrieves all user's team and prompt to select which team the cmd
 // will be applied to.
 func selectTeam(ctx context.Context, teamName string, identityClient *client.Identity) (*iModels.Team, error) {
-	teams, err := clients.FetchTeams(ctx, identityClient)
+	teams, err := clients.FetchTeams(ctx, identityClient, false)
 	if err != nil {
 		return nil, cli.NewExitError(fmt.Sprintf("Failed to fetch list of teams: %s", err), -1)
 	}

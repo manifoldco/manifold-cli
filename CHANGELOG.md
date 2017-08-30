@@ -16,6 +16,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ### Fixed
 
 - Optional params for redeeming coupons
+- Updated spinners
 
 ## [0.3.0] - 2017-08-29
 

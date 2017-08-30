@@ -91,6 +91,9 @@ func addBillingProfileCmd(cliCtx *cli.Context) error {
 		})
 	}
 
+	spin := prompts.NewSpinner("Creating billing profile")
+	spin.Start()
+	defer spin.Stop()
 	_, err = bClient.Profile.PostProfiles(params, nil)
 	if err != nil {
 		return cli.NewExitError("Failed to add billing profile: "+err.Error(), -1)
@@ -135,6 +138,9 @@ func updateBillingProfileCmd(cliCtx *cli.Context) error {
 		Token: &token,
 	})
 
+	spin := prompts.NewSpinner("Updating billing profile")
+	spin.Start()
+	defer spin.Stop()
 	_, err = bClient.Profile.PatchProfilesID(params, nil)
 	if err != nil {
 		return cli.NewExitError("Failed to update billing profile: "+err.Error(), -1)
@@ -181,6 +187,9 @@ func redeemCouponCmd(cliCtx *cli.Context) error {
 		body.TeamID = teamID
 	}
 
+	spin := prompts.NewSpinner("Applying coupon")
+	spin.Start()
+	defer spin.Stop()
 	params := discount.NewPostDiscountsParamsWithContext(ctx)
 	params.SetBody(body)
 
