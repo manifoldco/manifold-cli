@@ -162,7 +162,7 @@ func create(cliCtx *cli.Context) error {
 	}
 
 	// Get resources, so we can fetch the list of valid appnames
-	res, err := clients.FetchResources(ctx, mClient, teamID)
+	res, err := clients.FetchResources(ctx, mClient, teamID, false)
 	if err != nil {
 		return cli.NewExitError("Failed to fetch resource list: "+err.Error(), -1)
 	}
@@ -187,7 +187,7 @@ func create(cliCtx *cli.Context) error {
 	if !custom {
 		descriptor = "an instance of " + string(product.Body.Name)
 	}
-	spin := newSpinner(fmt.Sprintf("Creating %s", descriptor))
+	spin := prompts.NewSpinner(fmt.Sprintf("Creating %s", descriptor))
 	if !dontWait {
 		spin.Start()
 		defer spin.Stop()

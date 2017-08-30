@@ -3,9 +3,7 @@ package main
 import (
 	"fmt"
 	"os"
-	"time"
 
-	"github.com/briandowns/spinner"
 	"github.com/urfave/cli"
 
 	"github.com/manifoldco/manifold-cli/config"
@@ -50,12 +48,4 @@ func main() {
 	}
 
 	app.Run(os.Args)
-}
-
-func newSpinner(suffix string) *spinner.Spinner {
-	s := spinner.New(spinner.CharSets[11], 100*time.Millisecond)
-	if suffix != "" {
-		s.Suffix = " " + suffix
-	}
-	return s
 }

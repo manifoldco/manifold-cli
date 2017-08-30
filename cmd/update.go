@@ -91,7 +91,7 @@ func updateResourceCmd(cliCtx *cli.Context) error {
 		return cli.NewExitError(fmt.Sprintf("Failed to create Provisioning Client: %s", err), -1)
 	}
 
-	res, err := clients.FetchResources(ctx, marketplaceClient, teamID)
+	res, err := clients.FetchResources(ctx, marketplaceClient, teamID, false)
 	if err != nil {
 		return cli.NewExitError(
 			fmt.Sprintf("Failed to fetch the list of provisioned resources: %s", err), -1)
@@ -170,7 +170,7 @@ func updateResourceCmd(cliCtx *cli.Context) error {
 		return prompts.HandleSelectError(err, "Could not select apps")
 	}
 
-	spin := newSpinner(fmt.Sprintf("Updating resource \"%s\"", resource.Body.Label))
+	spin := prompts.NewSpinner(fmt.Sprintf("Updating resource \"%s\"", resource.Body.Label))
 	if !dontWait {
 		spin.Start()
 		defer spin.Stop()

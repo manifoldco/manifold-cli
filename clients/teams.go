@@ -6,10 +6,16 @@ import (
 	iClient "github.com/manifoldco/manifold-cli/generated/identity/client"
 	"github.com/manifoldco/manifold-cli/generated/identity/client/team"
 	iModels "github.com/manifoldco/manifold-cli/generated/identity/models"
+	"github.com/manifoldco/manifold-cli/prompts"
 )
 
 // FetchTeams returns the teams for the authenticated user
-func FetchTeams(ctx context.Context, c *iClient.Identity) ([]*iModels.Team, error) {
+func FetchTeams(ctx context.Context, c *iClient.Identity, shouldSpin bool) ([]*iModels.Team, error) {
+	if shouldSpin {
+		spin := prompts.NewSpinner("Fetching teams")
+		spin.Start()
+		defer spin.Stop()
+	}
 	res, err := c.Team.GetTeams(
 		team.NewGetTeamsParamsWithContext(ctx), nil)
 	if err != nil {
@@ -25,7 +31,12 @@ func FetchTeams(ctx context.Context, c *iClient.Identity) ([]*iModels.Team, erro
 }
 
 // FetchMemberships returns all memberships for the authenticated user
-func FetchMemberships(ctx context.Context, c *iClient.Identity) ([]iModels.TeamMembership, error) {
+func FetchMemberships(ctx context.Context, c *iClient.Identity, shouldSpin bool) ([]iModels.TeamMembership, error) {
+	if shouldSpin {
+		spin := prompts.NewSpinner("Fetching memberships")
+		spin.Start()
+		defer spin.Stop()
+	}
 	params := team.NewGetMembershipsParamsWithContext(ctx)
 	res, err := c.Team.GetMemberships(params, nil)
 

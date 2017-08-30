@@ -4,8 +4,10 @@ import (
 	"fmt"
 	"sort"
 	"strings"
+	"time"
 
 	"github.com/asaskevich/govalidator"
+	"github.com/briandowns/spinner"
 	"github.com/manifoldco/go-manifold"
 	"github.com/manifoldco/torus-cli/promptui"
 	"github.com/rhymond/go-money"
@@ -603,4 +605,13 @@ func CreditCard() (*stripe.Token, error) {
 	}
 
 	return tkn, nil
+}
+
+// NewSpinner returns a customized spinner
+func NewSpinner(suffix string) *spinner.Spinner {
+	s := spinner.New(spinner.CharSets[11], 100*time.Millisecond)
+	if suffix != "" {
+		s.Suffix = " " + suffix
+	}
+	return s
 }
