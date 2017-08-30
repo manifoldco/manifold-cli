@@ -3,7 +3,11 @@ package main
 import (
 	"context"
 	"fmt"
+	"os"
+	"sort"
+	"text/tabwriter"
 
+	"github.com/fatih/color"
 	"github.com/manifoldco/go-manifold"
 	"github.com/urfave/cli"
 
@@ -49,6 +53,11 @@ func init() {
 					teamFlag(),
 				},
 				Action: middleware.Chain(middleware.EnsureSession, inviteToTeamCmd),
+			},
+			{
+				Name:   "list",
+				Usage:  "List all your teams",
+				Action: middleware.Chain(middleware.EnsureSession, listTeamCmd),
 			},
 			{
 				Name:      "leave",
@@ -181,6 +190,37 @@ func inviteToTeamCmd(cliCtx *cli.Context) error {
 
 	fmt.Printf("An invite has been sent to %s <%s>\n", name, email)
 	return nil
+}
+
+func listTeamCmd(cliCtx *cli.Context) error {
+	ctx := context.Background()
+
+	identityClient, err := loadIdentityClient()
+	if err != nil {
+		return err
+	}
+
+	teams, err := clients.FetchTeamsMembersCount(ctx, identityClient)
+	if err != nil {
+		return cli.NewExitError(fmt.Sprintf("Failed to fetch list of teams: %s", err), -1)
+	}
+
+	w := tabwriter.NewWriter(os.Stdout, 0, 0, 8, ' ', 0)
+
+	bold := color.New(color.Bold).SprintFunc()
+
+	fmt.Fprintf(w, "%s\t%s\n\n", bold("Name"), bold("Members"))
+
+	sort.Slice(teams, func(i int, j int) bool {
+		a := strings.ToLower(teams[i].Name)
+		b := strings.ToLower(teams[j].Name)
+		return b > a
+	})
+
+	for _, team := range teams {
+		fmt.Fprintf(w, "%s\t%d\n", team.Name, team.Members)
+	}
+	return w.Flush()
 }
 
 func leaveTeamCmd(cliCtx *cli.Context) error {
