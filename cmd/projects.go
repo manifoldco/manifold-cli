@@ -79,7 +79,7 @@ func createProjectCmd(cliCtx *cli.Context) error {
 		UserID: userID,
 	}
 
-	if teamID.IsEmpty() {
+	if teamID == nil {
 		body.UserID = userID
 	} else {
 		body.TeamID = teamID
