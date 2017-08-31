@@ -207,9 +207,11 @@ func listTeamCmd(cliCtx *cli.Context) error {
 
 	w := tabwriter.NewWriter(os.Stdout, 0, 0, 8, ' ', 0)
 
-	bold := color.New(color.Bold).SprintFunc()
+	bold := color.New(color.Faint).SprintFunc()
+	str := color.New().SprintFunc() // TODO: find solution for tabwriter color support and remove this
 
-	fmt.Fprintf(w, "%s\t%s\n\n", bold("Name"), bold("Members"))
+	fmt.Fprintf(w, "%s\t%s\n", bold("Name"), bold("Members"))
+	fmt.Fprintf(w, "%s\t%s\n", str(""), str(""))
 
 	sort.Slice(teams, func(i int, j int) bool {
 		a := strings.ToLower(teams[i].Name)
@@ -218,7 +220,7 @@ func listTeamCmd(cliCtx *cli.Context) error {
 	})
 
 	for _, team := range teams {
-		fmt.Fprintf(w, "%s\t%d\n", team.Name, team.Members)
+		fmt.Fprintf(w, "%s\t%s\n", str(team.Name), str(team.Members))
 	}
 	return w.Flush()
 }
