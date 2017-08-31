@@ -305,7 +305,7 @@ func updateResource(ctx context.Context, cfg *config.Config, teamID *manifold.ID
 		"plan":  string(plan.Body.Label),
 		"price": toPrice(*plan.Body.Cost),
 	}
-	a.Track(ctx, "Update Resource", &params)
+	a.Track(ctx, "Resize Operation", &params)
 
 	if dontWait {
 		return opRes.Payload, patchRes.Payload, err

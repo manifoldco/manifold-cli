@@ -69,7 +69,6 @@ func signup(_ *cli.Context) error {
 		return cli.NewExitError("A problem occurred: "+err.Error(), -1)
 	}
 
-	a.Track(ctx, "Registered", nil)
 	a.Track(ctx, "Logged In", nil)
 
 	fmt.Println("Account created. You are logged in.")

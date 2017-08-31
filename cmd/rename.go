@@ -8,6 +8,7 @@ import (
 	"github.com/urfave/cli"
 
 	"github.com/manifoldco/go-manifold"
+	"github.com/manifoldco/manifold-cli/analytics"
 	"github.com/manifoldco/manifold-cli/clients"
 	"github.com/manifoldco/manifold-cli/config"
 	"github.com/manifoldco/manifold-cli/errs"
@@ -16,6 +17,7 @@ import (
 	"github.com/manifoldco/manifold-cli/generated/marketplace/models"
 	"github.com/manifoldco/manifold-cli/middleware"
 	"github.com/manifoldco/manifold-cli/prompts"
+	"github.com/manifoldco/manifold-cli/session"
 )
 
 func init() {
@@ -117,7 +119,7 @@ func rename(cliCtx *cli.Context) error {
 		return cli.NewExitError("Resource not renamed", -1)
 	}
 
-	updatedRes, err := relabelResource(ctx, resource, marketplaceClient, newResourceLabel)
+	updatedRes, err := relabelResource(ctx, cfg, resource, marketplaceClient, newResourceLabel)
 	if err != nil {
 		return cli.NewExitError(fmt.Sprintf("Unable to update resource: %s", err), -1)
 	}
@@ -126,9 +128,19 @@ func rename(cliCtx *cli.Context) error {
 	return nil
 }
 
-func relabelResource(ctx context.Context, resource *models.Resource,
+func relabelResource(ctx context.Context, cfg *config.Config, resource *models.Resource,
 	marketplaceClient *client.Marketplace, resourceName string,
 ) (*models.Resource, error) {
+	s, err := session.Retrieve(ctx, cfg)
+	if err != nil {
+		return nil, err
+	}
+
+	a, err := analytics.New(cfg, s)
+	if err != nil {
+		return nil, err
+	}
+
 	label := strings.Replace(strings.ToLower(resourceName), " ", "-", -1)
 	mLabel := manifold.Label(label)
 	if err := mLabel.Validate(nil); err != nil {
@@ -158,6 +170,8 @@ func relabelResource(ctx context.Context, resource *models.Resource,
 			}
 		}
 	}
+
+	a.Track(ctx, "Renamed Resource", nil)
 
 	return patchRes.Payload, nil
 }
