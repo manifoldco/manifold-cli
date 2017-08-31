@@ -6,13 +6,14 @@ import (
 
 	"github.com/urfave/cli"
 
-	"github.com/manifoldco/go-manifold"
+	"github.com/manifoldco/manifold-cli/analytics"
 	"github.com/manifoldco/manifold-cli/clients"
 	"github.com/manifoldco/manifold-cli/config"
 	"github.com/manifoldco/manifold-cli/errs"
 	"github.com/manifoldco/manifold-cli/generated/identity/models"
 	"github.com/manifoldco/manifold-cli/middleware"
 	"github.com/manifoldco/manifold-cli/prompts"
+	"github.com/manifoldco/manifold-cli/session"
 )
 
 func init() {
@@ -49,7 +50,6 @@ func switchTeamCmd(cliCtx *cli.Context) error {
 	me := cliCtx.Bool("me")
 
 	var team *models.Team
-	var teamID *manifold.ID
 	if !me {
 		identityClient, err := clients.NewIdentity(cfg)
 		if err != nil {
@@ -74,13 +74,10 @@ func switchTeamCmd(cliCtx *cli.Context) error {
 			me = true
 		} else {
 			team = teams[teamIdx]
-			teamID = &team.ID
 		}
-	} else {
-		teamID = nil
 	}
 
-	if err := switchTeam(cfg, teamID); err != nil {
+	if err := switchTeam(ctx, cfg, team); err != nil {
 		return cli.NewExitError(err, -1)
 	}
 
@@ -93,15 +90,35 @@ func switchTeamCmd(cliCtx *cli.Context) error {
 	return nil
 }
 
-func switchTeam(cfg *config.Config, teamID *manifold.ID) error {
+func switchTeam(ctx context.Context, cfg *config.Config, team *models.Team) error {
+	s, err := session.Retrieve(ctx, cfg)
+	if err != nil {
+		return err
+	}
+
+	a, err := analytics.New(cfg, s)
+	if err != nil {
+		return err
+	}
+
 	cfg.Team = ""
-	if teamID != nil {
-		cfg.Team = teamID.String()
+	if team != nil {
+		cfg.Team = team.ID.String()
 	}
 
 	if err := cfg.Write(); err != nil {
 		return fmt.Errorf("Could not switch teams context: %s", err)
 	}
+
+	params := map[string]string{}
+	if team != nil {
+		params["team-label"] = string(team.Body.Label)
+		params["team-name"] = string(team.Body.Name)
+	} else {
+		params["team-label"] = ""
+		params["team-name"] = ""
+	}
+	a.Track(ctx, "Switched Context", &params)
 
 	return nil
 }

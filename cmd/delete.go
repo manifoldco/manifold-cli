@@ -10,6 +10,7 @@ import (
 
 	"github.com/manifoldco/go-manifold"
 	"github.com/manifoldco/go-manifold/idtype"
+	"github.com/manifoldco/manifold-cli/analytics"
 	"github.com/manifoldco/manifold-cli/clients"
 	"github.com/manifoldco/manifold-cli/config"
 	"github.com/manifoldco/manifold-cli/errs"
@@ -111,7 +112,7 @@ func deleteCmd(cliCtx *cli.Context) error {
 		spin.Start()
 	}
 
-	err = deleteResource(ctx, teamID, s, resource, provisioningClient, dontWait)
+	err = deleteResource(ctx, cfg, teamID, s, resource, provisioningClient, dontWait)
 	if err != nil {
 		return cli.NewExitError(fmt.Sprintf("Failed to delete resource: %s", err), -1)
 	}
@@ -125,9 +126,13 @@ func deleteCmd(cliCtx *cli.Context) error {
 	return nil
 }
 
-func deleteResource(ctx context.Context, teamID *manifold.ID, s session.Session, resource *mModels.Resource,
-	provisioningClient *pClient.Provisioning, dontWait bool,
+func deleteResource(ctx context.Context, cfg *config.Config, teamID *manifold.ID, s session.Session,
+	resource *mModels.Resource, provisioningClient *pClient.Provisioning, dontWait bool,
 ) error {
+	a, err := analytics.New(cfg, s)
+	if err != nil {
+		return err
+	}
 
 	ID, err := manifold.NewID(idtype.Operation)
 	if err != nil {
@@ -177,6 +182,8 @@ func deleteResource(ctx context.Context, teamID *manifold.ID, s session.Session,
 			return err
 		}
 	}
+
+	a.Track(ctx, "Deprovision Operation", nil)
 
 	if dontWait {
 		return nil
