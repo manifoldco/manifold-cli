@@ -8,6 +8,7 @@ import (
 
 	"github.com/asaskevich/govalidator"
 	"github.com/briandowns/spinner"
+	"github.com/fatih/color"
 	"github.com/manifoldco/go-manifold"
 	"github.com/manifoldco/torus-cli/promptui"
 	"github.com/rhymond/go-money"
@@ -43,6 +44,31 @@ func (p plansSortByCost) Swap(i, j int) {
 
 func (p plansSortByCost) Less(i, j int) bool {
 	return *p[i].Body.Cost < *p[j].Body.Cost
+}
+
+type resourcesSortByName []*mModels.Resource
+
+func (p resourcesSortByName) Len() int {
+	return len(p)
+}
+
+func (p resourcesSortByName) Swap(i, j int) {
+	p[i], p[j] = p[j], p[i]
+}
+
+func (p resourcesSortByName) Less(i, j int) bool {
+	return strings.Compare(
+		strings.ToLower(formatResourceListItem(p[i])),
+		strings.ToLower(formatResourceListItem(p[j])),
+	) < 0
+}
+
+func formatResourceListItem(r *mModels.Resource) string {
+	bold := color.New(color.Bold).SprintFunc()
+	if r.Body.AppName == "" {
+		return string(r.Body.Label)
+	}
+	return fmt.Sprintf("%s/%s", r.Body.AppName, bold(r.Body.Label))
 }
 
 type productsSortByName []*cModels.Product
@@ -158,7 +184,7 @@ func SelectPlan(plans []*cModels.Plan, label string, filterLabelTop bool) (int, 
 // SelectResource promps the user to select a provisioned resource from the given list
 func SelectResource(resources []*mModels.Resource, label string) (int, string, error) {
 	line := func(r *mModels.Resource) string {
-		return fmt.Sprintf("%s (%s) %s", r.Body.Name, r.Body.Label, r.Body.AppName)
+		return formatResourceListItem(r)
 	}
 
 	var idx int
@@ -182,6 +208,7 @@ func SelectResource(resources []*mModels.Resource, label string) (int, string, e
 		return idx, label, nil
 	}
 
+	sort.Sort(resourcesSortByName(resources))
 	labels := make([]string, len(resources))
 	for i, r := range resources {
 		labels[i] = line(r)
