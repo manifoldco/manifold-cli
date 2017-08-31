@@ -59,11 +59,6 @@ func createProjectCmd(cliCtx *cli.Context) error {
 		return err
 	}
 
-	marketplaceClient, err := loadMarketplaceClient()
-	if err != nil {
-		return err
-	}
-
 	autoSelect := projectName != ""
 	projectName, err = prompts.ProjectName(projectName, autoSelect)
 	if err != nil {
@@ -93,11 +88,27 @@ func createProjectCmd(cliCtx *cli.Context) error {
 	spin.Start()
 	defer spin.Stop()
 
+	if err := createProject(params); err != nil {
+		return cli.NewExitError(fmt.Sprintf("Could not create project: %s", err), -1)
+	}
+
+	fmt.Printf("Your project '%s' has been created\n", projectName)
+	return nil
+}
+
+func createProject(params *projectClient.PostProjectsParams) error {
+	marketplaceClient, err := loadMarketplaceClient()
+	if err != nil {
+		return err
+	}
+
 	_, err = marketplaceClient.Project.PostProjects(params, nil)
 	if err != nil {
 		switch e := err.(type) {
 		case *projectClient.PostProjectsBadRequest:
+			return e.Payload
 		case *projectClient.PostProjectsUnauthorized:
+			return e.Payload
 		case *projectClient.PostProjectsConflict:
 			return e.Payload
 		case *projectClient.PostProjectsInternalServerError:
@@ -107,7 +118,6 @@ func createProjectCmd(cliCtx *cli.Context) error {
 		}
 	}
 
-	fmt.Printf("Your project '%s' has been created\n", projectName)
 	return nil
 }
 
