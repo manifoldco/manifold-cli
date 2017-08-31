@@ -104,7 +104,12 @@ func EnsureTeamPrefs(cliCtx *cli.Context) error {
 			return cli.NewExitError(errs.ErrNoTeams, -1)
 		}
 
-		teamIdx, _, err := prompts.SelectTeam(teams, "", true)
+		s, err := session.Retrieve(ctx, cfg)
+		if err != nil {
+			return cli.NewExitError(fmt.Sprintf("Could not retrieve session: %s", err), -1)
+		}
+
+		teamIdx, _, err := prompts.SelectTeam(teams, "", s.LabelInfo())
 		if err != nil {
 			prompts.HandleSelectError(err, "Could not select team")
 		}

@@ -65,9 +65,14 @@ func switchTeamCmd(cliCtx *cli.Context) error {
 			return errs.ErrNoTeams
 		}
 
-		teamIdx, _, err := prompts.SelectTeam(teams, teamLabel, true)
+		s, err := session.Retrieve(ctx, cfg)
 		if err != nil {
-			return prompts.HandleSelectError(err, "Could not select team")
+			return cli.NewExitError("Could not retrieve session: "+err.Error(), -1)
+		}
+
+		teamIdx, _, err := prompts.SelectContext(teams, teamLabel, s.LabelInfo())
+		if err != nil {
+			return prompts.HandleSelectError(err, "Could not select context")
 		}
 
 		if teamIdx == -1 {
@@ -82,7 +87,7 @@ func switchTeamCmd(cliCtx *cli.Context) error {
 	}
 
 	if me {
-		fmt.Println("You're now operating under your account, not a team.")
+		fmt.Println("You're now operating under your personal account.")
 	} else {
 		fmt.Printf("You're now operating under the \"%s\" team.\n", team.Body.Name)
 	}
@@ -107,7 +112,7 @@ func switchTeam(ctx context.Context, cfg *config.Config, team *models.Team) erro
 	}
 
 	if err := cfg.Write(); err != nil {
-		return fmt.Errorf("Could not switch teams context: %s", err)
+		return fmt.Errorf("Could not switch context: %s", err)
 	}
 
 	params := map[string]string{}

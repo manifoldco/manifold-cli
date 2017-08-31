@@ -20,6 +20,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - Updated spinners
 - Update resource selects to be label-focused
 - Make plugin execution architecture aware
+- Output adjusted for team selector
 
 ## [0.3.0] - 2017-08-29
 
