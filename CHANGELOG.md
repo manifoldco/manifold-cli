@@ -9,6 +9,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Added
 
+### Fixed
+
+## [0.4.0] - 2017-08-31
+
+### Added
+
 - Add `billing redeem` command to redeem coupon codes
 - Add `teams list` command to list all teams and # of members
 - Conflict response when redeeming coupons
