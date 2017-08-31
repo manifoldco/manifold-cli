@@ -32,6 +32,7 @@ type Session interface {
 	Authenticated() bool
 	FromEnvVars() bool
 	User() *models.User
+	LabelInfo() *[]string
 }
 
 // Unauthorized struct to represent an unauthorized user session
@@ -48,6 +49,9 @@ func (*Unauthorized) FromEnvVars() bool { return false }
 // User returns the user object associated with this session, in this case nil
 func (*Unauthorized) User() *models.User { return nil }
 
+// LabelInfo returns information used in selects for this user
+func (*Unauthorized) LabelInfo() *[]string { return nil }
+
 // Authorized struct to represent an authorized user session
 type Authorized struct {
 	user        *models.User
@@ -60,6 +64,12 @@ func (a *Authorized) Authenticated() bool { return true }
 
 // User returns the user object associated with this session, in this case nil
 func (a *Authorized) User() *models.User { return a.user }
+
+// LabelInfo returns information used in selects for this user
+func (a *Authorized) LabelInfo() *[]string {
+	lbl := []string{string(a.user.Body.Name), string(a.user.Body.Email)}
+	return &lbl
+}
 
 // FromEnvVars returns if the session was recently authenticated from
 // environment login variablesor not

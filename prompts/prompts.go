@@ -247,11 +247,23 @@ func SelectRegion(regions []*cModels.Region) (int, string, error) {
 	return prompt.Run()
 }
 
+// SelectContext runs a SelectTeam for context purposes
+func SelectContext(teams []*iModels.Team, label string, userTuple *[]string) (int, string, error) {
+	return selectTeam(teams, "Switch To", label, userTuple)
+}
+
 // SelectTeam prompts the user to select a team from the given list. -1 as the first return value
 // indicates no team has been selected
-func SelectTeam(teams []*iModels.Team, label string, includeNoTeam bool) (int, string, error) {
+func SelectTeam(teams []*iModels.Team, label string, userTuple *[]string) (int, string, error) {
+	return selectTeam(teams, "Select Team", label, userTuple)
+}
+
+func selectTeam(teams []*iModels.Team, prefix, label string, userTuple *[]string) (int, string, error) {
 	line := func(t *iModels.Team) string {
 		return fmt.Sprintf("%s (%s)", t.Body.Name, t.Body.Label)
+	}
+	if prefix == "" {
+		prefix = "Select Team"
 	}
 
 	var idx int
@@ -276,23 +288,26 @@ func SelectTeam(teams []*iModels.Team, label string, includeNoTeam bool) (int, s
 		return idx, label, nil
 	}
 
-	labels := make([]string, len(teams)+1)
+	labels := make([]string, len(teams))
 	for i, t := range teams {
 		labels[i] = line(t)
 	}
 
-	if includeNoTeam {
-		labels = append([]string{"Don't use a team"}, labels...)
+	if userTuple != nil {
+		usr := *userTuple
+		name := usr[0]
+		email := usr[1]
+		labels = append([]string{fmt.Sprintf("%s (%s)", name, email)}, labels...)
 	}
 
 	prompt := promptui.Select{
-		Label: "Select Team",
+		Label: prefix,
 		Items: labels,
 	}
 
 	teamIdx, name, err := prompt.Run()
 
-	if includeNoTeam {
+	if userTuple != nil {
 		return teamIdx - 1, name, err
 	}
 
