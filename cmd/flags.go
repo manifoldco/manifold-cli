@@ -31,7 +31,7 @@ func meFlag() cli.Flag {
 func teamFlag() cli.Flag {
 	return cli.StringFlag{
 		Name:   "team, t",
-		Usage:  "Specify a team name",
+		Usage:  "Specify a team",
 		Value:  "",
 		EnvVar: "MANIFOLD_TEAM",
 	}
