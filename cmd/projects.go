@@ -31,6 +31,12 @@ func init() {
 				Action: middleware.Chain(middleware.EnsureSession,
 					middleware.LoadTeamPrefs, createProjectCmd),
 			},
+			{
+				Name:   "list",
+				Usage:  "List all your projects",
+				Flags:  teamFlags,
+				Action: middleware.Chain(middleware.EnsureSession, listProjectsCmd),
+			},
 		},
 	}
 
@@ -91,6 +97,11 @@ func createProjectCmd(cliCtx *cli.Context) error {
 
 	fmt.Printf("Your project '%s' has been created\n", projectName)
 	return nil
+}
+
+func listProjectsCmd(cliCtx *cli.Context) error {
+
+	return cli.NewExitError(fmt.Sprintf("not implemented"), -1)
 }
 
 func createProject(params *projectClient.PostProjectsParams) error {
