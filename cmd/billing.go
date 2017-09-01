@@ -79,7 +79,7 @@ func addBillingProfileCmd(cliCtx *cli.Context) error {
 
 	params := profile.NewPostProfilesParamsWithContext(ctx)
 
-	if teamID.IsEmpty() {
+	if teamID == nil {
 		params.SetBody(&bModels.ProfileCreateRequest{
 			Token:  &token,
 			UserID: userID,
@@ -128,7 +128,7 @@ func updateBillingProfileCmd(cliCtx *cli.Context) error {
 
 	params := profile.NewPatchProfilesIDParamsWithContext(ctx)
 
-	if teamID.IsEmpty() {
+	if teamID == nil {
 		params.SetID(userID.String())
 	} else {
 		params.SetID(teamID.String())
@@ -183,7 +183,7 @@ func redeemCouponCmd(cliCtx *cli.Context) error {
 
 	me := cliCtx.Bool("me")
 
-	if !me && !teamID.IsEmpty() {
+	if !me && teamID != nil {
 		body.TeamID = teamID
 	}
 

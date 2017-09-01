@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"fmt"
-	"strings"
 	"time"
 
 	"github.com/go-openapi/strfmt"
@@ -226,12 +225,11 @@ func updateResource(ctx context.Context, cfg *config.Config, teamID *manifold.ID
 		return nil, nil, err
 	}
 
-	label := strings.Replace(strings.ToLower(resourceName), " ", "-", -1)
 	rename := &mModels.PublicUpdateResource{
 		Body: &mModels.PublicUpdateResourceBody{
 			AppName: &appName,
-			Label:   manifold.Label(label),
 			Name:    manifold.Name(resourceName),
+			Label:   generateLabel(resourceName),
 		},
 	}
 
