@@ -54,7 +54,7 @@ func createProjectCmd(cliCtx *cli.Context) error {
 		return err
 	}
 
-	projectName, err := optionalArgLabel(cliCtx, 0, "name")
+	projectName, err := optionalArgName(cliCtx, 0, "name")
 	if err != nil {
 		return err
 	}
