@@ -406,7 +406,7 @@ func selectTeam(ctx context.Context, teamName string, identityClient *client.Ide
 		return nil, errs.ErrNoTeams
 	}
 
-	idx, _, err := prompts.SelectTeam(teams, teamName, false)
+	idx, _, err := prompts.SelectTeam(teams, teamName, nil)
 	if err != nil {
 		return nil, prompts.HandleSelectError(err, "Could not select team")
 	}

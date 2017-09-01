@@ -9,14 +9,24 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Added
 
+### Fixed
+
+## [0.4.0] - 2017-08-31
+
+### Added
+
 - Add `billing redeem` command to redeem coupon codes
 - Add `teams list` command to list all teams and # of members
 - Conflict response when redeeming coupons
+- Add `view` command to view resource details
 
 ### Fixed
 
 - Optional params for redeeming coupons
 - Updated spinners
+- Update resource selects to be label-focused
+- Make plugin execution architecture aware
+- Output adjusted for team selector
 
 ## [0.3.0] - 2017-08-29
 
@@ -34,6 +44,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - Add 'switch' to switch Teams, so interact with a team's resources
 - Add --team and --me flags for operating under your account, or a team's
 - Add --team and --me flags for billing
+- Add `billing redeem` command to redeem coupon codes
+- Rewrote README, adding installation instructions
 
 ### Fixed
 

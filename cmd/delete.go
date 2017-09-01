@@ -5,12 +5,12 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/briandowns/spinner"
 	"github.com/go-openapi/strfmt"
 	"github.com/urfave/cli"
 
 	"github.com/manifoldco/go-manifold"
 	"github.com/manifoldco/go-manifold/idtype"
+	"github.com/manifoldco/manifold-cli/analytics"
 	"github.com/manifoldco/manifold-cli/clients"
 	"github.com/manifoldco/manifold-cli/config"
 	"github.com/manifoldco/manifold-cli/errs"
@@ -107,15 +107,12 @@ func deleteCmd(cliCtx *cli.Context) error {
 		return cli.NewExitError("Resource not deleted", -1)
 	}
 
-	spin := spinner.New(spinner.CharSets[38], 500*time.Millisecond)
+	spin := prompts.NewSpinner(fmt.Sprintf("Deleting resource \"%s\"", resource.Body.Label))
 	if !dontWait {
-		fmt.Printf("\nWe're starting to delete the resource \"%s\". This may take some time, please wait!\n\n",
-			resource.Body.Label,
-		)
 		spin.Start()
 	}
 
-	err = deleteResource(ctx, teamID, s, resource, provisioningClient, dontWait)
+	err = deleteResource(ctx, cfg, teamID, s, resource, provisioningClient, dontWait)
 	if err != nil {
 		return cli.NewExitError(fmt.Sprintf("Failed to delete resource: %s", err), -1)
 	}
@@ -129,9 +126,13 @@ func deleteCmd(cliCtx *cli.Context) error {
 	return nil
 }
 
-func deleteResource(ctx context.Context, teamID *manifold.ID, s session.Session, resource *mModels.Resource,
-	provisioningClient *pClient.Provisioning, dontWait bool,
+func deleteResource(ctx context.Context, cfg *config.Config, teamID *manifold.ID, s session.Session,
+	resource *mModels.Resource, provisioningClient *pClient.Provisioning, dontWait bool,
 ) error {
+	a, err := analytics.New(cfg, s)
+	if err != nil {
+		return err
+	}
 
 	ID, err := manifold.NewID(idtype.Operation)
 	if err != nil {
@@ -181,6 +182,8 @@ func deleteResource(ctx context.Context, teamID *manifold.ID, s session.Session,
 			return err
 		}
 	}
+
+	a.Track(ctx, "Deprovision Operation", nil)
 
 	if dontWait {
 		return nil

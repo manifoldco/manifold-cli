@@ -8,6 +8,7 @@ import (
 
 	"github.com/asaskevich/govalidator"
 	"github.com/briandowns/spinner"
+	"github.com/fatih/color"
 	"github.com/manifoldco/go-manifold"
 	"github.com/manifoldco/torus-cli/promptui"
 	"github.com/rhymond/go-money"
@@ -43,6 +44,31 @@ func (p plansSortByCost) Swap(i, j int) {
 
 func (p plansSortByCost) Less(i, j int) bool {
 	return *p[i].Body.Cost < *p[j].Body.Cost
+}
+
+type resourcesSortByName []*mModels.Resource
+
+func (p resourcesSortByName) Len() int {
+	return len(p)
+}
+
+func (p resourcesSortByName) Swap(i, j int) {
+	p[i], p[j] = p[j], p[i]
+}
+
+func (p resourcesSortByName) Less(i, j int) bool {
+	return strings.Compare(
+		strings.ToLower(formatResourceListItem(p[i])),
+		strings.ToLower(formatResourceListItem(p[j])),
+	) < 0
+}
+
+func formatResourceListItem(r *mModels.Resource) string {
+	bold := color.New(color.Bold).SprintFunc()
+	if r.Body.AppName == "" {
+		return string(r.Body.Label)
+	}
+	return fmt.Sprintf("%s/%s", r.Body.AppName, bold(r.Body.Label))
 }
 
 type productsSortByName []*cModels.Product
@@ -158,7 +184,7 @@ func SelectPlan(plans []*cModels.Plan, label string, filterLabelTop bool) (int, 
 // SelectResource promps the user to select a provisioned resource from the given list
 func SelectResource(resources []*mModels.Resource, label string) (int, string, error) {
 	line := func(r *mModels.Resource) string {
-		return fmt.Sprintf("%s (%s) %s", r.Body.Name, r.Body.Label, r.Body.AppName)
+		return formatResourceListItem(r)
 	}
 
 	var idx int
@@ -182,6 +208,7 @@ func SelectResource(resources []*mModels.Resource, label string) (int, string, e
 		return idx, label, nil
 	}
 
+	sort.Sort(resourcesSortByName(resources))
 	labels := make([]string, len(resources))
 	for i, r := range resources {
 		labels[i] = line(r)
@@ -220,11 +247,23 @@ func SelectRegion(regions []*cModels.Region) (int, string, error) {
 	return prompt.Run()
 }
 
+// SelectContext runs a SelectTeam for context purposes
+func SelectContext(teams []*iModels.Team, label string, userTuple *[]string) (int, string, error) {
+	return selectTeam(teams, "Switch To", label, userTuple)
+}
+
 // SelectTeam prompts the user to select a team from the given list. -1 as the first return value
 // indicates no team has been selected
-func SelectTeam(teams []*iModels.Team, label string, includeNoTeam bool) (int, string, error) {
+func SelectTeam(teams []*iModels.Team, label string, userTuple *[]string) (int, string, error) {
+	return selectTeam(teams, "Select Team", label, userTuple)
+}
+
+func selectTeam(teams []*iModels.Team, prefix, label string, userTuple *[]string) (int, string, error) {
 	line := func(t *iModels.Team) string {
 		return fmt.Sprintf("%s (%s)", t.Body.Name, t.Body.Label)
+	}
+	if prefix == "" {
+		prefix = "Select Team"
 	}
 
 	var idx int
@@ -249,23 +288,26 @@ func SelectTeam(teams []*iModels.Team, label string, includeNoTeam bool) (int, s
 		return idx, label, nil
 	}
 
-	labels := make([]string, len(teams)+1)
+	labels := make([]string, len(teams))
 	for i, t := range teams {
 		labels[i] = line(t)
 	}
 
-	if includeNoTeam {
-		labels = append([]string{"Don't use a team"}, labels...)
+	if userTuple != nil {
+		usr := *userTuple
+		name := usr[0]
+		email := usr[1]
+		labels = append([]string{fmt.Sprintf("%s (%s)", name, email)}, labels...)
 	}
 
 	prompt := promptui.Select{
-		Label: "Select Team",
+		Label: prefix,
 		Items: labels,
 	}
 
 	teamIdx, name, err := prompt.Run()
 
-	if includeNoTeam {
+	if userTuple != nil {
 		return teamIdx - 1, name, err
 	}
 
