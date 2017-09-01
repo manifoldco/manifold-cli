@@ -73,18 +73,18 @@ func EnsureTeamPrefs(cliCtx *cli.Context) error {
 	}
 
 	var teamID string
-	teamName := cliCtx.String("team")
+	teamLabel := cliCtx.String("team")
 	me := cliCtx.Bool("me")
 
-	if teamName != "" && me {
+	if teamLabel != "" && me {
 		return cli.NewExitError("Cannot use --me with --team", -1)
 	}
 
-	if teamName == "" {
+	if teamLabel == "" {
 		teamID = cfg.Team
 		// try to decode an ID, otherwise assume a label
 		if _, err := manifold.DecodeIDFromString(teamID); err != nil {
-			teamName = cfg.Team
+			teamLabel = cfg.Team
 			teamID = ""
 		}
 	}
@@ -99,7 +99,7 @@ func EnsureTeamPrefs(cliCtx *cli.Context) error {
 		return cli.NewExitError(fmt.Sprintf("Could not load teams: %s", err), -1)
 	}
 
-	if !me && teamName == "" && teamID == "" {
+	if !me && teamLabel == "" && teamID == "" {
 		if len(teams) == 0 {
 			return cli.NewExitError(errs.ErrNoTeams, -1)
 		}
@@ -117,25 +117,25 @@ func EnsureTeamPrefs(cliCtx *cli.Context) error {
 		if teamIdx == -1 {
 			cliCtx.Set("me", "true")
 		} else {
-			teamName = string(teams[teamIdx].Body.Label)
+			teamLabel = string(teams[teamIdx].Body.Label)
 			cliCtx.Set("team-id", teams[teamIdx].ID.String())
 		}
 
-	} else if teamName != "" {
+	} else if teamLabel != "" {
 		for _, t := range teams {
-			if string(t.Body.Label) == teamName {
+			if string(t.Body.Label) == teamLabel {
 				cliCtx.Set("team-id", t.ID.String())
 			}
 		}
 
 		if !isSet(cliCtx, "team-id") {
-			return cli.NewExitError(fmt.Sprintf("Team \"%s\" not found", teamName), -1)
+			return cli.NewExitError(fmt.Sprintf("Team \"%s\" not found", teamLabel), -1)
 		}
 	} else if teamID != "" {
 		cliCtx.Set("team-id", teamID)
 	}
 
-	return cliCtx.Set("team", teamName)
+	return cliCtx.Set("team", teamLabel)
 }
 
 // EnsureSession checks that the user has an active session
