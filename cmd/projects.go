@@ -69,9 +69,8 @@ func createProjectCmd(cliCtx *cli.Context) error {
 
 	params := projectClient.NewPostProjectsParamsWithContext(ctx)
 	body := &mModels.CreateProjectBody{
-		Name:   name,
-		Label:  manifold.Label(strings.Replace(strings.ToLower(projectName), " ", "-", -1)),
-		UserID: userID,
+		Name:  name,
+		Label: manifold.Label(strings.Replace(strings.ToLower(projectName), " ", "-", -1)),
 	}
 
 	if teamID == nil {
