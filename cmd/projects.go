@@ -7,7 +7,7 @@ import (
 
 	"github.com/urfave/cli"
 
-	manifold "github.com/manifoldco/go-manifold"
+	"github.com/manifoldco/go-manifold"
 	"github.com/manifoldco/manifold-cli/clients"
 	"github.com/manifoldco/manifold-cli/config"
 	"github.com/manifoldco/manifold-cli/errs"
@@ -65,12 +65,10 @@ func createProjectCmd(cliCtx *cli.Context) error {
 		return prompts.HandleSelectError(err, "Failed to name project")
 	}
 
-	name := manifold.Name(projectName)
-
 	params := projectClient.NewPostProjectsParamsWithContext(ctx)
 	body := &mModels.CreateProjectBody{
-		Name:  name,
-		Label: manifold.Label(strings.Replace(strings.ToLower(projectName), " ", "-", -1)),
+		Name:  manifold.Name(projectName),
+		Label: generateLabel(projectName),
 	}
 
 	if teamID == nil {
@@ -133,4 +131,10 @@ func loadMarketplaceClient() (*client.Marketplace, error) {
 	}
 
 	return identityClient, nil
+}
+
+// generateLabel makes a name lowercase and replace spaces with dashes
+func generateLabel(name string) manifold.Label {
+	label := strings.Replace(strings.ToLower(name), " ", "-", -1)
+	return manifold.Label(label)
 }

@@ -3,11 +3,9 @@ package main
 import (
 	"context"
 	"fmt"
-	"strings"
 
 	"github.com/urfave/cli"
 
-	"github.com/manifoldco/go-manifold"
 	"github.com/manifoldco/manifold-cli/analytics"
 	"github.com/manifoldco/manifold-cli/clients"
 	"github.com/manifoldco/manifold-cli/config"
@@ -141,15 +139,14 @@ func relabelResource(ctx context.Context, cfg *config.Config, resource *models.R
 		return nil, err
 	}
 
-	label := strings.Replace(strings.ToLower(resourceName), " ", "-", -1)
-	mLabel := manifold.Label(label)
-	if err := mLabel.Validate(nil); err != nil {
+	label := generateLabel(resourceName)
+	if err := label.Validate(nil); err != nil {
 		return nil, err
 	}
 
 	rename := &models.PublicUpdateResource{
 		Body: &models.PublicUpdateResourceBody{
-			Label: manifold.Label(label),
+			Label: label,
 		},
 	}
 

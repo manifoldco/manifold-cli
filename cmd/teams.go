@@ -274,7 +274,7 @@ func createTeam(ctx context.Context, teamName string, identityClient *client.Ide
 	createTeam := &models.CreateTeam{
 		Body: &models.CreateTeamBody{
 			Name:  manifold.Name(teamName),
-			Label: manifold.Label(strings.Replace(strings.ToLower(teamName), " ", "-", -1)),
+			Label: generateLabel(teamName),
 		},
 	}
 
@@ -305,7 +305,7 @@ func updateTeam(ctx context.Context, team *models.Team, teamName string, identit
 	updateTeam := &models.UpdateTeam{
 		Body: &models.UpdateTeamBody{
 			Name:  manifold.Name(teamName),
-			Label: manifold.Label(strings.Replace(strings.ToLower(teamName), " ", "-", -1)),
+			Label: generateLabel(teamName),
 		},
 	}
 
