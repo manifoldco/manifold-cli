@@ -3,8 +3,11 @@ package main
 import (
 	"context"
 	"fmt"
+	"os"
 	"strings"
+	"text/tabwriter"
 
+	"github.com/fatih/color"
 	"github.com/urfave/cli"
 
 	"github.com/manifoldco/go-manifold"
@@ -32,10 +35,11 @@ func init() {
 					middleware.LoadTeamPrefs, createProjectCmd),
 			},
 			{
-				Name:   "list",
-				Usage:  "List all your projects",
-				Flags:  teamFlags,
-				Action: middleware.Chain(middleware.EnsureSession, listProjectsCmd),
+				Name:  "list",
+				Usage: "List all your projects",
+				Flags: teamFlags,
+				Action: middleware.Chain(middleware.EnsureSession,
+					middleware.LoadTeamPrefs, listProjectsCmd),
 			},
 		},
 	}
@@ -100,8 +104,33 @@ func createProjectCmd(cliCtx *cli.Context) error {
 }
 
 func listProjectsCmd(cliCtx *cli.Context) error {
+	ctx := context.Background()
 
-	return cli.NewExitError(fmt.Sprintf("not implemented"), -1)
+	marketplaceClient, err := loadMarketplaceClient()
+	if err != nil {
+		return err
+	}
+
+	teamID, err := validateTeamID(cliCtx)
+	if err != nil {
+		return err
+	}
+
+	projects, err := clients.FetchProjects(ctx, teamID, marketplaceClient)
+	if err != nil {
+		return cli.NewExitError(fmt.Sprintf("Failed to fetch list of projects: %s", err), -1)
+	}
+
+	w := tabwriter.NewWriter(os.Stdout, 0, 0, 8, ' ', 0)
+
+	bold := color.New(color.Bold).SprintFunc()
+
+	fmt.Fprintf(w, "%s\n\n", bold("Project"))
+
+	for _, project := range projects {
+		fmt.Fprintf(w, "%s\n", project.Body.Label)
+	}
+	return w.Flush()
 }
 
 func createProject(params *projectClient.PostProjectsParams) error {

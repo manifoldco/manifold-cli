@@ -273,6 +273,38 @@ paths:
         default:
           $ref: '#/responses/Unexpected'
   /projects:
+    get:
+      summary: List all provisioned projects
+      tags:
+        - Project
+      parameters:
+        - name: team_id
+          in: query
+          description: |
+            ID of the Team to filter projects by, stored as a
+            base32 encoded 18 byte identifier.
+          type: string
+          pattern: '^[0-9abcdefghjkmnpqrtuvwxyz]{29}$'
+          format: base32ID
+          required: false
+      responses:
+        200:
+          description: List of projects
+          schema:
+            type: array
+            items: { $ref: '#/definitions/Project' }
+        400:
+          description: Validation failed for request.
+          schema: { $ref: '#/definitions/Error' }
+        401:
+          description: Authentication failed for the request.
+          schema: { $ref: '#/definitions/Error' }
+        500:
+          description: Request failed due to an internal server error.
+          schema: { $ref: '#/definitions/Error' }
+        default:
+          description: Unexpected error
+          schema: { $ref: '#/definitions/Error' }
     post:
       summary: Create a new project
       tags:
