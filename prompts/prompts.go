@@ -247,6 +247,47 @@ func SelectRegion(regions []*cModels.Region) (int, string, error) {
 	return prompt.Run()
 }
 
+// SelectProject prompts the user to select a project from the given list.
+func SelectProject(projects []*mModels.Project, label string) (int, string, error) {
+	line := func(p *mModels.Project) string {
+		return fmt.Sprintf("%s (%s)", p.Body.Name, p.Body.Label)
+	}
+
+	var idx int
+	if label != "" {
+		found := false
+		for i, p := range projects {
+			if string(p.Body.Label) == label {
+				idx = i
+				found = true
+				break
+			}
+		}
+
+		p := projects[idx]
+
+		if !found {
+			fmt.Println(promptui.FailedValue("Team", label))
+			return 0, "", errs.ErrProjectNotFound
+		}
+
+		fmt.Println(promptui.SuccessfulValue("Team", line(p)))
+		return idx, label, nil
+	}
+
+	labels := make([]string, len(projects))
+	for i, p := range projects {
+		labels[i] = line(p)
+	}
+
+	prompt := promptui.Select{
+		Label: "Select Project",
+		Items: labels,
+	}
+
+	return prompt.Run()
+}
+
 // SelectContext runs a SelectTeam for context purposes
 func SelectContext(teams []*iModels.Team, label string, userTuple *[]string) (int, string, error) {
 	return selectTeam(teams, "Switch To", label, userTuple)
