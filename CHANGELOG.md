@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ### Added
 
 - Add `projects create` command to create new projects
+- Add `projects update` command to update an existing project
 
 ### Fixed
 
