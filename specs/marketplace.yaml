@@ -28,6 +28,12 @@ responses:
     description: Invalid Auth Token
     schema:
       $ref: '#/definitions/Error'
+  Forbidden:
+    description: Insufficient permission to perform the action
+    schema: { $ref: '#/definitions/Error' }
+  Conflict:
+    description: Conflict during patch
+    schema: { $ref: '#/definitions/Error' }
   InternalServerError:
     description: Server Error
     schema:
@@ -273,6 +279,30 @@ paths:
         default:
           $ref: '#/responses/Unexpected'
   /projects:
+    get:
+      summary: List all provisioned projects
+      tags:
+        - Project
+      parameters:
+        - name: team_id
+          in: query
+          description: |
+            ID of the Team to filter projects by, stored as a
+            base32 encoded 18 byte identifier.
+          type: string
+          pattern: '^[0-9abcdefghjkmnpqrtuvwxyz]{29}$'
+          format: base32ID
+          required: false
+      responses:
+        200:
+          description: List of projects
+          schema:
+            type: array
+            items: { $ref: '#/definitions/Project' }
+        400: { $ref: "#/responses/BadRequest" }
+        401: { $ref: "#/responses/Unauthorized" }
+        500: { $ref: "#/responses/InternalServerError" }
+        default: { $ref: "#/responses/Unexpected" }
     post:
       summary: Create a new project
       tags:
@@ -303,6 +333,62 @@ paths:
         default:
           description: Unexpected error
           schema: { $ref: '#/definitions/Error' }
+  /projects/{id}:
+    get:
+      summary: Retrieve a project by its ID
+      parameters:
+        - name: id
+          in: path
+          description: |
+            ID of the project to retrieve, stored as a base32 encoded 18 byte
+            identifier.
+          required: true
+          type: string
+          pattern: '^[0-9abcdefghjkmnpqrtuvwxyz]{29}$'
+          format: base32ID
+      tags:
+        - Project
+      responses:
+        200:
+          description: A project.
+          schema: { $ref: '#/definitions/Project' }
+        404:
+          description: No proejct with the given ID exists.
+          schema: { $ref: '#/definitions/Error' }
+        401: { $ref: "#/responses/Unauthorized" }
+        403: { $ref: "#/responses/Forbidden" }
+        500: { $ref: "#/responses/InternalServerError" }
+        default: { $ref: "#/responses/Unexpected" }
+    patch:
+      summary: Update a project's name or description.
+      parameters:
+        - name: id
+          in: path
+          description: |
+            ID of the project to look up, stored as a base32 encoded 18 byte
+            identifier.
+          required: true
+          type: string
+          pattern: '^[0-9abcdefghjkmnpqrtuvwxyz]{29}$'
+          format: base32ID
+        - name: body
+          in: body
+          description: Project update request
+          required: true
+          schema: { $ref: '#/definitions/PublicUpdateProject' }
+      tags:
+        - Project
+      responses:
+        200:
+          description: An updated project object.
+          schema: { $ref: '#/definitions/Project' }
+        400: { $ref: "#/responses/BadRequest" }
+        401: { $ref: "#/responses/Unauthorized" }
+        403: { $ref: "#/responses/Forbidden" }
+        409: { $ref: "#/responses/Conflict" }
+        500: { $ref: "#/responses/InternalServerError" }
+        default: { $ref: "#/responses/Unexpected" }
+
 definitions:
   ID:
     type: string
@@ -584,6 +670,25 @@ definitions:
         required:
           - name
           - label
+    additionalProperties: false
+    required:
+      - body
+
+  PublicUpdateProject:
+    type: object
+    description: Update project patch request
+    properties:
+      body:
+        type: object
+        properties:
+          name: { $ref: '#/definitions/Name' }
+          label: { $ref: '#/definitions/Label' }
+          description:
+            x-nullable: true
+            type: string
+            minLength: 1
+            maxLength: 1000
+        additionalProperties: false
     additionalProperties: false
     required:
       - body
