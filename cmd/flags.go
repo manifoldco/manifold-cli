@@ -15,7 +15,7 @@ func formatFlag(defaultValue, description string) cli.Flag {
 func nameFlag() cli.Flag {
 	return cli.StringFlag{
 		Name:   "name, n",
-		Usage:  "Specify a name for a resource",
+		Usage:  "Specify a name",
 		Value:  "",
 		EnvVar: "MANIFOLD_NAME",
 	}

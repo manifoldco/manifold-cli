@@ -24,9 +24,11 @@ func init() {
 		Usage: "Manage your projects",
 		Subcommands: []cli.Command{
 			{
-				Name:      "create",
-				Usage:     "Create a new projects",
-				Flags:     teamFlags,
+				Name:  "create",
+				Usage: "Create a new projects",
+				Flags: append(teamFlags, []cli.Flag{
+					descriptionFlag(),
+				}...),
 				ArgsUsage: "[name]",
 				Action: middleware.Chain(middleware.EnsureSession,
 					middleware.LoadTeamPrefs, createProjectCmd),
@@ -35,7 +37,7 @@ func init() {
 				Name:  "update",
 				Usage: "Update an existing project",
 				Flags: append(teamFlags, []cli.Flag{
-					nameFlag(),
+					nameFlag(), descriptionFlag(),
 				}...),
 				ArgsUsage: "[label]",
 				Action: middleware.Chain(middleware.EnsureSession, middleware.LoadTeamPrefs,
@@ -69,16 +71,25 @@ func createProjectCmd(cliCtx *cli.Context) error {
 		return err
 	}
 
-	autoSelect := projectName != ""
-	projectName, err = prompts.ProjectName(projectName, autoSelect)
+	projectDescription := cliCtx.String("description")
+
+	autoSelectName := projectName != ""
+	projectName, err = prompts.ProjectName(projectName, autoSelectName)
 	if err != nil {
 		return prompts.HandleSelectError(err, "Failed to name project")
 	}
 
+	autoSelectDescription := projectDescription != ""
+	projectDescription, err = prompts.ProjectDescription(projectDescription, autoSelectDescription)
+	if err != nil {
+		return prompts.HandleSelectError(err, "Could not add description to project")
+	}
+
 	params := projectClient.NewPostProjectsParamsWithContext(ctx)
 	body := &mModels.CreateProjectBody{
-		Name:  manifold.Name(projectName),
-		Label: generateLabel(projectName),
+		Name:        manifold.Name(projectName),
+		Description: projectDescription,
+		Label:       generateLabel(projectName),
 	}
 
 	if teamID == nil {
