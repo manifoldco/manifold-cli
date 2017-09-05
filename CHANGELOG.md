@@ -29,6 +29,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - Update resource selects to be label-focused
 - Make plugin execution architecture aware
 - Output adjusted for team selector
+- Ensure columns accept long names in Teams list
 
 ## [0.3.0] - 2017-08-29
 
