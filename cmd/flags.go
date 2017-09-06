@@ -21,6 +21,15 @@ func nameFlag() cli.Flag {
 	}
 }
 
+func descriptionFlag() cli.Flag {
+	return cli.StringFlag{
+		Name:   "description, d",
+		Usage:  "Specify a description",
+		Value:  "",
+		EnvVar: "MANIFOLD_DESCRIPTION",
+	}
+}
+
 func meFlag() cli.Flag {
 	return cli.BoolFlag{
 		Name:  "me, m",

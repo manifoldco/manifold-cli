@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 - Add `projects create` command to create new projects
 - Add `projects list` command to list projects
+- Add `projects update` command to update an existing project
 
 ### Fixed
 
@@ -30,6 +31,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - Update resource selects to be label-focused
 - Make plugin execution architecture aware
 - Output adjusted for team selector
+- Ensure columns accept long names in Teams list
 
 ## [0.3.0] - 2017-08-29
 
