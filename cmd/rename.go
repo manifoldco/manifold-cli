@@ -71,7 +71,7 @@ func rename(cliCtx *cli.Context) error {
 			fmt.Sprintf("Failed to create Maketplace API client: %s", err), -1)
 	}
 
-	res, err := clients.FetchResources(ctx, marketplaceClient, teamID, false)
+	res, err := clients.FetchResources(ctx, marketplaceClient, teamID)
 	if err != nil {
 		return cli.NewExitError(
 			fmt.Sprintf("Failed to fetch list of provisioned resources: %s", err), -1)

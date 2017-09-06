@@ -6,7 +6,6 @@ import (
 	iClient "github.com/manifoldco/manifold-cli/generated/identity/client"
 	"github.com/manifoldco/manifold-cli/generated/identity/client/team"
 	iModels "github.com/manifoldco/manifold-cli/generated/identity/models"
-	"github.com/manifoldco/manifold-cli/prompts"
 )
 
 // TeamMembersCount groups a team name with the amount of members the team has
@@ -16,12 +15,7 @@ type TeamMembersCount struct {
 }
 
 // FetchTeams returns the teams for the authenticated user
-func FetchTeams(ctx context.Context, c *iClient.Identity, shouldSpin bool) ([]*iModels.Team, error) {
-	if shouldSpin {
-		spin := prompts.NewSpinner("Fetching teams")
-		spin.Start()
-		defer spin.Stop()
-	}
+func FetchTeams(ctx context.Context, c *iClient.Identity) ([]*iModels.Team, error) {
 	res, err := c.Team.GetTeams(
 		team.NewGetTeamsParamsWithContext(ctx), nil)
 	if err != nil {
@@ -31,12 +25,7 @@ func FetchTeams(ctx context.Context, c *iClient.Identity, shouldSpin bool) ([]*i
 }
 
 // FetchTeamMembers returns a list of members profile from a team.
-func FetchTeamMembers(ctx context.Context, id string, c *iClient.Identity, shouldSpin bool) ([]*iModels.MemberProfile, error) {
-	if shouldSpin {
-		spin := prompts.NewSpinner("Fetching memberships")
-		spin.Start()
-		defer spin.Stop()
-	}
+func FetchTeamMembers(ctx context.Context, id string, c *iClient.Identity) ([]*iModels.MemberProfile, error) {
 	params := team.NewGetTeamsIDMembersParamsWithContext(ctx)
 	params.SetID(id)
 	res, err := c.Team.GetTeamsIDMembers(params, nil)
@@ -48,13 +37,8 @@ func FetchTeamMembers(ctx context.Context, id string, c *iClient.Identity, shoul
 
 // FetchTeamsMembersCount returns a list of all user teams with their names and
 // number of members.
-func FetchTeamsMembersCount(ctx context.Context, c *iClient.Identity, shouldSpin bool) ([]TeamMembersCount, error) {
-	if shouldSpin {
-		spin := prompts.NewSpinner("Fetching memberships")
-		spin.Start()
-		defer spin.Stop()
-	}
-	teams, err := FetchTeams(ctx, c, false)
+func FetchTeamsMembersCount(ctx context.Context, c *iClient.Identity) ([]TeamMembersCount, error) {
+	teams, err := FetchTeams(ctx, c)
 	if err != nil {
 		return nil, err
 	}
@@ -69,7 +53,7 @@ func FetchTeamsMembersCount(ctx context.Context, c *iClient.Identity, shouldSpin
 		name := string(t.Body.Name)
 
 		go func() {
-			members, err := FetchTeamMembers(ctx, id, c, false)
+			members, err := FetchTeamMembers(ctx, id, c)
 
 			if err != nil {
 				fail <- err
@@ -97,12 +81,7 @@ func FetchTeamsMembersCount(ctx context.Context, c *iClient.Identity, shouldSpin
 }
 
 // FetchMemberships returns all memberships for the authenticated user
-func FetchMemberships(ctx context.Context, c *iClient.Identity, shouldSpin bool) ([]iModels.TeamMembership, error) {
-	if shouldSpin {
-		spin := prompts.NewSpinner("Fetching memberships")
-		spin.Start()
-		defer spin.Stop()
-	}
+func FetchMemberships(ctx context.Context, c *iClient.Identity) ([]iModels.TeamMembership, error) {
 	params := team.NewGetMembershipsParamsWithContext(ctx)
 	res, err := c.Team.GetMemberships(params, nil)
 

@@ -76,7 +76,7 @@ func deleteCmd(cliCtx *cli.Context) error {
 		return cli.NewExitError(fmt.Sprintf("Failed to create Provision Client: %s", err), -1)
 	}
 
-	res, err := clients.FetchResources(ctx, marketplaceClient, teamID, false)
+	res, err := clients.FetchResources(ctx, marketplaceClient, teamID)
 	if err != nil {
 		return cli.NewExitError(
 			fmt.Sprintf("Failed to fetch the list of provisioned resources: %s", err), -1)

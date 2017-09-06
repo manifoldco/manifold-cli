@@ -56,7 +56,7 @@ func switchTeamCmd(cliCtx *cli.Context) error {
 			return cli.NewExitError(fmt.Sprintf("Failed to create Identity client: %s", err), -1)
 		}
 
-		teams, err := clients.FetchTeams(ctx, identityClient, false)
+		teams, err := clients.FetchTeams(ctx, identityClient)
 		if err != nil {
 			return err
 		}

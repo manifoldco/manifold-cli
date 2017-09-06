@@ -150,7 +150,7 @@ func deleteAppCmd(cliCtx *cli.Context) error {
 func getResource(ctx context.Context, resourceLabel string, teamID *manifold.ID,
 	marketplaceClient *client.Marketplace, withAppsOnly bool,
 ) (*models.Resource, []*models.Resource, error) {
-	res, err := clients.FetchResources(ctx, marketplaceClient, teamID, false)
+	res, err := clients.FetchResources(ctx, marketplaceClient, teamID)
 	if err != nil {
 		return nil, nil, cli.NewExitError(
 			fmt.Sprintf("Failed to fetch the list of provisioned resources: %s", err), -1)

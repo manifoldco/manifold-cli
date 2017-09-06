@@ -162,7 +162,7 @@ func create(cliCtx *cli.Context) error {
 	}
 
 	// Get resources, so we can fetch the list of valid appnames
-	res, err := clients.FetchResources(ctx, mClient, teamID, false)
+	res, err := clients.FetchResources(ctx, mClient, teamID)
 	if err != nil {
 		return cli.NewExitError("Failed to fetch resource list: "+err.Error(), -1)
 	}

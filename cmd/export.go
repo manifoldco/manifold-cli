@@ -17,6 +17,7 @@ import (
 	"github.com/manifoldco/manifold-cli/config"
 	"github.com/manifoldco/manifold-cli/errs"
 	"github.com/manifoldco/manifold-cli/middleware"
+	"github.com/manifoldco/manifold-cli/prompts"
 	"github.com/manifoldco/manifold-cli/session"
 
 	mClient "github.com/manifoldco/manifold-cli/generated/marketplace/client"
@@ -79,7 +80,9 @@ func export(cliCtx *cli.Context) error {
 		return cli.NewExitError("Could not create marketplace client: "+err.Error(), -1)
 	}
 
-	r, err := clients.FetchResources(ctx, marketplace, teamID, true)
+	prompts.SpinStart("Fetching Resources")
+	r, err := clients.FetchResources(ctx, marketplace, teamID)
+	prompts.SpinStop()
 	if err != nil {
 		return cli.NewExitError("Could not retrieve resources: "+err.Error(), -1)
 	}
