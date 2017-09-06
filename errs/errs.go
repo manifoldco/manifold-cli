@@ -41,6 +41,9 @@ var ErrResourceNotFound = cli.NewExitError("The provided resource does not exist
 // ErrTeamNotFound represents an error where the provided user's team label does not exist
 var ErrTeamNotFound = cli.NewExitError("The provided team does not exist!", -1)
 
+// ErrProjectNotFound represents an error where the provided project does not exist
+var ErrProjectNotFound = cli.NewExitError("The provided project does not exist!", -1)
+
 // ErrRegionNotFound represents an error where the provided user's region label
 // does not exist
 var ErrRegionNotFound = cli.NewExitError("The provided region does not exist!", -1)
@@ -51,6 +54,9 @@ var ErrNoApps = cli.NewExitError("There are no resources with apps", -1)
 // ErrNoTeams represents an error where at least one team is required for an action, but none are
 // available
 var ErrNoTeams = cli.NewExitError("No teams found", -1)
+
+// ErrNoProjects represents an error when there are no projects found
+var ErrNoProjects = cli.NewExitError("No projects found", -1)
 
 // ErrNoResources represents an error where no resources exist to preform some action on
 var ErrNoResources = cli.NewExitError("No resources found", -1)
