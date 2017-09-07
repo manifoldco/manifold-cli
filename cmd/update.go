@@ -33,6 +33,7 @@ func init() {
 		Name:      "update",
 		ArgsUsage: "[label]",
 		Usage:     "Update a resource",
+		Category:  "RESOURCES",
 		Action: middleware.Chain(middleware.EnsureSession, middleware.LoadDirPrefs,
 			middleware.LoadTeamPrefs, updateResourceCmd),
 		Flags: append(teamFlags, []cli.Flag{

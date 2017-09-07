@@ -19,8 +19,9 @@ import (
 
 func init() {
 	appCmd := cli.Command{
-		Name:  "apps",
-		Usage: "Manage your apps",
+		Name:     "apps",
+		Usage:    "Manage your apps",
+		Category: "RESOURCES",
 		Subcommands: []cli.Command{
 			{
 				Name:      "add",
