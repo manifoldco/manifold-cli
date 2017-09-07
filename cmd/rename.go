@@ -23,6 +23,7 @@ func init() {
 		Name:      "rename",
 		ArgsUsage: "[name] [new-name]",
 		Usage:     "Rename a resource label",
+		Category:  "RESOURCES",
 		Flags: append(teamFlags, []cli.Flag{
 			appFlag(),
 		}...),

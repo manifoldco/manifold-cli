@@ -21,9 +21,10 @@ import (
 
 func init() {
 	runCmd := cli.Command{
-		Name:   "run",
-		Usage:  "Run a process and inject secrets into its environment",
-		Action: middleware.Chain(middleware.LoadDirPrefs, middleware.LoadTeamPrefs, run),
+		Name:     "run",
+		Usage:    "Run a process and inject secrets into its environment",
+		Category: "CONFIGURATION",
+		Action:   middleware.Chain(middleware.LoadDirPrefs, middleware.LoadTeamPrefs, run),
 		Flags: append(teamFlags, []cli.Flag{
 			appFlag(),
 		}...),

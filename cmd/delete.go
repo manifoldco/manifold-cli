@@ -28,6 +28,7 @@ func init() {
 		Name:      "delete",
 		ArgsUsage: "[name]",
 		Usage:     "Delete a resource",
+		Category:  "RESOURCES",
 		Action:    middleware.Chain(middleware.EnsureSession, middleware.LoadTeamPrefs, deleteCmd),
 		Flags: append(teamFlags, []cli.Flag{
 			skipFlag(),

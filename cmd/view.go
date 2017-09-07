@@ -23,9 +23,10 @@ import (
 
 func init() {
 	viewCmd := cli.Command{
-		Name:   "view",
-		Usage:  "View specific details of the provided resource",
-		Action: middleware.Chain(middleware.LoadDirPrefs, middleware.LoadTeamPrefs, view),
+		Name:     "view",
+		Usage:    "View specific details of the provided resource",
+		Category: "RESOURCES",
+		Action:   middleware.Chain(middleware.LoadDirPrefs, middleware.LoadTeamPrefs, view),
 		Flags: append(teamFlags, []cli.Flag{
 			appFlag(),
 		}...),
