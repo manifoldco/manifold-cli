@@ -10,9 +10,10 @@ import (
 
 func init() {
 	versionCmd := cli.Command{
-		Name:   "version",
-		Usage:  "Display version of this tool",
-		Action: versionLookup,
+		Name:     "version",
+		Usage:    "Display version of this tool",
+		Category: "UTILITY",
+		Action:   versionLookup,
 	}
 
 	cmds = append(cmds, versionCmd)

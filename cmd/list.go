@@ -37,9 +37,10 @@ func (r resourcesSortByName) Less(i, j int) bool {
 
 func init() {
 	listCmd := cli.Command{
-		Name:   "list",
-		Usage:  "List the status of your provisioned resources",
-		Action: middleware.Chain(middleware.LoadDirPrefs, middleware.LoadTeamPrefs, list),
+		Name:     "list",
+		Usage:    "List the status of your provisioned resources",
+		Category: "RESOURCES",
+		Action:   middleware.Chain(middleware.LoadDirPrefs, middleware.LoadTeamPrefs, list),
 		Flags: append(teamFlags, []cli.Flag{
 			appFlag(),
 		}...),
