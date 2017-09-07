@@ -54,6 +54,15 @@ func teamIDFlag() cli.Flag {
 	}
 }
 
+func appFlag() cli.Flag {
+	return cli.StringFlag{
+		Name:   "app, a",
+		Usage:  "Specify an app for filtering and updating",
+		Value:  "",
+		EnvVar: "MANIFOLD_APP",
+	}
+}
+
 func projectFlag() cli.Flag {
 	return cli.StringFlag{
 		Name:   "project",

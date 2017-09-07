@@ -27,7 +27,7 @@ func init() {
 		Usage:  "View specific details of the provided resource",
 		Action: middleware.Chain(middleware.LoadDirPrefs, middleware.LoadTeamPrefs, view),
 		Flags: append(teamFlags, []cli.Flag{
-			projectFlag(),
+			appFlag(),
 		}...),
 	}
 

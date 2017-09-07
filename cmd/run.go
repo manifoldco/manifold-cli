@@ -25,7 +25,7 @@ func init() {
 		Usage:  "Run a process and inject secrets into its environment",
 		Action: middleware.Chain(middleware.LoadDirPrefs, middleware.LoadTeamPrefs, run),
 		Flags: append(teamFlags, []cli.Flag{
-			projectFlag(),
+			appFlag(),
 		}...),
 	}
 
