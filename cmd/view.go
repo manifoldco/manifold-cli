@@ -155,12 +155,19 @@ func view(cliCtx *cli.Context) error {
 		status = green("Ready")
 	}
 
+	projectID := resource.Body.ProjectID
+	projectOutput := "-"
+	if projectID != nil {
+		// TODO: get project label/name
+		projectOutput = projectID.String()
+	}
+
 	fmt.Println("Use `manifold update [label] --project [project]` to edit your resource")
 	fmt.Println("")
 	w := tabwriter.NewWriter(os.Stdout, 0, 0, 8, ' ', 0)
 	fmt.Fprintln(w, fmt.Sprintf("%s\t%s", faint("Name"), bold(resource.Body.Name)))
 	fmt.Fprintln(w, fmt.Sprintf("%s\t%s", faint("Label"), resource.Body.Label))
-	fmt.Fprintln(w, fmt.Sprintf("%s\t%s", faint("App"), resource.Body.AppName))
+	fmt.Fprintln(w, fmt.Sprintf("%s\t%s", faint("Project"), projectOutput))
 	fmt.Fprintln(w, fmt.Sprintf("%s\t%s", faint("State"), status))
 	fmt.Fprintln(w, fmt.Sprintf("%s\t%s", faint("Custom"), isCustom))
 	fmt.Fprintln(w, fmt.Sprintf("%s\t%s", faint("Product"), productName))

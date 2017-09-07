@@ -483,6 +483,8 @@ definitions:
             $ref: '#/definitions/OptionalID'
           region_id:
             $ref: '#/definitions/OptionalID'
+          project_id:
+            $ref: '#/definitions/OptionalID'
           source:
             type: string
             enum:
