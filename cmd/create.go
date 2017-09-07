@@ -33,9 +33,10 @@ func init() {
 		ArgsUsage: "[name]",
 		Usage:     "Create a new resource",
 		Category:  "RESOURCES",
-		Action:    middleware.Chain(middleware.LoadDirPrefs, middleware.LoadTeamPrefs, create),
+		Action: middleware.Chain(middleware.LoadDirPrefs, middleware.EnsureSession,
+			middleware.LoadTeamPrefs, create),
 		Flags: append(teamFlags, []cli.Flag{
-			appFlag(),
+			projectFlag(),
 			planFlag(),
 			regionFlag(),
 			cli.StringFlag{
@@ -71,7 +72,7 @@ func create(cliCtx *cli.Context) error {
 	}
 
 	dontWait := cliCtx.Bool("no-wait")
-	appName, err := validateName(cliCtx, "app")
+	projectLabel, err := validateLabel(cliCtx, "project")
 	if err != nil {
 		return err
 	}
@@ -162,21 +163,18 @@ func create(cliCtx *cli.Context) error {
 		region = regions[regionIdx]
 	}
 
-	// Get resources, so we can fetch the list of valid appnames
-	res, err := clients.FetchResources(ctx, mClient, teamID, false)
+	projects, err := clients.FetchProjects(ctx, mClient, teamID, false)
 	if err != nil {
-		return cli.NewExitError("Failed to fetch resource list: "+err.Error(), -1)
+		return cli.NewExitError("Failed to fetch projects list: "+err.Error(), -1)
 	}
 
-	appNames := fetchUniqueAppNames(res)
-	newA, appName, err := prompts.SelectCreateAppName(appNames, appName, false)
-	if err != nil {
-		return prompts.HandleSelectError(err, "Could not select app.")
-	}
-	if newA == -1 {
-		// TODO: create app name that doesn't exist yet
-		// https://github.com/manifoldco/engineering/issues/2614
-		return cli.NewExitError("Whoops! A new app cannot be created without a resource", -1)
+	var project *mModels.Project
+	if len(projects) > 0 {
+		pidx, _, err := prompts.SelectProject(projects, projectLabel)
+		if err != nil {
+			return prompts.HandleSelectError(err, "Could not select project.")
+		}
+		project = projects[pidx]
 	}
 
 	resourceName, err = prompts.ResourceName(resourceName, false)
@@ -195,7 +193,7 @@ func create(cliCtx *cli.Context) error {
 	}
 
 	op, err := createResource(ctx, cfg, teamID, s, pClient, custom, product, plan, region,
-		appName, resourceName, dontWait)
+		project, resourceName, dontWait)
 	if err != nil {
 		return cli.NewExitError("Could not create resource: "+err.Error(), -1)
 	}
@@ -219,7 +217,7 @@ func create(cliCtx *cli.Context) error {
 
 func createResource(ctx context.Context, cfg *config.Config, teamID *manifold.ID, s session.Session,
 	pClient *provisioning.Provisioning, custom bool, product *cModels.Product, plan *cModels.Plan,
-	region *cModels.Region, appName, resourceName string, dontWait bool) (*pModels.Operation, error) {
+	region *cModels.Region, project *mModels.Project, resourceName string, dontWait bool) (*pModels.Operation, error) {
 
 	a, err := analytics.New(cfg, s)
 	if err != nil {
@@ -258,7 +256,6 @@ func createResource(ctx context.Context, cfg *config.Config, teamID *manifold.ID
 		Type:    &typeStr,
 		Version: &version,
 		Body: &pModels.Provision{
-			AppName:   appName,
 			Label:     &empty,
 			Name:      &resourceName,
 			Source:    &source,
@@ -269,6 +266,9 @@ func createResource(ctx context.Context, cfg *config.Config, teamID *manifold.ID
 		},
 	}
 
+	if project != nil {
+		op.Body.SetProjectID(&project.ID)
+	}
 	op.Body.SetCreatedAt(&curTime)
 	op.Body.SetUpdatedAt(&curTime)
 	op.Body.SetResourceID(resourceID)
