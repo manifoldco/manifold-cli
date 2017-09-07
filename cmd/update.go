@@ -37,7 +37,7 @@ func init() {
 			middleware.LoadTeamPrefs, updateResourceCmd),
 		Flags: append(teamFlags, []cli.Flag{
 			nameFlag(),
-			appFlag(),
+			projectFlag(),
 			planFlag(),
 			skipFlag(),
 		}...),

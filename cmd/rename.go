@@ -24,7 +24,7 @@ func init() {
 		ArgsUsage: "[name] [new-name]",
 		Usage:     "Rename a resource label",
 		Flags: append(teamFlags, []cli.Flag{
-			appFlag(),
+			projectFlag(),
 		}...),
 		Action: middleware.Chain(middleware.EnsureSession, middleware.LoadTeamPrefs,
 			middleware.LoadDirPrefs, rename),

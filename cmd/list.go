@@ -41,7 +41,7 @@ func init() {
 		Usage:  "List the status of your provisioned resources",
 		Action: middleware.Chain(middleware.LoadDirPrefs, middleware.LoadTeamPrefs, list),
 		Flags: append(teamFlags, []cli.Flag{
-			appFlag(),
+			projectFlag(),
 		}...),
 	}
 

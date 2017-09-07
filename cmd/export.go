@@ -35,7 +35,7 @@ func init() {
 		Action: middleware.Chain(middleware.LoadDirPrefs, middleware.LoadTeamPrefs, export),
 		Flags: append(teamFlags, []cli.Flag{
 			formatFlag(formats[0], formatFlagStr),
-			appFlag(),
+			projectFlag(),
 		}...),
 	}
 
