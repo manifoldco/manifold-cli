@@ -29,11 +29,5 @@ func FetchProjects(ctx context.Context, c *client.Marketplace, teamID *manifold.
 		return nil, err
 	}
 
-	var results []*models.Project
-
-	for _, p := range res.Payload {
-		results = append(results, p)
-	}
-
-	return results, nil
+	return res.Payload, nil
 }
