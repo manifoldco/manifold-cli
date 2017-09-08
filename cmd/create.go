@@ -380,6 +380,13 @@ func waitForOp(ctx context.Context, pClient *provisioning.Provisioning, op *pMod
 			default:
 				continue
 			}
+		case *pModels.Move:
+			switch *provision.State {
+			case "done":
+				return op, nil
+			case "error":
+				return nil, fmt.Errorf("Error completing move")
+			}
 		default:
 			return nil, fmt.Errorf("Unknown provision operation")
 		}
