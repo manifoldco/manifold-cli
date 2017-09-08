@@ -65,7 +65,7 @@ func appFlag() cli.Flag {
 
 func projectFlag() cli.Flag {
 	return cli.StringFlag{
-		Name:   "project",
+		Name:   "project, p",
 		Usage:  "Specify a project for filtering and updating",
 		Value:  "",
 		EnvVar: "MANIFOLD_PROJECT",
@@ -74,7 +74,7 @@ func projectFlag() cli.Flag {
 
 func planFlag() cli.Flag {
 	return cli.StringFlag{
-		Name:   "plan, p",
+		Name:   "plan",
 		Usage:  "Specify a plan",
 		Value:  "",
 		EnvVar: "MANIFOLD_PLAN",
