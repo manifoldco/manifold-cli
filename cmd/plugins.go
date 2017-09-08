@@ -15,8 +15,9 @@ import (
 
 func init() {
 	pluginsCmd := cli.Command{
-		Name:  "plugins",
-		Usage: "Manage installed plugins",
+		Name:     "plugins",
+		Usage:    "Manage installed plugins",
+		Category: "UTILITY",
 		Subcommands: []cli.Command{
 			{
 				Name:      "install",

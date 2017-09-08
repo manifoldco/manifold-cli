@@ -27,8 +27,9 @@ import (
 
 func init() {
 	appCmd := cli.Command{
-		Name:  "teams",
-		Usage: "Manage your teams",
+		Name:     "teams",
+		Usage:    "Manage your teams",
+		Category: "ADMINISTRATIVE",
 		Subcommands: []cli.Command{
 			{
 				Name:      "create",

@@ -32,6 +32,7 @@ func init() {
 		Name:      "create",
 		ArgsUsage: "[name]",
 		Usage:     "Create a new resource",
+		Category:  "RESOURCES",
 		Action:    middleware.Chain(middleware.LoadDirPrefs, middleware.LoadTeamPrefs, create),
 		Flags: append(teamFlags, []cli.Flag{
 			appFlag(),

@@ -23,8 +23,9 @@ import (
 
 func init() {
 	billingCmd := cli.Command{
-		Name:  "billing",
-		Usage: "Manage your billing information",
+		Name:     "billing",
+		Usage:    "Manage your billing information",
+		Category: "ADMINISTRATIVE",
 		Subcommands: []cli.Command{
 			{
 				Name:  "add",

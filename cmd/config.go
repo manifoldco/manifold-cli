@@ -21,8 +21,9 @@ var configKeyRegexp = regexp.MustCompile(`^[a-zA-Z][a-zA-Z0-9_]{0,1000}$`)
 
 func init() {
 	cmd := cli.Command{
-		Name:  "config",
-		Usage: "View and modify resource configuration",
+		Name:     "config",
+		Usage:    "View and modify resource configuration",
+		Category: "CONFIGURATION",
 		Subcommands: []cli.Command{
 			{
 				Name:      "set",

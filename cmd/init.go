@@ -19,8 +19,9 @@ import (
 
 func init() {
 	initCmd := cli.Command{
-		Name:  "init",
-		Usage: "Initialize the current directory for a specified app",
+		Name:     "init",
+		Usage:    "Initialize the current directory for a specified app",
+		Category: "ADMINISTRATIVE",
 		Flags: append(teamFlags, []cli.Flag{
 			appFlag(),
 			cli.BoolFlag{

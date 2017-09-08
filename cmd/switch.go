@@ -20,6 +20,7 @@ func init() {
 	switchCmd := cli.Command{
 		Name:      "switch",
 		Usage:     "Switch to a team context",
+		Category:  "ADMINISTRATIVE",
 		ArgsUsage: "[label]",
 		Flags: []cli.Flag{
 			meFlag(),

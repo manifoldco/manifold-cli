@@ -31,9 +31,10 @@ func init() {
 
 	formatFlagStr := fmt.Sprintf("Export format of the secrets (%s)", strings.Join(formats, ", "))
 	exportCmd := cli.Command{
-		Name:   "export",
-		Usage:  "Export all environment variables from all resources",
-		Action: middleware.Chain(middleware.LoadDirPrefs, middleware.LoadTeamPrefs, export),
+		Name:     "export",
+		Usage:    "Export all environment variables from all resources",
+		Category: "CONFIGURATION",
+		Action:   middleware.Chain(middleware.LoadDirPrefs, middleware.LoadTeamPrefs, export),
 		Flags: append(teamFlags, []cli.Flag{
 			formatFlag(formats[0], formatFlagStr),
 			appFlag(),

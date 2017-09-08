@@ -22,7 +22,8 @@ func main() {
 	app.HelpName = "manifold"
 	app.Usage = "A tool making it easy to buy, manage, and integrate developer services into an application."
 	app.Version = config.Version
-	app.Commands = cmds
+	app.Commands = append(cmds, helpCommand)
+	app.Flags = append(app.Flags, cli.HelpFlag)
 
 	app.Action = func(cliCtx *cli.Context) error {
 		// Show help if no arguments passed
@@ -48,4 +49,21 @@ func main() {
 	}
 
 	app.Run(os.Args)
+}
+
+// copied from urfave/cli so we can set the category
+var helpCommand = cli.Command{
+	Name:      "help",
+	Usage:     "Shows a list of commands or help for one command",
+	Category:  "UTILITY",
+	ArgsUsage: "[command]",
+	Action: func(c *cli.Context) error {
+		args := c.Args()
+		if args.Present() {
+			return cli.ShowCommandHelp(c, args.First())
+		}
+
+		cli.ShowAppHelp(c)
+		return nil
+	},
 }
