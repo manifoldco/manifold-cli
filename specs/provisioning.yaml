@@ -352,8 +352,6 @@ definitions:
               - commit
               - error
               - done
-          project_id:
-            $ref: '#/definitions/OptionalID'
         additionalProperties: false
         required:
           - state

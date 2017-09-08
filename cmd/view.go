@@ -160,8 +160,12 @@ func view(cliCtx *cli.Context) error {
 	projectID := resource.Body.ProjectID
 	projectOutput := "-"
 	if projectID != nil {
-		// TODO: get project label/name
-		projectOutput = projectID.String()
+		project, err := clients.FetchProject(ctx, marketplaceClient, projectID.String())
+		if err != nil {
+			cli.NewExitError("Project referenced by resource does not exist: "+
+				err.Error(), -1)
+		}
+		projectOutput = string(project.Body.Label)
 	}
 
 	fmt.Println("Use `manifold update [label] --project [project]` to edit your resource")
