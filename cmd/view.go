@@ -86,7 +86,7 @@ func view(cliCtx *cli.Context) error {
 	}
 
 	// Get resources
-	res, err := clients.FetchResources(ctx, marketplaceClient, teamID, false)
+	res, err := clients.FetchResources(ctx, marketplaceClient, teamID)
 	if err != nil {
 		return cli.NewExitError(
 			fmt.Sprintf("Failed to fetch the list of provisioned resources: %s", err), -1)
@@ -111,7 +111,7 @@ func view(cliCtx *cli.Context) error {
 	}
 
 	// Get operations
-	oRes, err := clients.FetchOperations(ctx, pClient, nil, false)
+	oRes, err := clients.FetchOperations(ctx, pClient, nil)
 	if err != nil {
 		return cli.NewExitError("Failed to fetch the list of operations: "+err.Error(), -1)
 	}

@@ -7,17 +7,10 @@ import (
 	iClient "github.com/manifoldco/manifold-cli/generated/marketplace/client"
 	"github.com/manifoldco/manifold-cli/generated/marketplace/client/project"
 	mModels "github.com/manifoldco/manifold-cli/generated/marketplace/models"
-	"github.com/manifoldco/manifold-cli/prompts"
 )
 
 // FetchProjects fetches and returns the projects for an authenticated user
-func FetchProjects(ctx context.Context, c *iClient.Marketplace, teamID *manifold.ID, shouldSpin bool) ([]*mModels.Project, error) {
-	if shouldSpin {
-		spin := prompts.NewSpinner("Fetching Projects")
-		spin.Start()
-		defer spin.Stop()
-	}
-
+func FetchProjects(ctx context.Context, c *iClient.Marketplace, teamID *manifold.ID) ([]*mModels.Project, error) {
 	res, err := c.Project.GetProjects(
 		project.NewGetProjectsParamsWithContext(ctx), nil,
 	)
