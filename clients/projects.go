@@ -7,19 +7,16 @@ import (
 	"github.com/manifoldco/manifold-cli/generated/marketplace/client"
 	"github.com/manifoldco/manifold-cli/generated/marketplace/client/project"
 	"github.com/manifoldco/manifold-cli/generated/marketplace/models"
-	"github.com/manifoldco/manifold-cli/prompts"
 )
 
 // FetchProjects returns all user or team projects
-func FetchProjects(ctx context.Context, c *client.Marketplace, teamID *manifold.ID, shouldSpin bool) ([]*models.Project, error) {
-	if shouldSpin {
-		spin := prompts.NewSpinner("Fetching Projects")
-		spin.Start()
-		defer spin.Stop()
-	}
+func FetchProjects(ctx context.Context, c *client.Marketplace, teamID *manifold.ID) ([]*models.Project, error) {
 	params := project.NewGetProjectsParamsWithContext(ctx)
 
-	if teamID != nil {
+	if teamID == nil {
+		me := true
+		params.SetMe(&me)
+	} else {
 		id := teamID.String()
 		params.SetTeamID(&id)
 	}

@@ -284,6 +284,11 @@ paths:
       tags:
         - Project
       parameters:
+        - name: me
+          in: query
+          description: Only list projects with the user as the owner
+          type: boolean
+          required: false
         - name: team_id
           in: query
           description: |

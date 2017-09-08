@@ -127,7 +127,7 @@ func listProjectsCmd(cliCtx *cli.Context) error {
 		return err
 	}
 
-	projects, err := clients.FetchProjects(ctx, marketplaceClient, teamID, true)
+	projects, err := clients.FetchProjects(ctx, marketplaceClient, teamID)
 	if err != nil {
 		return cli.NewExitError(fmt.Sprintf("Failed to fetch list of projects: %s", err), -1)
 	}
@@ -286,7 +286,7 @@ func loadMarketplaceClient() (*client.Marketplace, error) {
 
 // selectProject prompts a user to select a project (if selects the one provided automatically)
 func selectProject(ctx context.Context, projectLabel string, teamID *manifold.ID, marketplaceClient *client.Marketplace) (*mModels.Project, error) {
-	projects, err := clients.FetchProjects(ctx, marketplaceClient, teamID, false)
+	projects, err := clients.FetchProjects(ctx, marketplaceClient, teamID)
 	if err != nil {
 		return nil, cli.NewExitError(fmt.Sprintf("Failed to fetch list of projects: %s", err), -1)
 	}
