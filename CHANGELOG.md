@@ -9,13 +9,17 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Added
 
+- Group commands into categories for better help output
 - Add `projects create` command to create new projects
 - Add `projects list` command to list projects
 - Add `projects update` command to update an existing project
-- Group commands into categories for better help output
 - Add `projects add` to add a resource to a project
 
 ### Fixed
+
+### Removed
+
+- `apps` commands, replaced with `projects` commands
 
 ## [0.4.0] - 2017-08-31
 
