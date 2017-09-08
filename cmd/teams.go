@@ -201,7 +201,7 @@ func listTeamCmd(cliCtx *cli.Context) error {
 		return err
 	}
 
-	prompts.SpinStart("Fetching team members")
+	prompts.SpinStart("Fetching Team Members")
 	teams, err := clients.FetchTeamsMembersCount(ctx, identityClient)
 	prompts.SpinStop()
 	if err != nil {
