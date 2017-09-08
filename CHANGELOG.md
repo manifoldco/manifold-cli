@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - Add `projects create` command to create new projects
 - Add `projects list` command to list projects
 - Add `projects update` command to update an existing project
+- Group commands into categories for better help output
 
 ### Fixed
 
