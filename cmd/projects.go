@@ -3,17 +3,28 @@ package main
 import (
 	"context"
 	"fmt"
+	"os"
 	"strings"
+	"text/tabwriter"
 
+	"time"
+
+	"github.com/fatih/color"
+
+	"github.com/go-openapi/strfmt"
 	"github.com/urfave/cli"
 
 	"github.com/manifoldco/go-manifold"
+	"github.com/manifoldco/go-manifold/idtype"
 	"github.com/manifoldco/manifold-cli/clients"
 	"github.com/manifoldco/manifold-cli/config"
 	"github.com/manifoldco/manifold-cli/errs"
-	"github.com/manifoldco/manifold-cli/generated/marketplace/client"
+	mClient "github.com/manifoldco/manifold-cli/generated/marketplace/client"
 	projectClient "github.com/manifoldco/manifold-cli/generated/marketplace/client/project"
 	mModels "github.com/manifoldco/manifold-cli/generated/marketplace/models"
+	pClient "github.com/manifoldco/manifold-cli/generated/provisioning/client"
+	"github.com/manifoldco/manifold-cli/generated/provisioning/client/operation"
+	pModels "github.com/manifoldco/manifold-cli/generated/provisioning/models"
 	"github.com/manifoldco/manifold-cli/middleware"
 	"github.com/manifoldco/manifold-cli/prompts"
 )
@@ -33,6 +44,16 @@ func init() {
 					middleware.LoadTeamPrefs, createProjectCmd),
 			},
 			{
+				Name:  "list",
+				Usage: "List projects",
+				Flags: append(teamFlags, cli.BoolFlag{
+					Name:  "all",
+					Usage: "List all your projects and teams projects",
+				}),
+				Action: middleware.Chain(middleware.EnsureSession,
+					middleware.LoadTeamPrefs, listProjectsCmd),
+			},
+			{
 				Name:  "update",
 				Usage: "Update an existing project",
 				Flags: append(teamFlags, []cli.Flag{
@@ -41,6 +62,15 @@ func init() {
 				ArgsUsage: "[label]",
 				Action: middleware.Chain(middleware.EnsureSession, middleware.LoadTeamPrefs,
 					updateProjectCmd),
+			},
+			{
+				Name:  "add",
+				Usage: "Adds or moves a resource to a project",
+				Flags: append(teamFlags, []cli.Flag{
+					skipFlag(),
+				}...),
+				Action: middleware.Chain(middleware.EnsureSession,
+					middleware.LoadTeamPrefs, addProjectCmd),
 			},
 		},
 	}
@@ -102,6 +132,45 @@ func createProjectCmd(cliCtx *cli.Context) error {
 
 	fmt.Printf("Your project '%s' has been created\n", projectName)
 	return nil
+}
+
+func listProjectsCmd(cliCtx *cli.Context) error {
+	ctx := context.Background()
+
+	marketplaceClient, err := loadMarketplaceClient()
+	if err != nil {
+		return err
+	}
+
+	teamID, err := validateTeamID(cliCtx)
+	if err != nil {
+		return err
+	}
+
+	var projects []*mModels.Project
+
+	prompts.SpinStart("Fetching Projects")
+	if cliCtx.Bool("all") {
+		projects, err = clients.FetchAllProjects(ctx, marketplaceClient)
+	} else {
+		projects, err = clients.FetchProjects(ctx, marketplaceClient, teamID)
+	}
+	prompts.SpinStop()
+
+	if err != nil {
+		return cli.NewExitError(fmt.Sprintf("Failed to fetch list of projects: %s", err), -1)
+	}
+
+	w := tabwriter.NewWriter(os.Stdout, 0, 0, 8, ' ', 0)
+
+	bold := color.New(color.Bold).SprintFunc()
+
+	fmt.Fprintf(w, "%s\n\n", bold("Project"))
+
+	for _, project := range projects {
+		fmt.Fprintf(w, "%s\n", project.Body.Label)
+	}
+	return w.Flush()
 }
 
 func updateProjectCmd(cliCtx *cli.Context) error {
@@ -177,6 +246,81 @@ func updateProjectCmd(cliCtx *cli.Context) error {
 	return nil
 }
 
+func addProjectCmd(cliCtx *cli.Context) error {
+	ctx := context.Background()
+
+	if err := maxOptionalArgsLength(cliCtx, 2); err != nil {
+		return err
+	}
+
+	projectLabel, err := optionalArgLabel(cliCtx, 0, "project")
+	if err != nil {
+		return err
+	}
+
+	resourceLabel, err := optionalArgLabel(cliCtx, 1, "resource")
+	if err != nil {
+		return err
+	}
+
+	dontWait := cliCtx.Bool("no-wait")
+
+	userID, err := loadUserID(ctx)
+	if err != nil {
+		return err
+	}
+
+	teamID, err := validateTeamID(cliCtx)
+	if err != nil {
+		return err
+	}
+
+	marketplaceClient, err := loadMarketplaceClient()
+	if err != nil {
+		return err
+	}
+
+	provisioningClient, err := loadProvisioningClient()
+	if err != nil {
+		return err
+	}
+
+	ps, err := clients.FetchProjects(ctx, marketplaceClient, teamID)
+	if err != nil {
+		return cli.NewExitError(fmt.Sprintf("Failed to fetch projects list: %s", err), -1)
+	}
+	projectIdx, _, err := prompts.SelectProject(ps, projectLabel)
+	if err != nil {
+		return prompts.HandleSelectError(err, "Could not select Project")
+	}
+	p := ps[projectIdx]
+
+	res, err := clients.FetchResources(ctx, marketplaceClient, teamID)
+	if err != nil {
+		return cli.NewExitError(fmt.Sprintf("Failed to fetch list of provisioned resources: %s", err), -1)
+	}
+	if len(res) == 0 {
+		return errs.ErrNoResources
+	}
+	resourceIdx, _, err := prompts.SelectResource(res, resourceLabel)
+	if err != nil {
+		return prompts.HandleSelectError(err, "Could not select Resource")
+	}
+	r := res[resourceIdx]
+
+	if err := addProject(ctx, userID, teamID, r, p, provisioningClient, dontWait); err != nil {
+		return cli.NewExitError(fmt.Sprintf("Could not add resource to project: %s", err), -1)
+	}
+
+	if r.Body.ProjectID == nil {
+		fmt.Printf("Adding %s to %s\n", resourceLabel, projectLabel)
+	} else {
+		fmt.Printf("Moving %s to %s\n", resourceLabel, projectLabel)
+	}
+
+	return nil
+}
+
 func createProject(params *projectClient.PostProjectsParams) error {
 	marketplaceClient, err := loadMarketplaceClient()
 	if err != nil {
@@ -229,8 +373,71 @@ func updateProject(params *projectClient.PatchProjectsIDParams) error {
 	return nil
 }
 
+// addProject adds a resource to an existing project
+func addProject(ctx context.Context, uid, tid *manifold.ID, r *mModels.Resource,
+	p *mModels.Project, provisioningClient *pClient.Provisioning, dontWait bool,
+) error {
+	ID, err := manifold.NewID(idtype.Operation)
+	if err != nil {
+		return err
+	}
+
+	typeStr := "operation"
+	version := int64(1)
+	state := "move"
+	curTime := strfmt.DateTime(time.Now())
+	opBody := &pModels.Operation{
+		ID:      ID,
+		Type:    &typeStr,
+		Version: &version,
+		Body: &pModels.Move{
+			State: &state,
+		},
+	}
+
+	opBody.Body.SetCreatedAt(&curTime)
+	opBody.Body.SetUpdatedAt(&curTime)
+	opBody.Body.SetResourceID(r.ID)
+	opBody.Body.SetProjectID(&p.ID)
+
+	if tid == nil {
+		opBody.Body.SetUserID(uid)
+	} else {
+		opBody.Body.SetTeamID(tid)
+	}
+
+	op := operation.NewPutOperationsIDParamsWithContext(ctx)
+	op.SetBody(opBody)
+	op.SetID(ID.String())
+
+	res, err := provisioningClient.Operation.PutOperationsID(op, nil)
+	if err != nil {
+		switch e := err.(type) {
+		case *operation.PutOperationsIDBadRequest:
+			return e.Payload
+		case *operation.PutOperationsIDUnauthorized:
+			return e.Payload
+		case *operation.PutOperationsIDNotFound:
+			return e.Payload
+		case *operation.PutOperationsIDConflict:
+			return e.Payload
+		case *operation.PutOperationsIDInternalServerError:
+			return errs.ErrSomethingWentHorriblyWrong
+		default:
+			return err
+		}
+	}
+
+	if dontWait {
+		return nil
+	}
+
+	_, err = waitForOp(ctx, provisioningClient, res.Payload)
+	return err
+}
+
 // loadMarketplaceClient returns an identify client based on the configuration file.
-func loadMarketplaceClient() (*client.Marketplace, error) {
+func loadMarketplaceClient() (*mClient.Marketplace, error) {
 	cfg, err := config.Load()
 	if err != nil {
 		return nil, cli.NewExitError(fmt.Sprintf("Could not load configuration: %s", err), -1)
@@ -244,9 +451,24 @@ func loadMarketplaceClient() (*client.Marketplace, error) {
 	return identityClient, nil
 }
 
+// loadProvisioningClient returns a provisioning client based on the configuration file.
+func loadProvisioningClient() (*pClient.Provisioning, error) {
+	cfg, err := config.Load()
+	if err != nil {
+		return nil, cli.NewExitError(fmt.Sprintf("Could not load configuration: %s", err), -1)
+	}
+
+	provisioningClient, err := clients.NewProvisioning(cfg)
+	if err != nil {
+		return nil, cli.NewExitError(fmt.Sprintf("Failed to create Provisioning client: %s", err), -1)
+	}
+
+	return provisioningClient, nil
+}
+
 // selectProject prompts a user to select a project (if selects the one provided automatically)
-func selectProject(ctx context.Context, projectLabel string, teamID *manifold.ID, marketplaceClient *client.Marketplace) (*mModels.Project, error) {
-	projects, err := clients.FetchProjects(ctx, marketplaceClient, teamID, false)
+func selectProject(ctx context.Context, projectLabel string, teamID *manifold.ID, marketplaceClient *mClient.Marketplace) (*mModels.Project, error) {
+	projects, err := clients.FetchProjects(ctx, marketplaceClient, teamID)
 	if err != nil {
 		return nil, cli.NewExitError(fmt.Sprintf("Failed to fetch list of projects: %s", err), -1)
 	}

@@ -284,6 +284,11 @@ paths:
       tags:
         - Project
       parameters:
+        - name: me
+          in: query
+          description: Only list projects with the user as the owner
+          type: boolean
+          required: false
         - name: team_id
           in: query
           description: |
@@ -299,10 +304,18 @@ paths:
           schema:
             type: array
             items: { $ref: '#/definitions/Project' }
-        400: { $ref: "#/responses/BadRequest" }
-        401: { $ref: "#/responses/Unauthorized" }
-        500: { $ref: "#/responses/InternalServerError" }
-        default: { $ref: "#/responses/Unexpected" }
+        400:
+          description: Validation failed for request.
+          schema: { $ref: '#/definitions/Error' }
+        401:
+          description: Authentication failed for the request.
+          schema: { $ref: '#/definitions/Error' }
+        500:
+          description: Request failed due to an internal server error.
+          schema: { $ref: '#/definitions/Error' }
+        default:
+          description: Unexpected error
+          schema: { $ref: '#/definitions/Error' }
     post:
       summary: Create a new project
       tags:
@@ -482,6 +495,8 @@ definitions:
           plan_id:
             $ref: '#/definitions/OptionalID'
           region_id:
+            $ref: '#/definitions/OptionalID'
+          project_id:
             $ref: '#/definitions/OptionalID'
           source:
             type: string

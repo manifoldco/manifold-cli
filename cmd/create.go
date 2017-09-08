@@ -163,7 +163,7 @@ func create(cliCtx *cli.Context) error {
 		region = regions[regionIdx]
 	}
 
-	projects, err := clients.FetchProjects(ctx, mClient, teamID, false)
+	projects, err := clients.FetchProjects(ctx, mClient, teamID)
 	if err != nil {
 		return cli.NewExitError("Failed to fetch projects list: "+err.Error(), -1)
 	}
@@ -379,6 +379,13 @@ func waitForOp(ctx context.Context, pClient *provisioning.Provisioning, op *pMod
 				return nil, fmt.Errorf("Error completing delete")
 			default:
 				continue
+			}
+		case *pModels.Move:
+			switch *provision.State {
+			case "done":
+				return op, nil
+			case "error":
+				return nil, fmt.Errorf("Error completing move")
 			}
 		default:
 			return nil, fmt.Errorf("Unknown provision operation")

@@ -5,8 +5,6 @@ import (
 
 	"github.com/manifoldco/go-manifold"
 
-	"github.com/manifoldco/manifold-cli/prompts"
-
 	mClient "github.com/manifoldco/manifold-cli/generated/marketplace/client"
 	"github.com/manifoldco/manifold-cli/generated/marketplace/client/resource"
 	mModels "github.com/manifoldco/manifold-cli/generated/marketplace/models"
@@ -16,12 +14,7 @@ import (
 )
 
 // FetchOperations returns the resources for the authenticated user
-func FetchOperations(ctx context.Context, c *pClient.Provisioning, teamID *manifold.ID, shouldSpin bool) ([]*pModels.Operation, error) {
-	if shouldSpin {
-		spin := prompts.NewSpinner("Fetching operations")
-		spin.Start()
-		defer spin.Stop()
-	}
+func FetchOperations(ctx context.Context, c *pClient.Provisioning, teamID *manifold.ID) ([]*pModels.Operation, error) {
 	res, err := c.Operation.GetOperations(
 		operation.NewGetOperationsParamsWithContext(ctx), nil)
 	if err != nil {
@@ -39,12 +32,7 @@ func FetchOperations(ctx context.Context, c *pClient.Provisioning, teamID *manif
 }
 
 // FetchResources returns the resources for the authenticated user
-func FetchResources(ctx context.Context, c *mClient.Marketplace, teamID *manifold.ID, shouldSpin bool) ([]*mModels.Resource, error) {
-	if shouldSpin {
-		spin := prompts.NewSpinner("Fetching resources")
-		spin.Start()
-		defer spin.Stop()
-	}
+func FetchResources(ctx context.Context, c *mClient.Marketplace, teamID *manifold.ID) ([]*mModels.Resource, error) {
 	res, err := c.Resource.GetResources(
 		resource.NewGetResourcesParamsWithContext(ctx), nil)
 	if err != nil {
