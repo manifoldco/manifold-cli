@@ -17,6 +17,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Fixed
 
+- `view` command to show project label instead of app name
+
 ## [0.4.0] - 2017-08-31
 
 ### Added
