@@ -132,13 +132,13 @@ func listProjectsCmd(cliCtx *cli.Context) error {
 
 	var projects []*mModels.Project
 
-	prompt.SpinStart("Fetching Projects")
+	prompts.SpinStart("Fetching Projects")
 	if cliCtx.Bool("all") {
 		projects, err = clients.FetchAllProjects(ctx, marketplaceClient)
 	} else {
 		projects, err = clients.FetchProjects(ctx, marketplaceClient, teamID)
 	}
-	prompt.SpinStop()
+	prompts.SpinStop()
 
 	if err != nil {
 		return cli.NewExitError(fmt.Sprintf("Failed to fetch list of projects: %s", err), -1)
