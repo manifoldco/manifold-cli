@@ -37,8 +37,11 @@ func init() {
 			},
 			{
 				Name:  "list",
-				Usage: "List all your projects",
-				Flags: teamFlags,
+				Usage: "List projects",
+				Flags: append(teamFlags, cli.BoolFlag{
+					Name:  "all",
+					Usage: "List all your projects and teams projects",
+				}),
 				Action: middleware.Chain(middleware.EnsureSession,
 					middleware.LoadTeamPrefs, listProjectsCmd),
 			},
@@ -127,7 +130,14 @@ func listProjectsCmd(cliCtx *cli.Context) error {
 		return err
 	}
 
-	projects, err := clients.FetchProjects(ctx, marketplaceClient, teamID)
+	var projects []*mModels.Project
+
+	if cliCtx.Bool("all") {
+		projects, err = clients.FetchAllProjects(ctx, marketplaceClient)
+	} else {
+		projects, err = clients.FetchProjects(ctx, marketplaceClient, teamID)
+	}
+
 	if err != nil {
 		return cli.NewExitError(fmt.Sprintf("Failed to fetch list of projects: %s", err), -1)
 	}

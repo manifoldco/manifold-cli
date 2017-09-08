@@ -9,6 +9,17 @@ import (
 	"github.com/manifoldco/manifold-cli/generated/marketplace/models"
 )
 
+// FetchAllProjects returns all user and team projects
+func FetchAllProjects(ctx context.Context, c *client.Marketplace) ([]*models.Project, error) {
+	params := project.NewGetProjectsParamsWithContext(ctx)
+	res, err := c.Project.GetProjects(params, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return res.Payload, nil
+}
+
 // FetchProjects returns all user or team projects
 func FetchProjects(ctx context.Context, c *client.Marketplace, teamID *manifold.ID) ([]*models.Project, error) {
 	params := project.NewGetProjectsParamsWithContext(ctx)
