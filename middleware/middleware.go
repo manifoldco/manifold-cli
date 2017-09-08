@@ -94,7 +94,7 @@ func EnsureTeamPrefs(cliCtx *cli.Context) error {
 		return cli.NewExitError(fmt.Sprintf("Could not load identity client: %s", err), -1)
 	}
 
-	teams, err := clients.FetchTeams(ctx, identityClient, false)
+	teams, err := clients.FetchTeams(ctx, identityClient)
 	if err != nil {
 		return cli.NewExitError(fmt.Sprintf("Could not load teams: %s", err), -1)
 	}

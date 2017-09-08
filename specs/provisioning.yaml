@@ -338,6 +338,26 @@ definitions:
       required:
       - state
       - plan_id
+  move:
+    type: object
+    allOf:
+      - $ref: '#/definitions/OperationBody'
+      - type: object
+        properties:
+          state:
+            description: State must be specified as move on a PUT operation
+            type: string
+            enum:
+              - move
+              - commit
+              - error
+              - done
+          project_id:
+            $ref: '#/definitions/OptionalID'
+        additionalProperties: false
+        required:
+          - state
+          - project_id
   deprovision:
     type: object
     allOf:
