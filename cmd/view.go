@@ -158,14 +158,14 @@ func view(cliCtx *cli.Context) error {
 	}
 
 	projectID := resource.Body.ProjectID
-	projectOutput := "-"
+	projectLabel := "-"
 	if projectID != nil {
 		project, err := clients.FetchProject(ctx, marketplaceClient, projectID.String())
 		if err != nil {
 			cli.NewExitError("Project referenced by resource does not exist: "+
 				err.Error(), -1)
 		}
-		projectOutput = string(project.Body.Label)
+		projectLabel = string(project.Body.Label)
 	}
 
 	fmt.Println("Use `manifold update [label] --project [project]` to edit your resource")
@@ -173,7 +173,7 @@ func view(cliCtx *cli.Context) error {
 	w := tabwriter.NewWriter(os.Stdout, 0, 0, 8, ' ', 0)
 	fmt.Fprintln(w, fmt.Sprintf("%s\t%s", faint("Name"), bold(resource.Body.Name)))
 	fmt.Fprintln(w, fmt.Sprintf("%s\t%s", faint("Label"), resource.Body.Label))
-	fmt.Fprintln(w, fmt.Sprintf("%s\t%s", faint("Project"), projectOutput))
+	fmt.Fprintln(w, fmt.Sprintf("%s\t%s", faint("Project"), projectLabel))
 	fmt.Fprintln(w, fmt.Sprintf("%s\t%s", faint("State"), status))
 	fmt.Fprintln(w, fmt.Sprintf("%s\t%s", faint("Custom"), isCustom))
 	fmt.Fprintln(w, fmt.Sprintf("%s\t%s", faint("Product"), productName))

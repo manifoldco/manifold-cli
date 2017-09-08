@@ -74,7 +74,7 @@ func projectFlag() cli.Flag {
 
 func planFlag() cli.Flag {
 	return cli.StringFlag{
-		Name:   "plan, p",
+		Name:   "plan",
 		Usage:  "Specify a plan",
 		Value:  "",
 		EnvVar: "MANIFOLD_PLAN",
