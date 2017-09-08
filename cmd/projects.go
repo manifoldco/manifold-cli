@@ -3,8 +3,13 @@ package main
 import (
 	"context"
 	"fmt"
+	"os"
 	"strings"
+	"text/tabwriter"
+
 	"time"
+
+	"github.com/fatih/color"
 
 	"github.com/go-openapi/strfmt"
 	"github.com/urfave/cli"
@@ -37,6 +42,16 @@ func init() {
 				ArgsUsage: "[name]",
 				Action: middleware.Chain(middleware.EnsureSession,
 					middleware.LoadTeamPrefs, createProjectCmd),
+			},
+			{
+				Name:  "list",
+				Usage: "List projects",
+				Flags: append(teamFlags, cli.BoolFlag{
+					Name:  "all",
+					Usage: "List all your projects and teams projects",
+				}),
+				Action: middleware.Chain(middleware.EnsureSession,
+					middleware.LoadTeamPrefs, listProjectsCmd),
 			},
 			{
 				Name:  "update",
@@ -117,6 +132,45 @@ func createProjectCmd(cliCtx *cli.Context) error {
 
 	fmt.Printf("Your project '%s' has been created\n", projectName)
 	return nil
+}
+
+func listProjectsCmd(cliCtx *cli.Context) error {
+	ctx := context.Background()
+
+	marketplaceClient, err := loadMarketplaceClient()
+	if err != nil {
+		return err
+	}
+
+	teamID, err := validateTeamID(cliCtx)
+	if err != nil {
+		return err
+	}
+
+	var projects []*mModels.Project
+
+	prompts.SpinStart("Fetching Projects")
+	if cliCtx.Bool("all") {
+		projects, err = clients.FetchAllProjects(ctx, marketplaceClient)
+	} else {
+		projects, err = clients.FetchProjects(ctx, marketplaceClient, teamID)
+	}
+	prompts.SpinStop()
+
+	if err != nil {
+		return cli.NewExitError(fmt.Sprintf("Failed to fetch list of projects: %s", err), -1)
+	}
+
+	w := tabwriter.NewWriter(os.Stdout, 0, 0, 8, ' ', 0)
+
+	bold := color.New(color.Bold).SprintFunc()
+
+	fmt.Fprintf(w, "%s\n\n", bold("Project"))
+
+	for _, project := range projects {
+		fmt.Fprintf(w, "%s\n", project.Body.Label)
+	}
+	return w.Flush()
 }
 
 func updateProjectCmd(cliCtx *cli.Context) error {
