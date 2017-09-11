@@ -6,6 +6,7 @@ import (
 
 	"github.com/urfave/cli"
 
+	"github.com/manifoldco/go-manifold"
 	"github.com/manifoldco/manifold-cli/analytics"
 	"github.com/manifoldco/manifold-cli/clients"
 	"github.com/manifoldco/manifold-cli/config"
@@ -46,7 +47,7 @@ func rename(cliCtx *cli.Context) error {
 		return err
 	}
 
-	newResourceLabel, err := optionalArgLabel(cliCtx, 1, "resource")
+	newResourceName, err := optionalArgName(cliCtx, 1, "resource")
 	if err != nil {
 		return err
 	}
@@ -89,38 +90,31 @@ func rename(cliCtx *cli.Context) error {
 	}
 
 	var resource *models.Resource
-	autoSelect := false
-	if newResourceLabel != "" {
-		resource, err = pickResourcesByLabel(res, resourceLabel)
-		if err != nil {
-			return cli.NewExitError(fmt.Sprintf(
-				"Unable to find resource named \"%s\": %s", resourceLabel, err), -1)
-		}
-		autoSelect = true
-	} else {
-		resourceIdx, _, err := prompts.SelectResource(res, resourceLabel)
-		if err != nil {
-			return prompts.HandleSelectError(err, "Could not select Resource")
-		}
-
-		resource = res[resourceIdx]
+	resourceIdx, _, err := prompts.SelectResource(res, resourceLabel)
+	if err != nil {
+		return prompts.HandleSelectError(err, "Could not select Resource")
 	}
-	newResourceLabel, err = prompts.ResourceLabel(newResourceLabel, autoSelect)
+	resource = res[resourceIdx]
+
+	autoSelect := newResourceName != ""
+	newResourceName, err = prompts.ResourceName(newResourceName, autoSelect)
 	if err != nil {
 		return prompts.HandleSelectError(err, "Could not get new resource label")
 	}
 
-	if _, err := pickResourcesByLabel(res, newResourceLabel); err == nil {
+	newResourceLabel := generateLabel(newResourceName)
+
+	if _, err := pickResourcesByLabel(res, string(newResourceLabel)); err == nil {
 		return cli.NewExitError("A resource with that label already exists", -1)
 	}
 
 	if _, err := prompts.Confirm(
-		fmt.Sprintf("Are you sure you want to rename \"%s\" to \"%s\"", resource.Body.Label, newResourceLabel),
+		fmt.Sprintf("Are you sure you want to rename \"%s\" to \"%s\"", resource.Body.Label, newResourceName),
 	); err != nil {
 		return cli.NewExitError("Resource not renamed", -1)
 	}
 
-	updatedRes, err := relabelResource(ctx, cfg, resource, marketplaceClient, newResourceLabel)
+	updatedRes, err := renameResource(ctx, cfg, resource, marketplaceClient, newResourceName)
 	if err != nil {
 		return cli.NewExitError(fmt.Sprintf("Unable to update resource: %s", err), -1)
 	}
@@ -129,7 +123,7 @@ func rename(cliCtx *cli.Context) error {
 	return nil
 }
 
-func relabelResource(ctx context.Context, cfg *config.Config, resource *models.Resource,
+func renameResource(ctx context.Context, cfg *config.Config, resource *models.Resource,
 	marketplaceClient *client.Marketplace, resourceName string,
 ) (*models.Resource, error) {
 	s, err := session.Retrieve(ctx, cfg)
@@ -149,6 +143,7 @@ func relabelResource(ctx context.Context, cfg *config.Config, resource *models.R
 
 	rename := &models.PublicUpdateResource{
 		Body: &models.PublicUpdateResourceBody{
+			Name:  manifold.Name(resourceName),
 			Label: label,
 		},
 	}
