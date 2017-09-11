@@ -249,6 +249,9 @@ definitions:
       team_id:
         $ref: '#/definitions/OptionalID'
         description: Team owning the operation, cannot be supplied if user_id defined
+      project_id:
+        $ref: '#/definitions/OptionalID'
+        description: Project in which the operation is grouped.
       message:
         type: string
         description: A message associated with the operation to display to the user.
@@ -349,8 +352,6 @@ definitions:
               - commit
               - error
               - done
-          project_id:
-            $ref: '#/definitions/OptionalID'
         additionalProperties: false
         required:
           - state
