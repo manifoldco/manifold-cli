@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - Add `projects list` command to list projects
 - Add `projects update` command to update an existing project
 - Add `projects add` to add a resource to a project
+- Add `projects remove` to remove a resource from a project
 
 ### Fixed
 
