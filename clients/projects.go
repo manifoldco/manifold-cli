@@ -39,3 +39,16 @@ func FetchProjects(ctx context.Context, c *client.Marketplace, teamID *manifold.
 
 	return res.Payload, nil
 }
+
+// FetchProject returns a project
+func FetchProject(ctx context.Context, c *client.Marketplace, id string) (*models.Project, error) {
+	params := project.NewGetProjectsIDParamsWithContext(ctx)
+	params.SetID(id)
+
+	res, err := c.Project.GetProjectsID(params, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return res.Payload, nil
+}
