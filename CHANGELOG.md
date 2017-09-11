@@ -10,20 +10,21 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ### Added
 
 - Group commands into categories for better help output
-- Add `projects create` command to create new projects
-- Add `projects list` command to list projects
-- Add `projects update` command to update an existing project
-- Add `projects add` to add a resource to a project
+- `projects add` to add a resource to a project
+- `projects create` command to create new projects
+- `projects list` command to list projects
+- `projects remove` to remove a resource from a project
+- `projects update` command to update an existing project
 
 ### Fixed
 
 - `view` command to show project label instead of app name
-- `rename` command to accept project label instead of app name
 - `update` command to accept project label instead of app name
 
 ### Removed
 
 - `apps` commands, replaced with `projects` commands
+- `rename` command in favour of `update`
 
 ## [0.4.0] - 2017-08-31
 
