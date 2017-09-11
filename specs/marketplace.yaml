@@ -534,8 +534,6 @@ definitions:
             $ref: '#/definitions/Name'
           label:
             $ref: '#/definitions/Label'
-          project_id:
-            $ref: '#/definitions/OptionalID'
         additionalProperties: false
     additionalProperties: false
     required:
