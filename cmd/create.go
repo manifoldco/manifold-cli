@@ -247,6 +247,11 @@ func createResource(ctx context.Context, cfg *config.Config, teamID *manifold.ID
 		source = "catalog"
 	}
 
+	var projectID *manifold.ID
+	if project != nil {
+		projectID = &project.ID
+	}
+
 	// TODO: Generate a label from the name if name provided..?
 	// TODO: Expose the Operation primitive from the core marketplace code base into
 	// go-manifold so we can use it here.
@@ -267,12 +272,10 @@ func createResource(ctx context.Context, cfg *config.Config, teamID *manifold.ID
 			ProductID: productID,
 			RegionID:  regionID,
 			State:     &state,
+			ProjectID: projectID,
 		},
 	}
 
-	if project != nil {
-		op.Body.SetProjectID(&project.ID)
-	}
 	op.Body.SetCreatedAt(&curTime)
 	op.Body.SetUpdatedAt(&curTime)
 	op.Body.SetResourceID(resourceID)
