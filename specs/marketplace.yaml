@@ -534,10 +534,6 @@ definitions:
             $ref: '#/definitions/Name'
           label:
             $ref: '#/definitions/Label'
-          app_name:
-            x-nullable: true
-            type: string
-            pattern: ^$|[a-zA-Z][a-z0-9A-Z \-]{2,128}$
         additionalProperties: false
     additionalProperties: false
     required:
