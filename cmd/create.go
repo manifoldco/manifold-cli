@@ -169,12 +169,16 @@ func create(cliCtx *cli.Context) error {
 	}
 
 	var project *mModels.Project
+
 	if len(projects) > 0 {
-		pidx, _, err := prompts.SelectProject(projects, projectLabel)
+		pidx, _, err := prompts.SelectProject(projects, projectLabel, true)
 		if err != nil {
 			return prompts.HandleSelectError(err, "Could not select project.")
 		}
-		project = projects[pidx]
+
+		if pidx > -1 {
+			project = projects[pidx]
+		}
 	}
 
 	resourceName, err = prompts.ResourceName(resourceName, false)
