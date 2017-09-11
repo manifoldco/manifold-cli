@@ -2,6 +2,7 @@ package clients
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/manifoldco/go-manifold"
 	"github.com/manifoldco/manifold-cli/generated/marketplace/client"
@@ -51,4 +52,20 @@ func FetchProject(ctx context.Context, c *client.Marketplace, id string) (*model
 	}
 
 	return res.Payload, nil
+}
+
+// FetchProjectByLabel returns a project that matches the label
+func FetchProjectByLabel(ctx context.Context, c *client.Marketplace, teamID *manifold.ID, label string) (*models.Project, error) {
+	projects, err := FetchProjects(ctx, c, teamID)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, p := range projects {
+		if string(p.Body.Label) == label {
+			return p, nil
+		}
+	}
+
+	return nil, fmt.Errorf("Project with label %q not found", label)
 }
