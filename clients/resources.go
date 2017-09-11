@@ -48,3 +48,28 @@ func FetchResources(ctx context.Context, c *mClient.Marketplace, teamID *manifol
 	}
 	return results, nil
 }
+
+// FetchResourcesByProject returns a list of resources that have the same project label
+func FetchResourcesByProject(ctx context.Context, c *mClient.Marketplace, teamID *manifold.ID, projectLabel string) ([]*mModels.Resource, error) {
+	project, err := FetchProjectByLabel(ctx, c, teamID, projectLabel)
+	if err != nil {
+		return nil, err
+	}
+
+	resources, err := FetchResources(ctx, c, teamID)
+	if err != nil {
+		return nil, err
+	}
+
+	var matches []*mModels.Resource
+
+	for _, r := range resources {
+		id := r.Body.ProjectID
+
+		if id != nil && *id == project.ID {
+			matches = append(matches, r)
+		}
+	}
+
+	return matches, nil
+}

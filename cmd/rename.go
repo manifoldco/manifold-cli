@@ -25,7 +25,7 @@ func init() {
 		Usage:     "Rename a resource label",
 		Category:  "RESOURCES",
 		Flags: append(teamFlags, []cli.Flag{
-			appFlag(),
+			projectFlag(),
 		}...),
 		Action: middleware.Chain(middleware.EnsureSession, middleware.LoadTeamPrefs,
 			middleware.LoadDirPrefs, rename),
@@ -51,7 +51,7 @@ func rename(cliCtx *cli.Context) error {
 		return err
 	}
 
-	appName, err := validateName(cliCtx, "app")
+	projectLabel, err := validateLabel(cliCtx, "project")
 	if err != nil {
 		return err
 	}
@@ -72,7 +72,13 @@ func rename(cliCtx *cli.Context) error {
 			fmt.Sprintf("Failed to create Maketplace API client: %s", err), -1)
 	}
 
-	res, err := clients.FetchResources(ctx, marketplaceClient, teamID)
+	var res []*models.Resource
+
+	if projectLabel != "" {
+		res, err = clients.FetchResourcesByProject(ctx, marketplaceClient, teamID, projectLabel)
+	} else {
+		res, err = clients.FetchResources(ctx, marketplaceClient, teamID)
+	}
 	if err != nil {
 		return cli.NewExitError(
 			fmt.Sprintf("Failed to fetch list of provisioned resources: %s", err), -1)
@@ -92,10 +98,6 @@ func rename(cliCtx *cli.Context) error {
 		}
 		autoSelect = true
 	} else {
-		res = filterResourcesByAppName(res, appName)
-		if appName != "" && len(res) == 0 {
-			return cli.NewExitError(fmt.Sprintf("No resources in the app \"%s\"", appName), -1)
-		}
 		resourceIdx, _, err := prompts.SelectResource(res, resourceLabel)
 		if err != nil {
 			return prompts.HandleSelectError(err, "Could not select Resource")
