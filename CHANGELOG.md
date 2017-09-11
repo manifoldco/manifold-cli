@@ -15,6 +15,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - `projects list` command to list projects
 - `projects remove` to remove a resource from a project
 - `projects update` command to update an existing project
+- `verify $EMAIL_CODE` command to verify users e-mail with the CLI
 
 ### Fixed
 
