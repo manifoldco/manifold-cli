@@ -15,11 +15,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - Add `projects update` command to update an existing project
 - Add `projects add` to add a resource to a project
 - Add `projects remove` to remove a resource from a project
+- Removed `rename` command in favour of `update`
 
 ### Fixed
 
 - `view` command to show project label instead of app name
-- `rename` command to accept project label instead of app name
 
 ### Removed
 
