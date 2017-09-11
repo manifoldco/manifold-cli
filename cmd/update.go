@@ -38,7 +38,7 @@ func init() {
 			middleware.LoadTeamPrefs, updateResourceCmd),
 		Flags: append(teamFlags, []cli.Flag{
 			nameFlag(),
-			appFlag(),
+			projectFlag(),
 			planFlag(),
 			skipFlag(),
 		}...),
@@ -154,20 +154,24 @@ func updateResourceCmd(cliCtx *cli.Context) error {
 		return prompts.HandleSelectError(err, "Could not select plan")
 	}
 
-	appName, err := validateName(cliCtx, "app")
+	projects, err := clients.FetchProjects(ctx, marketplaceClient, teamID)
+	if err != nil {
+		return cli.NewExitError(fmt.Sprintf("Failed to fetch list of projects: %s", err), -1)
+	}
+
+	projectLabel, err := validateLabel(cliCtx, "project")
 	if err != nil {
 		return err
 	}
 
-	if appName == "" {
-		appName = string(resource.Body.AppName)
+	var projectID *manifold.ID
+	projectIdx, _, err := prompts.SelectProject(projects, projectLabel, true)
+	if err != nil {
+		return prompts.HandleSelectError(err, "Could not select project")
 	}
 
-	apps := fetchUniqueAppNames(res)
-	// TODO: This auto-selects the app and doesn't let the user change it without the -a flag
-	_, appName, err = prompts.SelectCreateAppName(apps, appName, true)
-	if err != nil {
-		return prompts.HandleSelectError(err, "Could not select apps")
+	if projectIdx > -1 {
+		projectID = &projects[projectIdx].ID
 	}
 
 	spin := prompts.NewSpinner(fmt.Sprintf("Updating resource \"%s\"", resource.Body.Label))
@@ -177,7 +181,7 @@ func updateResourceCmd(cliCtx *cli.Context) error {
 	}
 
 	_, mrb, err := updateResource(ctx, cfg, teamID, s, resource, marketplaceClient, provisioningClient,
-		plans[planIdx], appName, newResourceName, dontWait,
+		plans[planIdx], projectID, newResourceName, dontWait,
 	)
 	if err != nil {
 		return cli.NewExitError(fmt.Sprintf("Failed to update resource: %s", err), -1)
@@ -218,7 +222,7 @@ func pickPlanByID(plans []*cModels.Plan, id manifold.ID) (*cModels.Plan, error) 
 
 func updateResource(ctx context.Context, cfg *config.Config, teamID *manifold.ID, s session.Session,
 	resource *mModels.Resource, marketplaceClient *mClient.Marketplace,
-	provisioningClient *pClient.Provisioning, plan *cModels.Plan, appName, resourceName string,
+	provisioningClient *pClient.Provisioning, plan *cModels.Plan, projectID *manifold.ID, resourceName string,
 	dontWait bool,
 ) (*pModels.Operation, *mModels.Resource, error) {
 	a, err := analytics.New(cfg, s)
@@ -228,9 +232,9 @@ func updateResource(ctx context.Context, cfg *config.Config, teamID *manifold.ID
 
 	rename := &mModels.PublicUpdateResource{
 		Body: &mModels.PublicUpdateResourceBody{
-			AppName: &appName,
-			Name:    manifold.Name(resourceName),
-			Label:   generateLabel(resourceName),
+			Name:      manifold.Name(resourceName),
+			Label:     generateLabel(resourceName),
+			ProjectID: projectID,
 		},
 	}
 
