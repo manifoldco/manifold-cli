@@ -298,7 +298,7 @@ func addProjectCmd(cliCtx *cli.Context) error {
 	if err != nil {
 		return cli.NewExitError(fmt.Sprintf("Failed to fetch projects list: %s", err), -1)
 	}
-	projectIdx, _, err := prompts.SelectProject(ps, projectLabel)
+	projectIdx, _, err := prompts.SelectProject(ps, projectLabel, false)
 	if err != nil {
 		return prompts.HandleSelectError(err, "Could not select Project")
 	}
@@ -549,7 +549,7 @@ func selectProject(ctx context.Context, projectLabel string, teamID *manifold.ID
 		return nil, errs.ErrNoProjects
 	}
 
-	idx, _, err := prompts.SelectProject(projects, projectLabel)
+	idx, _, err := prompts.SelectProject(projects, projectLabel, false)
 	if err != nil {
 		return nil, prompts.HandleSelectError(err, "Could not select project")
 	}
