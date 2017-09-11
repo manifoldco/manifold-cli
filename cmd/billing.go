@@ -8,14 +8,12 @@ import (
 	"github.com/manifoldco/go-manifold"
 	"github.com/urfave/cli"
 
-	"github.com/manifoldco/manifold-cli/clients"
 	"github.com/manifoldco/manifold-cli/config"
 	"github.com/manifoldco/manifold-cli/errs"
 	"github.com/manifoldco/manifold-cli/middleware"
 	"github.com/manifoldco/manifold-cli/prompts"
 	"github.com/manifoldco/manifold-cli/session"
 
-	"github.com/manifoldco/manifold-cli/generated/billing/client"
 	"github.com/manifoldco/manifold-cli/generated/billing/client/discount"
 	"github.com/manifoldco/manifold-cli/generated/billing/client/profile"
 	bModels "github.com/manifoldco/manifold-cli/generated/billing/models"
@@ -238,19 +236,4 @@ func creditCardInput(ctx context.Context) (string, error) {
 	}
 
 	return token.ID, nil
-}
-
-func loadBillingClient() (*client.Billing, error) {
-	cfg, err := config.Load()
-	if err != nil {
-		return nil, cli.NewExitError("Could not load config: "+err.Error(), -1)
-	}
-
-	bClient, err := clients.NewBilling(cfg)
-	if err != nil {
-		return nil, cli.NewExitError("Failed to create a Billing API client: "+
-			err.Error(), -1)
-	}
-
-	return bClient, nil
 }

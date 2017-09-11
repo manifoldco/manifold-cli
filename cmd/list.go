@@ -12,11 +12,8 @@ import (
 	"github.com/urfave/cli"
 
 	"github.com/manifoldco/manifold-cli/clients"
-	"github.com/manifoldco/manifold-cli/config"
 	"github.com/manifoldco/manifold-cli/data/catalog"
-	"github.com/manifoldco/manifold-cli/errs"
 	"github.com/manifoldco/manifold-cli/middleware"
-	"github.com/manifoldco/manifold-cli/session"
 
 	"github.com/manifoldco/manifold-cli/generated/marketplace/models"
 	pModels "github.com/manifoldco/manifold-cli/generated/provisioning/models"
@@ -40,9 +37,10 @@ func init() {
 		Name:     "list",
 		Usage:    "List the status of your provisioned resources",
 		Category: "RESOURCES",
-		Action:   middleware.Chain(middleware.LoadDirPrefs, middleware.LoadTeamPrefs, list),
+		Action: middleware.Chain(middleware.LoadDirPrefs, middleware.EnsureSession,
+			middleware.LoadTeamPrefs, list),
 		Flags: append(teamFlags, []cli.Flag{
-			appFlag(),
+			projectFlag(),
 		}...),
 	}
 
@@ -52,7 +50,7 @@ func init() {
 func list(cliCtx *cli.Context) error {
 	ctx := context.Background()
 
-	appName, err := validateName(cliCtx, "app")
+	projectLabel, err := validateLabel(cliCtx, "project")
 	if err != nil {
 		return err
 	}
@@ -62,35 +60,19 @@ func list(cliCtx *cli.Context) error {
 		return err
 	}
 
-	cfg, err := config.Load()
+	catalogClient, err := loadCatalogClient()
 	if err != nil {
-		return cli.NewExitError("Could not load config: "+err.Error(), -1)
+		return err
 	}
 
-	s, err := session.Retrieve(ctx, cfg)
+	marketplaceClient, err := loadMarketplaceClient()
 	if err != nil {
-		return cli.NewExitError("Could not retrieve session: "+err.Error(), -1)
-	}
-	if !s.Authenticated() {
-		return errs.ErrNotLoggedIn
+		return err
 	}
 
-	catalogClient, err := clients.NewCatalog(cfg)
+	pClient, err := loadProvisioningClient()
 	if err != nil {
-		return cli.NewExitError("Failed to create a Catalog API client: "+
-			err.Error(), -1)
-	}
-
-	marketplaceClient, err := clients.NewMarketplace(cfg)
-	if err != nil {
-		return cli.NewExitError("Failed to create a Marketplace API client: "+
-			err.Error(), -1)
-	}
-
-	pClient, err := clients.NewProvisioning(cfg)
-	if err != nil {
-		return cli.NewExitError("Failed to create a Provisioning API Client: "+
-			err.Error(), -1)
+		return err
 	}
 
 	// Get catalog
@@ -115,7 +97,7 @@ func list(cliCtx *cli.Context) error {
 	resources, statuses := buildResourceList(res, oRes)
 
 	// Sort resources by name and filter by given app name
-	resources = filterResourcesByAppName(resources, appName)
+	resources = filterResourcesByAppName(resources, projectLabel)
 	sort.Sort(resourcesSortByName(resources))
 
 	// Write out the resources table

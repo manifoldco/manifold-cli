@@ -16,7 +16,6 @@ import (
 	"github.com/manifoldco/manifold-cli/errs"
 	"github.com/manifoldco/manifold-cli/middleware"
 	"github.com/manifoldco/manifold-cli/prompts"
-	"github.com/manifoldco/manifold-cli/session"
 
 	mModels "github.com/manifoldco/manifold-cli/generated/marketplace/models"
 )
@@ -56,11 +55,6 @@ func view(cliCtx *cli.Context) error {
 	cfg, err := config.Load()
 	if err != nil {
 		return cli.NewExitError(fmt.Sprintf("Could not load configuration: %s", err), -1)
-	}
-
-	_, err = session.Retrieve(ctx, cfg)
-	if err != nil {
-		return cli.NewExitError(fmt.Sprintf("Could not retrieve session: %s", err), -1)
 	}
 
 	marketplaceClient, err := clients.NewMarketplace(cfg)
