@@ -20,6 +20,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 - `view` command to show project label instead of app name
 - `rename` command to accept project label instead of app name
+- `rename` command renames a resource's name and label instead of just label
 
 ### Removed
 
