@@ -26,9 +26,10 @@ func init() {
 		Name:     "view",
 		Usage:    "View specific details of the provided resource",
 		Category: "RESOURCES",
-		Action:   middleware.Chain(middleware.LoadDirPrefs, middleware.LoadTeamPrefs, view),
+		Action: middleware.Chain(middleware.LoadDirPrefs, middleware.EnsureSession,
+			middleware.LoadTeamPrefs, view),
 		Flags: append(teamFlags, []cli.Flag{
-			appFlag(),
+			projectFlag(),
 		}...),
 	}
 
@@ -156,12 +157,23 @@ func view(cliCtx *cli.Context) error {
 		status = green("Ready")
 	}
 
+	projectID := resource.Body.ProjectID
+	projectLabel := "-"
+	if projectID != nil {
+		project, err := clients.FetchProject(ctx, marketplaceClient, projectID.String())
+		if err != nil {
+			cli.NewExitError("Project referenced by resource does not exist: "+
+				err.Error(), -1)
+		}
+		projectLabel = string(project.Body.Label)
+	}
+
 	fmt.Println("Use `manifold update [label] --project [project]` to edit your resource")
 	fmt.Println("")
 	w := tabwriter.NewWriter(os.Stdout, 0, 0, 8, ' ', 0)
 	fmt.Fprintln(w, fmt.Sprintf("%s\t%s", faint("Name"), bold(resource.Body.Name)))
 	fmt.Fprintln(w, fmt.Sprintf("%s\t%s", faint("Label"), resource.Body.Label))
-	fmt.Fprintln(w, fmt.Sprintf("%s\t%s", faint("App"), resource.Body.AppName))
+	fmt.Fprintln(w, fmt.Sprintf("%s\t%s", faint("Project"), projectLabel))
 	fmt.Fprintln(w, fmt.Sprintf("%s\t%s", faint("State"), status))
 	fmt.Fprintln(w, fmt.Sprintf("%s\t%s", faint("Custom"), isCustom))
 	fmt.Fprintln(w, fmt.Sprintf("%s\t%s", faint("Product"), productName))

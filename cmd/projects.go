@@ -391,14 +391,14 @@ func addProject(ctx context.Context, uid, tid *manifold.ID, r *mModels.Resource,
 		Type:    &typeStr,
 		Version: &version,
 		Body: &pModels.Move{
-			ProjectID: &p.ID,
-			State:     &state,
+			State: &state,
 		},
 	}
 
 	opBody.Body.SetCreatedAt(&curTime)
 	opBody.Body.SetUpdatedAt(&curTime)
 	opBody.Body.SetResourceID(r.ID)
+	opBody.Body.SetProjectID(&p.ID)
 
 	if tid == nil {
 		opBody.Body.SetUserID(uid)
