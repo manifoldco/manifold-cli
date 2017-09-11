@@ -381,7 +381,7 @@ func removeProjectCmd(cliCtx *cli.Context) error {
 		return cli.NewExitError(fmt.Sprintf("Could not remove the project from the resource: %s", err), -1)
 	}
 
-	fmt.Printf("Removed project from %s\n", r.Body.Label)
+	fmt.Printf("Removed %s from project\n", r.Body.Label)
 
 	return nil
 }
