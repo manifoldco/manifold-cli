@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - Add `projects list` command to list projects
 - Add `projects update` command to update an existing project
 - Add `projects add` to add a resource to a project
+- Add `verify $EMAIL_CODE`, allowing users to verify their e-mail with the CLI
 
 ### Fixed
 

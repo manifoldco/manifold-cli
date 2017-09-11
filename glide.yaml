@@ -21,7 +21,7 @@ import:
 - package: github.com/go-ini/ini
   version: 1.28.0
 - package: github.com/manifoldco/go-manifold
-  version: 0.3.0
+  version: 0.7.2
 - package: github.com/go-openapi/runtime
 - package: github.com/go-openapi/strfmt
 - package: github.com/manifoldco/torus-cli
