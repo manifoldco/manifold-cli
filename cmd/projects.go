@@ -322,9 +322,9 @@ func addProjectCmd(cliCtx *cli.Context) error {
 	}
 
 	if r.Body.ProjectID == nil {
-		fmt.Printf("Adding %s to %s\n", resourceLabel, projectLabel)
+		fmt.Printf("Adding %s to %s\n", r.Body.Label, p.Body.Label)
 	} else {
-		fmt.Printf("Moving %s to %s\n", resourceLabel, projectLabel)
+		fmt.Printf("Moving %s to %s\n", r.Body.Label, p.Body.Label)
 	}
 
 	return nil
