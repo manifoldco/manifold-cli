@@ -72,6 +72,15 @@ func init() {
 				Action: middleware.Chain(middleware.EnsureSession,
 					middleware.LoadTeamPrefs, addProjectCmd),
 			},
+			{
+				Name:  "remove",
+				Usage: "Removes a resource from a project",
+				Flags: append(teamFlags, []cli.Flag{
+					skipFlag(),
+				}...),
+				Action: middleware.Chain(middleware.EnsureSession,
+					middleware.LoadTeamPrefs, removeProjectCmd),
+			},
 		},
 	}
 
@@ -308,7 +317,7 @@ func addProjectCmd(cliCtx *cli.Context) error {
 	}
 	r := res[resourceIdx]
 
-	if err := addProject(ctx, userID, teamID, r, p, provisioningClient, dontWait); err != nil {
+	if err := updateResourceProject(ctx, userID, teamID, r, p, provisioningClient, dontWait); err != nil {
 		return cli.NewExitError(fmt.Sprintf("Could not add resource to project: %s", err), -1)
 	}
 
@@ -317,6 +326,62 @@ func addProjectCmd(cliCtx *cli.Context) error {
 	} else {
 		fmt.Printf("Moving %s to %s\n", resourceLabel, projectLabel)
 	}
+
+	return nil
+}
+
+func removeProjectCmd(cliCtx *cli.Context) error {
+	ctx := context.Background()
+
+	if err := maxOptionalArgsLength(cliCtx, 1); err != nil {
+		return err
+	}
+
+	resourceLabel, err := optionalArgLabel(cliCtx, 0, "resource")
+	if err != nil {
+		return err
+	}
+
+	dontWait := cliCtx.Bool("no-wait")
+
+	userID, err := loadUserID(ctx)
+	if err != nil {
+		return err
+	}
+
+	teamID, err := validateTeamID(cliCtx)
+	if err != nil {
+		return err
+	}
+
+	marketplaceClient, err := loadMarketplaceClient()
+	if err != nil {
+		return err
+	}
+
+	provisioningClient, err := loadProvisioningClient()
+	if err != nil {
+		return err
+	}
+
+	res, err := clients.FetchResources(ctx, marketplaceClient, teamID)
+	if err != nil {
+		return cli.NewExitError(fmt.Sprintf("Failed to fetch list of provisioned resource: %s", err), -1)
+	}
+	if len(res) == 0 {
+		return errs.ErrNoResources
+	}
+	resourceIdx, _, err := prompts.SelectResource(res, resourceLabel)
+	if err != nil {
+		return prompts.HandleSelectError(err, "Could not select Resource")
+	}
+	r := res[resourceIdx]
+
+	if err := updateResourceProject(ctx, userID, teamID, r, nil, provisioningClient, dontWait); err != nil {
+		return cli.NewExitError(fmt.Sprintf("Could not remove the project from the resource: %s", err), -1)
+	}
+
+	fmt.Printf("Removed project from %s\n", r.Body.Label)
 
 	return nil
 }
@@ -373,8 +438,8 @@ func updateProject(params *projectClient.PatchProjectsIDParams) error {
 	return nil
 }
 
-// addProject adds a resource to an existing project
-func addProject(ctx context.Context, uid, tid *manifold.ID, r *mModels.Resource,
+// updateResourceProject updates a resource to add or remove an existing project
+func updateResourceProject(ctx context.Context, uid, tid *manifold.ID, r *mModels.Resource,
 	p *mModels.Project, provisioningClient *pClient.Provisioning, dontWait bool,
 ) error {
 	ID, err := manifold.NewID(idtype.Operation)
@@ -390,10 +455,17 @@ func addProject(ctx context.Context, uid, tid *manifold.ID, r *mModels.Resource,
 		ID:      ID,
 		Type:    &typeStr,
 		Version: &version,
-		Body: &pModels.Move{
-			State:     &state,
+	}
+
+	if p != nil {
+		opBody.Body = &pModels.Move{
 			ProjectID: &p.ID,
-		},
+			State:     &state,
+		}
+	} else {
+		opBody.Body = &pModels.Move{
+			State: &state,
+		}
 	}
 
 	opBody.Body.SetCreatedAt(&curTime)
