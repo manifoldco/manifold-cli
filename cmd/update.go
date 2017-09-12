@@ -120,10 +120,17 @@ func pickResourcesByLabel(resources []*models.Resource, label string) (*models.R
 		return nil, errs.ErrResourceNotFound
 	}
 
+	var found *models.Resource
 	for _, resource := range resources {
 		if string(resource.Body.Label) == label {
-			return resource, nil
+			if found != nil {
+				return nil, errs.ErrResourceMultipleFound
+			}
+			found = resource
 		}
+	}
+	if found != nil {
+		return found, nil
 	}
 
 	return nil, errs.ErrResourceNotFound

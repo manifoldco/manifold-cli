@@ -34,6 +34,10 @@ var ErrProductNotFound = cli.NewExitError("The provided product does not exist!"
 // does not exist.
 var ErrPlanNotFound = cli.NewExitError("The provided plan does not exist!", -1)
 
+// ErrResourceMultipleFound represents an error where the provided label
+// matches more than one resource
+var ErrResourceMultipleFound = cli.NewExitError("Multiple resources found. Please provide additional context.", -1)
+
 // ErrResourceNotFound represents an error where the provided user's resource label
 // does not exist
 var ErrResourceNotFound = cli.NewExitError("The provided resource does not exist!", -1)
