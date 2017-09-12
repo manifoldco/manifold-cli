@@ -40,3 +40,4 @@ import:
 - package: github.com/stripe/stripe-go
   version: ^24.2.0
 - package: gopkg.in/yaml.v2
+- package: github.com/juju/ansiterm

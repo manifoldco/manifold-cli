@@ -1,5 +1,5 @@
-hash: 1d29e603ab16a710ffe0700ceb692bbf9a9c60887392df7af94464be2196ead2
-updated: 2017-08-22T19:50:42.951234967-03:00
+hash: ae48d6cce457eae412604700d502dd67548687476303250679e4c2abba27ce47
+updated: 2017-09-11T17:36:59.451092636-03:00
 imports:
 - name: github.com/alecthomas/gometalinter
   version: bae2f1293d092fd8167939d5108d1b025eaef9de
@@ -53,6 +53,12 @@ imports:
   - golint
 - name: github.com/gordonklaus/ineffassign
   version: f0c5cfc1817d6dd6011c7e8b8d272f94aeeb12cb
+- name: github.com/juju/ansiterm
+  version: 35c59b9e0fe275705a71bf5d58ee293f27efbbc4
+  subpackages:
+  - tabwriter
+- name: github.com/lunixbochs/vtclean
+  version: d14193dfc626125c831501c1c42340b4248e1f5a
 - name: github.com/mailru/easyjson
   version: 2af9a745a611440bab0528e5ac19b2805a1c50eb
   subpackages:

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"os"
@@ -8,6 +9,7 @@ import (
 	"strings"
 	"text/tabwriter"
 
+	"github.com/juju/ansiterm"
 	"github.com/manifoldco/go-manifold"
 	"github.com/urfave/cli"
 
@@ -70,7 +72,7 @@ func list(cliCtx *cli.Context) error {
 		return err
 	}
 
-	pClient, err := loadProvisioningClient()
+	provisionClient, err := loadProvisioningClient()
 	if err != nil {
 		return err
 	}
@@ -82,38 +84,45 @@ func list(cliCtx *cli.Context) error {
 	}
 
 	// Get resources
-	res, err := clients.FetchResources(ctx, marketplaceClient, teamID)
+	var res []*models.Resource
+
+	if projectLabel == "" {
+		res, err = clients.FetchResources(ctx, marketplaceClient, teamID)
+	} else {
+		res, err = clients.FetchResourcesByProject(ctx, marketplaceClient, teamID, projectLabel)
+	}
+
 	if err != nil {
 		return cli.NewExitError("Failed to fetch the list of provisioned "+
 			"resources: "+err.Error(), -1)
 	}
 
 	// Get operations
-	oRes, err := clients.FetchOperations(ctx, pClient, nil)
+	oRes, err := clients.FetchOperations(ctx, provisionClient, nil)
 	if err != nil {
 		return cli.NewExitError("Failed to fetch the list of operations: "+err.Error(), -1)
 	}
 
 	resources, statuses := buildResourceList(res, oRes)
 
-	// Sort resources by name and filter by given app name
-	resources = filterResourcesByAppName(resources, projectLabel)
+	// Sort resources by name
 	sort.Sort(resourcesSortByName(resources))
 
 	// Write out the resources table
-	w := tabwriter.NewWriter(os.Stdout, 0, 0, 8, ' ', 0)
-	fmt.Fprintln(w, "RESOURCE NAME\tAPP NAME\tSTATUS\tPRODUCT\tPLAN\tREGION\tCUSTOM")
-	fmt.Fprintln(w, " \t \t \t \t \t \t")
-	for _, resource := range resources {
-		appName := string(resource.Body.AppName)
+	tw := tabwriter.NewWriter(os.Stdout, 0, 0, 8, ' ', 0)
 
-		productName := ""
-		planName := ""
-		regionName := ""
-		isCustom := 'Y'
+	buf := &bytes.Buffer{}
+	w := ansiterm.NewWriter(buf)
+	ansiterm.Foreground(ansiterm.BrightRed).Fprintf(w, "ERROR")
+
+	ansiterm.Foreground(ansiterm.Black).Fprintf(w, "ERROR")
+
+	fmt.Fprintf(tw, "%s\t%s\t%s\n", "Label", "Type", buf.Bytes())
+
+	for _, resource := range resources {
+		rType := "Custom"
 
 		if *resource.Body.Source != "custom" {
-			isCustom = 'N'
 			// Get catalog data
 			product, err := catalog.GetProduct(*resource.Body.ProductID)
 			if err != nil {
@@ -125,15 +134,8 @@ func list(cliCtx *cli.Context) error {
 				cli.NewExitError("Plan referenced by resource does not exist: "+
 					err.Error(), -1)
 			}
-			region, err := catalog.GetRegion(*resource.Body.RegionID)
-			if err != nil {
-				cli.NewExitError("Region referenced by resource does not exist: "+
-					err.Error(), -1)
-			}
 
-			productName = string(product.Body.Name)
-			planName = string(plan.Body.Name)
-			regionName = string(region.Body.Name)
+			rType = fmt.Sprintf("%s %s", product.Body.Name, plan.Body.Name)
 		}
 
 		status, ok := statuses[resource.ID]
@@ -141,10 +143,9 @@ func list(cliCtx *cli.Context) error {
 			status = "Ready"
 		}
 
-		fmt.Fprintf(w, "%s\t%s\t%s\t%s\t%s\t%s\t%c\n", resource.Body.Name,
-			appName, status, productName, planName, regionName, isCustom)
+		fmt.Fprintf(w, "%s\t%s\t%s\n", resource.Body.Label, rType, status)
 	}
-	w.Flush()
+	tw.Flush()
 	return nil
 }
 
