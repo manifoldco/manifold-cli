@@ -429,30 +429,6 @@ func filterRegionsForPlan(regions []*cModels.Region, regionIDs []manifold.ID) []
 	return out
 }
 
-func fetchUniqueAppNames(resources []*mModels.Resource) []string {
-	out := []string{}
-
-	// TODO: Make this not awful :(
-	exists := func(name string) bool {
-		for _, n := range out {
-			if n == name {
-				return true
-			}
-		}
-
-		return false
-	}
-
-	for _, r := range resources {
-		name := string(r.Body.AppName)
-		if !exists(name) && name != "" {
-			out = append(out, name)
-		}
-	}
-
-	return out
-}
-
 func toPrice(cost int64) string {
 	s := strconv.Itoa(int(cost))
 	if len(s) == 0 {
