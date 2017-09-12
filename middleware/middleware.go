@@ -121,7 +121,7 @@ func EnsureTeamPrefs(cliCtx *cli.Context) error {
 			cliCtx.Set("team-id", teams[teamIdx].ID.String())
 		}
 
-	} else if teamLabel != "" {
+	} else if teamLabel != "" && !me {
 		for _, t := range teams {
 			if string(t.Body.Label) == teamLabel {
 				cliCtx.Set("team-id", t.ID.String())
@@ -131,7 +131,7 @@ func EnsureTeamPrefs(cliCtx *cli.Context) error {
 		if !isSet(cliCtx, "team-id") {
 			return cli.NewExitError(fmt.Sprintf("Team \"%s\" not found", teamLabel), -1)
 		}
-	} else if teamID != "" {
+	} else if teamID != "" && !me {
 		cliCtx.Set("team-id", teamID)
 	}
 
