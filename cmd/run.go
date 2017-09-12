@@ -24,9 +24,10 @@ func init() {
 		Name:     "run",
 		Usage:    "Run a process and inject secrets into its environment",
 		Category: "CONFIGURATION",
-		Action:   middleware.Chain(middleware.LoadDirPrefs, middleware.LoadTeamPrefs, run),
+		Action: middleware.Chain(middleware.EnsureSession, middleware.LoadDirPrefs,
+			middleware.LoadTeamPrefs, run),
 		Flags: append(teamFlags, []cli.Flag{
-			appFlag(),
+			projectFlag(),
 		}...),
 	}
 
@@ -43,7 +44,7 @@ func run(cliCtx *cli.Context) error {
 		args = strings.Split(args[0], " ")
 	}
 
-	appName, err := validateName(cliCtx, "app")
+	projectLabel, err := validateName(cliCtx, "project")
 	if err != nil {
 		return err
 	}
@@ -53,32 +54,17 @@ func run(cliCtx *cli.Context) error {
 		return err
 	}
 
-	cfg, err := config.Load()
-	if err != nil {
-		return cli.NewExitError("Could not load config: "+err.Error(), -1)
-	}
-
-	s, err := session.Retrieve(ctx, cfg)
-	if err != nil {
-		return cli.NewExitError("Could not retrieve session: "+err.Error(), -1)
-	}
-
-	if !s.Authenticated() {
-		return errs.ErrMustLogin
-	}
-
-	marketplace, err := clients.NewMarketplace(cfg)
+	marketplace, err := loadMarketplaceClient()
 	if err != nil {
 		return cli.NewExitError("Could not create marketplace client: "+err.Error(), -1)
 	}
 
-	r, err := clients.FetchResources(ctx, marketplace, teamID)
+	rs, err := clients.FetchResourcesByProject(ctx, marketplace, teamID, projectLabel)
 	if err != nil {
 		return cli.NewExitError("Could not retrieve resources: "+err.Error(), -1)
 	}
 
-	resources := filterResourcesByAppName(r, appName)
-	cMap, err := fetchCredentials(ctx, marketplace, resources)
+	cMap, err := fetchCredentials(ctx, marketplace, rs)
 	if err != nil {
 		return cli.NewExitError("Could not retrieve credentials: "+err.Error(), -1)
 	}
@@ -88,17 +74,17 @@ func run(cliCtx *cli.Context) error {
 		return cli.NewExitError("Could not flatten credential map: "+err.Error(), -1)
 	}
 
-	a, err := analytics.New(cfg, s)
+	a, err := loadAnalytics()
 	if err != nil {
-		return cli.NewExitError("Something went horribly wrong: "+err.Error(), -1)
+		return err
 	}
 
 	params := map[string]string{}
-	if appName != "" {
-		params["app"] = appName
+	if projectLabel != "" {
+		params["project"] = projectLabel
 	}
 
-	a.Track(ctx, "App Run", &params)
+	a.Track(ctx, "Project Run", &params)
 
 	cmd := exec.Command(args[0], args[1:]...)
 	cmd.Stdin = os.Stdin
@@ -156,4 +142,25 @@ func filterEnv() []string {
 	}
 
 	return env
+}
+
+func loadAnalytics() (*analytics.Analytics, error) {
+	ctx := context.Background()
+
+	cfg, err := config.Load()
+	if err != nil {
+		return nil, cli.NewExitError(fmt.Sprintf("Failed to load configuration: %s", err), -1)
+	}
+
+	s, err := session.Retrieve(ctx, cfg)
+	if err != nil {
+		return nil, cli.NewExitError(fmt.Sprintf("Failed to load authenticated session: %s", err), -1)
+	}
+
+	a, err := analytics.New(cfg, s)
+	if err != nil {
+		return nil, cli.NewExitError(fmt.Sprintf("Failed to load analytics agent: %s", err), -1)
+	}
+
+	return a, nil
 }
