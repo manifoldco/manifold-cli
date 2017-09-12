@@ -25,6 +25,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - `update` command to accept project label instead of app name
 - Fetching resources or operations with nil team returns personal account
 - `list` now adheres to team context for operations
+- `view` resource still in provision
 
 ### Removed
 
