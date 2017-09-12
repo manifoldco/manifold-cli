@@ -164,7 +164,7 @@ func (c *Config) Write() error {
 
 // ManifoldYaml represents the standard project config object
 type ManifoldYaml struct {
-	App     string                 `yaml:"app,omitempty" flag:"app,omitempty"`
+	Project string                 `yaml:"project,omitempty" flag:"project,omitempty"`
 	Team    string                 `yaml:"team,omitempty" flag:"team,omitempty"`
 	Plugins map[string]interface{} `yaml:"plugins,omitempty"`
 	Path    string                 `yaml:"-" json:"-"`
