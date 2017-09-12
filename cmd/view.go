@@ -16,7 +16,6 @@ import (
 	"github.com/manifoldco/manifold-cli/errs"
 	"github.com/manifoldco/manifold-cli/middleware"
 	"github.com/manifoldco/manifold-cli/prompts"
-	"github.com/manifoldco/manifold-cli/session"
 
 	mModels "github.com/manifoldco/manifold-cli/generated/marketplace/models"
 )
@@ -53,14 +52,14 @@ func view(cliCtx *cli.Context) error {
 		return err
 	}
 
+	project, err := validateLabel(cliCtx, "project")
+	if err != nil {
+		return err
+	}
+
 	cfg, err := config.Load()
 	if err != nil {
 		return cli.NewExitError(fmt.Sprintf("Could not load configuration: %s", err), -1)
-	}
-
-	_, err = session.Retrieve(ctx, cfg)
-	if err != nil {
-		return cli.NewExitError(fmt.Sprintf("Could not retrieve session: %s", err), -1)
 	}
 
 	marketplaceClient, err := clients.NewMarketplace(cfg)
@@ -87,28 +86,34 @@ func view(cliCtx *cli.Context) error {
 	}
 
 	// Get resources
-	res, err := clients.FetchResources(ctx, marketplaceClient, teamID)
+	var resources []*mModels.Resource
+
+	if project == "" {
+		resources, err = clients.FetchResources(ctx, marketplaceClient, teamID)
+	} else {
+		resources, err = clients.FetchResourcesByProject(ctx, marketplaceClient, teamID, project)
+	}
 	if err != nil {
 		return cli.NewExitError(
 			fmt.Sprintf("Failed to fetch the list of provisioned resources: %s", err), -1)
 	}
-	if len(res) == 0 {
+	if len(resources) == 0 {
 		return errs.ErrNoResources
 	}
 
 	var resource *mModels.Resource
 	if resourceLabel != "" {
-		resource, err = pickResourcesByLabel(res, resourceLabel)
+		resource, err = pickResourcesByLabel(resources, resourceLabel)
 		if err != nil {
 			return cli.NewExitError(
 				fmt.Sprintf("Failed to find resource \"%s\": %s", resourceLabel, err), -1)
 		}
 	} else {
-		resourceIdx, _, err := prompts.SelectResource(res, resourceLabel)
+		idx, _, err := prompts.SelectResource(resources, resourceLabel)
 		if err != nil {
 			return prompts.HandleSelectError(err, "Could not select Resource")
 		}
-		resource = res[resourceIdx]
+		resource = resources[idx]
 	}
 
 	// Get operations
@@ -150,7 +155,7 @@ func view(cliCtx *cli.Context) error {
 		regionName = string(region.Body.Name)
 	}
 
-	_, statuses := buildResourceList(res, oRes)
+	_, statuses := buildResourceList(resources, oRes)
 	status, ok := statuses[resource.ID]
 	if !ok {
 		green := color.New(color.FgGreen).SprintFunc()
