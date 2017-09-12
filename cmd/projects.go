@@ -303,7 +303,7 @@ func addProjectCmd(cliCtx *cli.Context) error {
 	}
 	p := ps[projectIdx]
 
-	res, err := clients.FetchResources(ctx, marketplaceClient, teamID)
+	res, err := clients.FetchResources(ctx, marketplaceClient, teamID, "")
 	if err != nil {
 		return cli.NewExitError(fmt.Sprintf("Failed to fetch list of provisioned resources: %s", err), -1)
 	}
@@ -363,7 +363,7 @@ func removeProjectCmd(cliCtx *cli.Context) error {
 		return err
 	}
 
-	res, err := clients.FetchResources(ctx, marketplaceClient, teamID)
+	res, err := clients.FetchResources(ctx, marketplaceClient, teamID, "")
 	if err != nil {
 		return cli.NewExitError(fmt.Sprintf("Failed to fetch list of provisioned resource: %s", err), -1)
 	}

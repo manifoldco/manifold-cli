@@ -11,7 +11,6 @@ import (
 	"github.com/urfave/cli"
 
 	"github.com/manifoldco/manifold-cli/clients"
-	"github.com/manifoldco/manifold-cli/config"
 	"github.com/manifoldco/manifold-cli/data/catalog"
 	"github.com/manifoldco/manifold-cli/errs"
 	"github.com/manifoldco/manifold-cli/middleware"
@@ -52,26 +51,24 @@ func view(cliCtx *cli.Context) error {
 		return err
 	}
 
-	cfg, err := config.Load()
+	project, err := validateLabel(cliCtx, "project")
 	if err != nil {
-		return cli.NewExitError(fmt.Sprintf("Could not load configuration: %s", err), -1)
+		return err
 	}
 
-	marketplaceClient, err := clients.NewMarketplace(cfg)
+	marketplaceClient, err := loadMarketplaceClient()
 	if err != nil {
-		return cli.NewExitError(fmt.Sprintf("Failed to create Maketplace Client: %s", err), -1)
+		return err
 	}
 
-	catalogClient, err := clients.NewCatalog(cfg)
+	catalogClient, err := loadCatalogClient()
 	if err != nil {
-		return cli.NewExitError("Failed to create a Catalog API client: "+
-			err.Error(), -1)
+		return err
 	}
 
-	pClient, err := clients.NewProvisioning(cfg)
+	pClient, err := loadProvisioningClient()
 	if err != nil {
-		return cli.NewExitError("Failed to create a Provisioning API Client: "+
-			err.Error(), -1)
+		return err
 	}
 
 	// Get catalog
@@ -81,28 +78,28 @@ func view(cliCtx *cli.Context) error {
 	}
 
 	// Get resources
-	res, err := clients.FetchResources(ctx, marketplaceClient, teamID)
+	resources, err := clients.FetchResources(ctx, marketplaceClient, teamID, project)
 	if err != nil {
 		return cli.NewExitError(
 			fmt.Sprintf("Failed to fetch the list of provisioned resources: %s", err), -1)
 	}
-	if len(res) == 0 {
+	if len(resources) == 0 {
 		return errs.ErrNoResources
 	}
 
 	var resource *mModels.Resource
 	if resourceLabel != "" {
-		resource, err = pickResourcesByLabel(res, resourceLabel)
+		resource, err = pickResourcesByLabel(resources, resourceLabel)
 		if err != nil {
 			return cli.NewExitError(
 				fmt.Sprintf("Failed to find resource \"%s\": %s", resourceLabel, err), -1)
 		}
 	} else {
-		resourceIdx, _, err := prompts.SelectResource(res, resourceLabel)
+		idx, _, err := prompts.SelectResource(resources, resourceLabel)
 		if err != nil {
 			return prompts.HandleSelectError(err, "Could not select Resource")
 		}
-		resource = res[resourceIdx]
+		resource = resources[idx]
 	}
 
 	// Get operations
@@ -144,7 +141,7 @@ func view(cliCtx *cli.Context) error {
 		regionName = string(region.Body.Name)
 	}
 
-	_, statuses := buildResourceList(res, oRes)
+	_, statuses := buildResourceList(resources, oRes)
 	status, ok := statuses[resource.ID]
 	if !ok {
 		green := color.New(color.FgGreen).SprintFunc()

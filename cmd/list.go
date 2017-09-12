@@ -82,14 +82,7 @@ func list(cliCtx *cli.Context) error {
 	}
 
 	// Get resources
-	var res []*models.Resource
-
-	if projectLabel == "" {
-		res, err = clients.FetchResources(ctx, marketplaceClient, teamID)
-	} else {
-		res, err = clients.FetchResourcesByProject(ctx, marketplaceClient, teamID, projectLabel)
-	}
-
+	res, err := clients.FetchResources(ctx, marketplaceClient, teamID, projectLabel)
 	if err != nil {
 		return cli.NewExitError("Failed to fetch the list of provisioned "+
 			"resources: "+err.Error(), -1)
