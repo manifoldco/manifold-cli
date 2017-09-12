@@ -82,7 +82,7 @@ func export(cliCtx *cli.Context) error {
 	}
 
 	prompts.SpinStart("Fetching Resources")
-	r, err := clients.FetchResources(ctx, marketplace, teamID)
+	r, err := clients.FetchResources(ctx, marketplace, teamID, "")
 	prompts.SpinStop()
 	if err != nil {
 		return cli.NewExitError("Could not retrieve resources: "+err.Error(), -1)

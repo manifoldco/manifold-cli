@@ -63,11 +63,7 @@ func updateResourceCmd(cliCtx *cli.Context) error {
 
 	var resources []*models.Resource
 
-	if project == "" {
-		resources, err = clients.FetchResources(ctx, marketplaceClient, teamID)
-	} else {
-		resources, err = clients.FetchResourcesByProject(ctx, marketplaceClient, teamID, project)
-	}
+	resources, err = clients.FetchResources(ctx, marketplaceClient, teamID, project)
 
 	if err != nil {
 		return cli.NewExitError(

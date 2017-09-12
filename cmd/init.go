@@ -72,7 +72,7 @@ func initDir(cliCtx *cli.Context) error {
 			err.Error(), -1)
 	}
 
-	res, err := clients.FetchResources(ctx, mClient, teamID)
+	res, err := clients.FetchResources(ctx, mClient, teamID, "")
 	if err != nil {
 		return cli.NewExitError("Failed to fetch resource list: "+err.Error(), -1)
 	}

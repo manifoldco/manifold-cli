@@ -59,7 +59,7 @@ func run(cliCtx *cli.Context) error {
 		return cli.NewExitError("Could not create marketplace client: "+err.Error(), -1)
 	}
 
-	rs, err := clients.FetchResourcesByProject(ctx, marketplace, teamID, projectLabel)
+	rs, err := clients.FetchResources(ctx, marketplace, teamID, projectLabel)
 	if err != nil {
 		return cli.NewExitError("Could not retrieve resources: "+err.Error(), -1)
 	}

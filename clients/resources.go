@@ -32,7 +32,17 @@ func FetchOperations(ctx context.Context, c *pClient.Provisioning, teamID *manif
 }
 
 // FetchResources returns the resources for the authenticated user
-func FetchResources(ctx context.Context, c *mClient.Marketplace, teamID *manifold.ID) ([]*mModels.Resource, error) {
+func FetchResources(ctx context.Context, c *mClient.Marketplace, teamID *manifold.ID, projectLabel string) ([]*mModels.Resource, error) {
+	var project *mModels.Project
+
+	if projectLabel != "" {
+		var err error
+		project, err = FetchProjectByLabel(ctx, c, teamID, projectLabel)
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	res, err := c.Resource.GetResources(
 		resource.NewGetResourcesParamsWithContext(ctx), nil)
 	if err != nil {
@@ -46,28 +56,9 @@ func FetchResources(ctx context.Context, c *mClient.Marketplace, teamID *manifol
 			results = append(results, r)
 		}
 	}
-	return results, nil
-}
-
-// FetchResourcesByProject returns a list of resources that have the same project label
-func FetchResourcesByProject(ctx context.Context, c *mClient.Marketplace, teamID *manifold.ID, projectLabel string) ([]*mModels.Resource, error) {
-	var project *mModels.Project
-
-	if projectLabel != "" {
-		var err error
-		project, err = FetchProjectByLabel(ctx, c, teamID, projectLabel)
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	resources, err := FetchResources(ctx, c, teamID)
-	if err != nil {
-		return nil, err
-	}
 
 	var matches []*mModels.Resource
-	for _, r := range resources {
+	for _, r := range results {
 		id := r.Body.ProjectID
 
 		if (project == nil && id == nil) || (id != nil && project != nil && *id == project.ID) {
