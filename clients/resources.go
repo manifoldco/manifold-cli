@@ -61,7 +61,7 @@ func FetchResources(ctx context.Context, c *mClient.Marketplace, teamID *manifol
 	for _, r := range results {
 		id := r.Body.ProjectID
 
-		if (project == nil && id == nil) || (id != nil && project != nil && *id == project.ID) {
+		if project == nil || (id != nil && project != nil && *id == project.ID) {
 			matches = append(matches, r)
 		}
 	}
