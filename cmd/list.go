@@ -52,11 +52,6 @@ func init() {
 func list(cliCtx *cli.Context) error {
 	ctx := context.Background()
 
-	appName, err := validateName(cliCtx, "app")
-	if err != nil {
-		return err
-	}
-
 	teamID, err := validateTeamID(cliCtx)
 	if err != nil {
 		return err
@@ -115,7 +110,6 @@ func list(cliCtx *cli.Context) error {
 	resources, statuses := buildResourceList(res, oRes)
 
 	// Sort resources by name and filter by given app name
-	resources = filterResourcesByAppName(resources, appName)
 	sort.Sort(resourcesSortByName(resources))
 
 	// Write out the resources table
