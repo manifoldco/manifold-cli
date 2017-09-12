@@ -1,13 +1,11 @@
 package main
 
 import (
-	"bytes"
 	"context"
 	"fmt"
 	"os"
 	"sort"
 	"strings"
-	"text/tabwriter"
 
 	"github.com/juju/ansiterm"
 	"github.com/manifoldco/go-manifold"
@@ -109,15 +107,11 @@ func list(cliCtx *cli.Context) error {
 	sort.Sort(resourcesSortByName(resources))
 
 	// Write out the resources table
-	tw := tabwriter.NewWriter(os.Stdout, 0, 0, 8, ' ', 0)
+	tw := ansiterm.NewTabWriter(os.Stdout, 0, 0, 8, ' ', 0)
+	tw.SetForeground(ansiterm.Gray)
 
-	buf := &bytes.Buffer{}
-	w := ansiterm.NewWriter(buf)
-	ansiterm.Foreground(ansiterm.BrightRed).Fprintf(w, "ERROR")
-
-	ansiterm.Foreground(ansiterm.Black).Fprintf(w, "ERROR")
-
-	fmt.Fprintf(tw, "%s\t%s\t%s\n", "Label", "Type", buf.Bytes())
+	fmt.Fprintln(tw, "Label\tType\tStatus")
+	tw.SetForeground(ansiterm.Default)
 
 	for _, resource := range resources {
 		rType := "Custom"
@@ -143,7 +137,7 @@ func list(cliCtx *cli.Context) error {
 			status = "Ready"
 		}
 
-		fmt.Fprintf(w, "%s\t%s\t%s\n", resource.Body.Label, rType, status)
+		fmt.Fprintf(tw, "%s\t%s\t%s\n", resource.Body.Label, rType, status)
 	}
 	tw.Flush()
 	return nil
