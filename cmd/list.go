@@ -12,12 +12,20 @@ import (
 	"github.com/urfave/cli"
 
 	"github.com/manifoldco/manifold-cli/clients"
+	"github.com/manifoldco/manifold-cli/config"
 	"github.com/manifoldco/manifold-cli/data/catalog"
 	"github.com/manifoldco/manifold-cli/middleware"
+	"github.com/manifoldco/manifold-cli/session"
 
 	"github.com/manifoldco/manifold-cli/generated/marketplace/models"
 	pModels "github.com/manifoldco/manifold-cli/generated/provisioning/models"
 )
+
+type resourceOwner struct {
+	owner     string
+	project   string
+	resources []*models.Resource
+}
 
 type resourcesSortByName []*models.Resource
 
@@ -81,6 +89,11 @@ func list(cliCtx *cli.Context) error {
 		return cli.NewExitError("Failed to fetch catalog data: "+err.Error(), -1)
 	}
 
+	email, err := userEmail(ctx)
+	if err != nil {
+		return err
+	}
+
 	// Get resources
 	res, err := clients.FetchResources(ctx, marketplaceClient, teamID, projectLabel)
 	if err != nil {
@@ -94,44 +107,73 @@ func list(cliCtx *cli.Context) error {
 		return cli.NewExitError("Failed to fetch the list of operations: "+err.Error(), -1)
 	}
 
-	resources, statuses := buildResourceList(res, oRes)
-
-	// Sort resources by name
-	sort.Sort(resourcesSortByName(resources))
-
-	// Write out the resources table
-	tw := ansiterm.NewTabWriter(os.Stdout, 0, 0, 8, ' ', 0)
-	tw.SetForeground(ansiterm.Gray)
-
-	fmt.Fprintln(tw, "Label\tType\tStatus")
-	tw.SetForeground(ansiterm.Default)
-
-	for _, resource := range resources {
-		rType := "Custom"
-
-		if *resource.Body.Source != "custom" {
-			// Get catalog data
-			product, err := catalog.GetProduct(*resource.Body.ProductID)
-			if err != nil {
-				cli.NewExitError("Product referenced by resource does not exist: "+
-					err.Error(), -1)
-			}
-			plan, err := catalog.GetPlan(*resource.Body.PlanID)
-			if err != nil {
-				cli.NewExitError("Plan referenced by resource does not exist: "+
-					err.Error(), -1)
-			}
-
-			rType = fmt.Sprintf("%s %s", product.Body.Name, plan.Body.Name)
-		}
-
-		status, ok := statuses[resource.ID]
-		if !ok {
-			status = "Ready"
-		}
-
-		fmt.Fprintf(tw, "%s\t%s\t%s\n", resource.Body.Label, rType, status)
+	projects, err := clients.FetchProjects(ctx, marketplaceClient, teamID)
+	if err != nil {
+		return cli.NewExitError("Failed to fetch the list of projects: "+err.Error(), -1)
 	}
+
+	resources, statuses := buildResourceList(res, oRes)
+	groups := groupResources(resources, email)
+
+	fmt.Printf("%d resources in %d projects\n", len(resources), len(projects))
+	fmt.Println("Use `manifold view [label]` to display resource details")
+
+	tw := ansiterm.NewTabWriter(os.Stdout, 0, 0, 8, ' ', 0)
+
+	for _, group := range groups {
+		tw.SetStyle(ansiterm.Bold)
+		fmt.Fprintf(tw, "\n%s", group.owner)
+		tw.ClearStyle(ansiterm.Bold)
+
+		if group.project != "" {
+
+			// Find correct project label
+			for _, p := range projects {
+				if p.ID.String() == group.project {
+					group.project = string(p.Body.Label)
+				}
+			}
+
+			fmt.Fprint(tw, "/")
+			tw.SetStyle(ansiterm.Bold)
+			fmt.Fprint(tw, group.project)
+			tw.ClearStyle(ansiterm.Bold)
+		}
+
+		fmt.Fprintf(tw, "\n")
+
+		tw.SetForeground(ansiterm.Gray)
+		fmt.Fprintln(tw, "Label\tType\tStatus")
+		tw.SetForeground(ansiterm.Default)
+
+		for _, resource := range group.resources {
+			rType := "Custom"
+
+			if *resource.Body.Source != "custom" {
+				// Get catalog data
+				product, err := catalog.GetProduct(*resource.Body.ProductID)
+				if err != nil {
+					cli.NewExitError("Product referenced by resource does not exist: "+
+						err.Error(), -1)
+				}
+				plan, err := catalog.GetPlan(*resource.Body.PlanID)
+				if err != nil {
+					cli.NewExitError("Plan referenced by resource does not exist: "+
+						err.Error(), -1)
+				}
+
+				rType = fmt.Sprintf("%s %s", product.Body.Name, plan.Body.Name)
+			}
+
+			status, ok := statuses[resource.ID]
+			if !ok {
+				status = "Ready"
+			}
+
+			fmt.Fprintf(tw, "%s\t%s\t%s\n", resource.Body.Label, rType, status)
+		}
+	}
+
 	tw.Flush()
 	return nil
 }
@@ -200,4 +242,80 @@ func buildResourceList(resources []*models.Resource, operations []*pModels.Opera
 	}
 
 	return out, statuses
+}
+
+func groupResources(resources []*models.Resource, email string) []resourceOwner {
+	type group struct {
+		owner   string
+		project string
+	}
+
+	m := make(map[group][]*models.Resource)
+
+	// Group resources by team/me + projects
+	for _, r := range resources {
+		key := group{}
+
+		if r.Body.UserID != nil {
+			key.owner = email
+		} else {
+			key.owner = r.Body.TeamID.String()
+		}
+
+		if r.Body.ProjectID != nil {
+			key.project = r.Body.ProjectID.String()
+		}
+
+		list := m[key]
+		list = append(list, r)
+		m[key] = list
+	}
+
+	// Assemble groups into a single list, sorting resources by label
+	var groups []resourceOwner
+	for k, v := range m {
+		sort.Slice(v, func(i, j int) bool {
+			return v[i].Body.Label < v[j].Body.Label
+		})
+
+		groups = append(groups, resourceOwner{
+			owner:     k.owner,
+			project:   k.project,
+			resources: v,
+		})
+	}
+
+	// Sort groups by owner, project and name
+	sort.Slice(groups, func(i, j int) bool {
+		a := groups[i]
+		b := groups[j]
+
+		if a.owner != b.owner {
+			return a.owner < b.owner
+		}
+
+		return a.project < b.project
+	})
+
+	return groups
+}
+
+func userEmail(ctx context.Context) (string, error) {
+	cfg, err := config.Load()
+	if err != nil {
+		return "", cli.NewExitError(fmt.Sprintf("Could not load configuration: %s", err), -1)
+	}
+
+	s, err := session.Retrieve(ctx, cfg)
+	if err != nil {
+		return "", cli.NewExitError("Could not retrieve session: "+err.Error(), -1)
+	}
+
+	label := s.LabelInfo()
+
+	if label == nil && len(*label) < 2 {
+		return "", cli.NewExitError("Could not retrieve user email", -1)
+	}
+
+	return (*label)[1], nil
 }
