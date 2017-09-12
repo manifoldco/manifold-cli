@@ -36,7 +36,7 @@ func init() {
 		Subcommands: []cli.Command{
 			{
 				Name:      "create",
-				Usage:     "Create a new projects",
+				Usage:     "Create a new project",
 				Flags:     teamFlags,
 				ArgsUsage: "[name]",
 				Action: middleware.Chain(middleware.EnsureSession,
@@ -63,6 +63,15 @@ func init() {
 					updateProjectCmd),
 			},
 			{
+				Name:      "delete",
+				Usage:     "Delete a project",
+				Flags:     teamFlags,
+				ArgsUsage: "[name]",
+				Action: middleware.Chain(middleware.EnsureSession,
+					middleware.LoadTeamPrefs, deleteProjectCmd),
+			},
+			{
+
 				Name:      "add",
 				Usage:     "Adds or moves a resource to a project",
 				ArgsUsage: "[project-label] [resource-label]",
@@ -139,6 +148,7 @@ func createProjectCmd(cliCtx *cli.Context) error {
 		return cli.NewExitError(fmt.Sprintf("Could not create project: %s", err), -1)
 	}
 
+	spin.Stop()
 	fmt.Printf("Your project '%s' has been created\n", projectName)
 	return nil
 }
@@ -251,7 +261,104 @@ func updateProjectCmd(cliCtx *cli.Context) error {
 		return cli.NewExitError(fmt.Sprintf("Could not update project: %s", err), -1)
 	}
 
+	spin.Stop()
 	fmt.Printf("\nYour project \"%s\" has been updated\n", newProjectName)
+	return nil
+}
+
+func deleteProjectCmd(cliCtx *cli.Context) error {
+	ctx := context.Background()
+
+	if err := maxOptionalArgsLength(cliCtx, 1); err != nil {
+		return err
+	}
+
+	userID, err := loadUserID(ctx)
+	if err != nil {
+		return err
+	}
+
+	teamID, err := validateTeamID(cliCtx)
+	if err != nil {
+		return err
+	}
+
+	projectLabel, err := optionalArgName(cliCtx, 0, "project")
+	if err != nil {
+		return err
+	}
+
+	marketplaceClient, err := loadMarketplaceClient()
+	if err != nil {
+		return err
+	}
+
+	provisioningClient, err := loadProvisioningClient()
+	if err != nil {
+		return err
+	}
+
+	p, err := selectProject(ctx, projectLabel, teamID, marketplaceClient)
+	if err != nil {
+		return err
+	}
+
+	spin := prompts.NewSpinner(fmt.Sprintf("Deleting %s", p.Body.Label))
+	spin.Start()
+	defer spin.Stop()
+
+	ID, err := manifold.NewID(idtype.Operation)
+	if err != nil {
+		return err
+	}
+
+	typeStr := "operation"
+	version := int64(1)
+	state := "delete"
+	curTime := strfmt.DateTime(time.Now())
+	op := &pModels.Operation{
+		ID:      ID,
+		Type:    &typeStr,
+		Version: &version,
+		Body: &pModels.ProjectDelete{
+			ProjectID: p.ID,
+			State:     &state,
+		},
+	}
+
+	op.Body.SetCreatedAt(&curTime)
+	op.Body.SetUpdatedAt(&curTime)
+	if teamID == nil {
+		op.Body.SetUserID(userID)
+	} else {
+		op.Body.SetTeamID(teamID)
+	}
+
+	d := operation.NewPutOperationsIDParamsWithContext(ctx)
+	d.SetBody(op)
+	d.SetID(ID.String())
+
+	res, err := provisioningClient.Operation.PutOperationsID(d, nil)
+	if err != nil {
+		switch e := err.(type) {
+		case *operation.PutOperationsIDBadRequest:
+			return e.Payload
+		case *operation.PutOperationsIDUnauthorized:
+			return e.Payload
+		case *operation.PutOperationsIDNotFound:
+			return e.Payload
+		case *operation.PutOperationsIDConflict:
+			return e.Payload
+		case *operation.PutOperationsIDInternalServerError:
+			return errs.ErrSomethingWentHorriblyWrong
+		default:
+			return err
+		}
+	}
+
+	waitForOp(ctx, provisioningClient, res.Payload)
+	spin.Stop()
+	fmt.Printf("Your project '%s' has been deleted\n", projectLabel)
 	return nil
 }
 
@@ -465,18 +572,19 @@ func updateResourceProject(ctx context.Context, uid, tid *manifold.ID, r *mModel
 
 	if p != nil {
 		opBody.Body = &pModels.Move{
-			ProjectID: &p.ID,
-			State:     &state,
+			ResourceID: r.ID,
+			ProjectID:  &p.ID,
+			State:      &state,
 		}
 	} else {
 		opBody.Body = &pModels.Move{
-			State: &state,
+			ResourceID: r.ID,
+			State:      &state,
 		}
 	}
 
 	opBody.Body.SetCreatedAt(&curTime)
 	opBody.Body.SetUpdatedAt(&curTime)
-	opBody.Body.SetResourceID(r.ID)
 
 	if tid == nil {
 		opBody.Body.SetUserID(uid)

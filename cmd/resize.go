@@ -149,14 +149,14 @@ func resizeResource(ctx context.Context, r *mModels.Resource, p *cModels.Plan,
 		Type:    &typeStr,
 		Version: &version,
 		Body: &models.Resize{
-			PlanID: p.ID,
-			State:  &state,
+			PlanID:     p.ID,
+			ResourceID: r.ID,
+			State:      &state,
 		},
 	}
 
 	op.Body.SetCreatedAt(&curTime)
 	op.Body.SetUpdatedAt(&curTime)
-	op.Body.SetResourceID(r.ID)
 
 	if tid == nil {
 		op.Body.SetUserID(uid)
