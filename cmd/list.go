@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"os"
 	"sort"
-	"strings"
 
 	"github.com/juju/ansiterm"
 	"github.com/manifoldco/go-manifold"
@@ -31,19 +30,6 @@ type resourceGroup struct {
 	owner     string
 	project   string
 	resources []*models.Resource
-}
-
-type resourcesSortByName []*models.Resource
-
-func (r resourcesSortByName) Len() int {
-	return len(r)
-}
-func (r resourcesSortByName) Swap(i, j int) {
-	r[i], r[j] = r[j], r[i]
-}
-func (r resourcesSortByName) Less(i, j int) bool {
-	return strings.Compare(strings.ToLower(fmt.Sprintf("%s", r[i].Body.Name)),
-		fmt.Sprintf("%s", r[j].Body.Name)) > 0
 }
 
 func init() {
