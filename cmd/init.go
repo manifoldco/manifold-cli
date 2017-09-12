@@ -14,22 +14,21 @@ import (
 	"github.com/manifoldco/manifold-cli/errs"
 	"github.com/manifoldco/manifold-cli/middleware"
 	"github.com/manifoldco/manifold-cli/prompts"
-	"github.com/manifoldco/manifold-cli/session"
 )
 
 func init() {
 	initCmd := cli.Command{
 		Name:     "init",
-		Usage:    "Initialize the current directory for a specified app",
+		Usage:    "Initialize the current directory for a specified project",
 		Category: "ADMINISTRATIVE",
 		Flags: append(teamFlags, []cli.Flag{
 			appFlag(),
 			cli.BoolFlag{
 				Name:  "force, f",
-				Usage: "Overwrite existing app",
+				Usage: "Overwrite existing project",
 			},
 		}...),
-		Action: middleware.Chain(middleware.LoadDirPrefs, middleware.LoadTeamPrefs, initDir),
+		Action: middleware.Chain(middleware.EnsureSession, middleware.LoadDirPrefs, middleware.LoadTeamPrefs, initDir),
 	}
 
 	cmds = append(cmds, initCmd)
@@ -37,7 +36,7 @@ func init() {
 
 func initDir(cliCtx *cli.Context) error {
 	ctx := context.Background()
-	appName := cliCtx.String("app")
+	projectLabel := cliCtx.String("project")
 
 	teamID, err := validateTeamID(cliCtx)
 	if err != nil {
@@ -50,53 +49,38 @@ func initDir(cliCtx *cli.Context) error {
 	}
 
 	if mYaml != nil && mYaml.Path != "" && !cliCtx.Bool("force") {
-		return cli.NewExitError(fmt.Sprintf("This directory is already linked to application `%s`.", mYaml.App), -1)
+		return cli.NewExitError(fmt.Sprintf("This directory is already linked to project `%s`.", mYaml.Project), -1)
 	}
 
-	cfg, err := config.Load()
+	mClient, err := loadMarketplaceClient()
 	if err != nil {
-		return cli.NewExitError("Could not load config: "+err.Error(), -1)
+		return err
 	}
 
-	s, err := session.Retrieve(ctx, cfg)
+	ps, err := clients.FetchProjects(ctx, mClient, teamID)
 	if err != nil {
-		return cli.NewExitError("Could not retrieve session: "+err.Error(), -1)
+		return cli.NewExitError(fmt.Sprintf("Failed to load projects: %s", err), -1)
 	}
-	if !s.Authenticated() {
-		return errs.ErrNotLoggedIn
+	if len(ps) == 0 {
+		return errs.ErrNoProjects
 	}
 
-	mClient, err := clients.NewMarketplace(cfg)
+	pIdx, _, err := prompts.SelectProject(ps, projectLabel, true)
 	if err != nil {
-		return cli.NewExitError("Failed to create a Marketplace API client: "+
-			err.Error(), -1)
+		return prompts.HandleSelectError(err, "Could not select project.")
 	}
-
-	res, err := clients.FetchResources(ctx, mClient, teamID, "")
-	if err != nil {
-		return cli.NewExitError("Failed to fetch resource list: "+err.Error(), -1)
-	}
-
-	appNames := fetchUniqueAppNames(res)
-	if len(appNames) == 0 {
-		return errs.ErrNoApps
-	}
-
-	newA, appName, err := prompts.SelectCreateAppName(appNames, appName, true)
-	if err != nil {
-		return prompts.HandleSelectError(err, "Could not select app.")
-	}
-	if newA == -1 {
-		// TODO: create app name that doesn't exist yet
-		// https://github.com/manifoldco/engineering/issues/2614
-		return cli.NewExitError("Whoops! A new app cannot be created without a resource", -1)
+	if pIdx == -1 {
+		projectLabel = ""
+	} else {
+		projectLabel = string(ps[pIdx].Body.Label)
 	}
 
 	cwd, err := os.Getwd()
 	if err != nil {
 		return err
 	}
-	mYaml.App = appName
+	oldLabel := mYaml.Project
+	mYaml.Project = projectLabel
 	mYaml.Path = filepath.Join(cwd, config.YamlFilename)
 
 	err = mYaml.Save()
@@ -104,11 +88,18 @@ func initDir(cliCtx *cli.Context) error {
 		return err
 	}
 
-	// Display the output
-	fmt.Println("\nThis directory and its subdirectories have been linked to:")
-	w := tabwriter.NewWriter(os.Stdout, 2, 0, 1, ' ', 0)
-	fmt.Fprintf(w, "App:\t%s\n", appName)
-	w.Flush()
+	if mYaml.Project == "" {
+		fmt.Println("\nThis directory and its subdirectories have been unlinked from:")
+		w := tabwriter.NewWriter(os.Stdout, 2, 0, 1, ' ', 0)
+		fmt.Fprintf(w, "Project:\t%s\n", oldLabel)
+		w.Flush()
+	} else {
+		// Display the output
+		fmt.Println("\nThis directory and its subdirectories have been linked to:")
+		w := tabwriter.NewWriter(os.Stdout, 2, 0, 1, ' ', 0)
+		fmt.Fprintf(w, "Project:\t%s\n", projectLabel)
+		w.Flush()
+	}
 
 	return nil
 }
