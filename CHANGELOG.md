@@ -15,11 +15,14 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - `projects list` command to list projects
 - `projects remove` to remove a resource from a project
 - `projects update` command to update an existing project
+- `verify $EMAIL_CODE` command to verify users e-mail with the CLI
 
 ### Fixed
 
 - `view` command to show project label instead of app name
 - `update` command to accept project label instead of app name
+- Fetching resources or operations with nil team returns personal account
+- `list` now adheres to team context for operations
 
 ### Removed
 

@@ -1,5 +1,5 @@
-hash: ae48d6cce457eae412604700d502dd67548687476303250679e4c2abba27ce47
-updated: 2017-09-11T17:36:59.451092636-03:00
+hash: 21e1465facd47112801da0cbfd3ef92ee918574d68a8b7281bb1a4e65ae78b85
+updated: 2017-09-12T10:45:26.46256735-03:00
 imports:
 - name: github.com/alecthomas/gometalinter
   version: bae2f1293d092fd8167939d5108d1b025eaef9de
@@ -70,7 +70,7 @@ imports:
 - name: github.com/manifoldco/go-base64
   version: bb5e620cf51d2bbe78e624a2c27117655ce73acc
 - name: github.com/manifoldco/go-manifold
-  version: 8a4b15ba2615d028131c7050c9d0c5565266105e
+  version: d7f843e17a66eb40fcdaafa36896f086cbbc214b
   subpackages:
   - errors
   - idtype

@@ -23,8 +23,8 @@ func FetchOperations(ctx context.Context, c *pClient.Provisioning, teamID *manif
 
 	var results []*pModels.Operation
 	for _, o := range res.Payload {
-		if teamID != nil && o.Body.TeamID() != nil && teamID.String() == o.Body.TeamID().String() ||
-			teamID == nil && o.Body.TeamID() == nil {
+		if (teamID == nil && o.Body.TeamID() == nil) ||
+			(teamID != nil && o.Body.TeamID() != nil && teamID.String() == o.Body.TeamID().String()) {
 			results = append(results, o)
 		}
 	}
@@ -41,8 +41,8 @@ func FetchResources(ctx context.Context, c *mClient.Marketplace, teamID *manifol
 
 	var results []*mModels.Resource
 	for _, r := range res.Payload {
-		if teamID != nil && r.Body.TeamID != nil && teamID.String() == r.Body.TeamID.String() ||
-			teamID == nil && r.Body.TeamID == nil {
+		if (teamID == nil && r.Body.TeamID == nil) ||
+			(teamID != nil && r.Body.TeamID != nil && teamID.String() == r.Body.TeamID.String()) {
 			results = append(results, r)
 		}
 	}

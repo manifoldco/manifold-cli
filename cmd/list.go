@@ -98,7 +98,7 @@ func list(cliCtx *cli.Context) error {
 	}
 
 	// Get operations
-	oRes, err := clients.FetchOperations(ctx, provisionClient, nil)
+	oRes, err := clients.FetchOperations(ctx, provisionClient, teamID)
 	if err != nil {
 		return cli.NewExitError("Failed to fetch the list of operations: "+err.Error(), -1)
 	}
