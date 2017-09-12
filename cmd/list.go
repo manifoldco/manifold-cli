@@ -21,7 +21,13 @@ import (
 	pModels "github.com/manifoldco/manifold-cli/generated/provisioning/models"
 )
 
-type resourceOwner struct {
+type resourceList struct {
+	totalResources int
+	totalProjects  int
+	groups         []resourceGroup
+}
+
+type resourceGroup struct {
 	owner     string
 	project   string
 	resources []*models.Resource
@@ -89,11 +95,6 @@ func list(cliCtx *cli.Context) error {
 		return cli.NewExitError("Failed to fetch catalog data: "+err.Error(), -1)
 	}
 
-	email, err := userEmail(ctx)
-	if err != nil {
-		return err
-	}
-
 	// Get resources
 	res, err := clients.FetchResources(ctx, marketplaceClient, teamID, projectLabel)
 	if err != nil {
@@ -107,32 +108,24 @@ func list(cliCtx *cli.Context) error {
 		return cli.NewExitError("Failed to fetch the list of operations: "+err.Error(), -1)
 	}
 
-	projects, err := clients.FetchProjects(ctx, marketplaceClient, teamID)
+	resources, statuses := buildResourceList(res, oRes)
+
+	list, err := groupResources(ctx, resources, teamID)
 	if err != nil {
-		return cli.NewExitError("Failed to fetch the list of projects: "+err.Error(), -1)
+		return err
 	}
 
-	resources, statuses := buildResourceList(res, oRes)
-	groups := groupResources(resources, email)
-
-	fmt.Printf("%d resources in %d projects\n", len(resources), len(projects))
+	fmt.Printf("%d resources in %d projects\n", list.totalResources, list.totalProjects)
 	fmt.Println("Use `manifold view [label]` to display resource details")
 
 	tw := ansiterm.NewTabWriter(os.Stdout, 0, 0, 8, ' ', 0)
 
-	for _, group := range groups {
+	for _, group := range list.groups {
 		tw.SetStyle(ansiterm.Bold)
 		fmt.Fprintf(tw, "\n%s", group.owner)
 		tw.ClearStyle(ansiterm.Bold)
 
 		if group.project != "" {
-
-			// Find correct project label
-			for _, p := range projects {
-				if p.ID.String() == group.project {
-					group.project = string(p.Body.Label)
-				}
-			}
 
 			fmt.Fprint(tw, "/")
 			tw.SetStyle(ansiterm.Bold)
@@ -244,10 +237,40 @@ func buildResourceList(resources []*models.Resource, operations []*pModels.Opera
 	return out, statuses
 }
 
-func groupResources(resources []*models.Resource, email string) []resourceOwner {
+func groupResources(ctx context.Context, resources []*models.Resource, teamID *manifold.ID) (resourceList, error) {
+	list := resourceList{
+		totalResources: len(resources),
+	}
+
+	email, err := userEmail(ctx)
+	if err != nil {
+		return list, err
+	}
+
+	marketplaceClient, err := loadMarketplaceClient()
+	if err != nil {
+		return list, err
+	}
+
+	identityClient, err := loadIdentityClient()
+	if err != nil {
+		return list, err
+	}
+
+	projects, err := clients.FetchProjects(ctx, marketplaceClient, teamID)
+	if err != nil {
+		return list, cli.NewExitError("Failed to fetch the list of projects: "+err.Error(), -1)
+	}
+
+	teams, err := clients.FetchTeams(ctx, identityClient)
+	if err != nil {
+		return list, err
+	}
+
 	type group struct {
-		owner   string
-		project string
+		user    *manifold.ID
+		team    *manifold.ID
+		project *manifold.ID
 	}
 
 	m := make(map[group][]*models.Resource)
@@ -257,14 +280,12 @@ func groupResources(resources []*models.Resource, email string) []resourceOwner 
 		key := group{}
 
 		if r.Body.UserID != nil {
-			key.owner = email
+			key.user = r.Body.UserID
 		} else {
-			key.owner = r.Body.TeamID.String()
+			key.team = r.Body.TeamID
 		}
 
-		if r.Body.ProjectID != nil {
-			key.project = r.Body.ProjectID.String()
-		}
+		key.project = r.Body.ProjectID
 
 		list := m[key]
 		list = append(list, r)
@@ -272,15 +293,39 @@ func groupResources(resources []*models.Resource, email string) []resourceOwner 
 	}
 
 	// Assemble groups into a single list, sorting resources by label
-	var groups []resourceOwner
+	var groups []resourceGroup
 	for k, v := range m {
 		sort.Slice(v, func(i, j int) bool {
 			return v[i].Body.Label < v[j].Body.Label
 		})
 
-		groups = append(groups, resourceOwner{
-			owner:     k.owner,
-			project:   k.project,
+		var owner string
+		var project string
+
+		// Find the correct owner, either a team label or the user email
+		if k.user != nil {
+			owner = email
+		} else {
+			for _, t := range teams {
+				if t.ID == *k.team {
+					owner = string(t.Body.Label)
+				}
+			}
+		}
+
+		// Find the project label if any
+		if k.project != nil {
+			list.totalProjects++
+			for _, p := range projects {
+				if p.ID == *k.project {
+					project = string(p.Body.Label)
+				}
+			}
+		}
+
+		groups = append(groups, resourceGroup{
+			owner:     owner,
+			project:   project,
 			resources: v,
 		})
 	}
@@ -297,9 +342,12 @@ func groupResources(resources []*models.Resource, email string) []resourceOwner 
 		return a.project < b.project
 	})
 
-	return groups
+	list.groups = groups
+
+	return list, nil
 }
 
+// userEmail returns the user email based on the authenticated session
 func userEmail(ctx context.Context) (string, error) {
 	cfg, err := config.Load()
 	if err != nil {
