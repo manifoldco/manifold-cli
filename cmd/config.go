@@ -80,7 +80,7 @@ func patchConfig(cliCtx *cli.Context, req map[string]*string) error {
 		return cli.NewExitError("Could not create marketplace client: "+err.Error(), -1)
 	}
 
-	resources, err := clients.FetchResources(ctx, marketplace, teamID)
+	resources, err := clients.FetchResources(ctx, marketplace, teamID, "")
 	if err != nil {
 		return cli.NewExitError("Could not retrieve resources: "+err.Error(), -1)
 	}

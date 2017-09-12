@@ -100,7 +100,7 @@ func list(cliCtx *cli.Context) error {
 	}
 
 	// Get resources
-	res, err := clients.FetchResources(ctx, marketplaceClient, teamID)
+	res, err := clients.FetchResources(ctx, marketplaceClient, teamID, "")
 	if err != nil {
 		return cli.NewExitError("Failed to fetch the list of provisioned "+
 			"resources: "+err.Error(), -1)
