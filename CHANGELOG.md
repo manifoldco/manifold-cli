@@ -29,6 +29,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 - `apps` commands, replaced with `projects` commands
 - `rename` command in favour of `update`
+- Fix `--me` when in a team context
 
 ## [0.4.0] - 2017-08-31
 
