@@ -254,9 +254,9 @@ func groupResources(ctx context.Context, resources []*models.Resource, teamID *m
 	}
 
 	type group struct {
-		user    *manifold.ID
-		team    *manifold.ID
-		project *manifold.ID
+		user    manifold.ID
+		team    manifold.ID
+		project manifold.ID
 	}
 
 	m := make(map[group][]*models.Resource)
@@ -266,12 +266,14 @@ func groupResources(ctx context.Context, resources []*models.Resource, teamID *m
 		key := group{}
 
 		if r.Body.UserID != nil {
-			key.user = r.Body.UserID
+			key.user = *r.Body.UserID
 		} else {
-			key.team = r.Body.TeamID
+			key.team = *r.Body.TeamID
 		}
 
-		key.project = r.Body.ProjectID
+		if r.Body.ProjectID != nil {
+			key.project = *r.Body.ProjectID
+		}
 
 		list := m[key]
 		list = append(list, r)
@@ -289,21 +291,21 @@ func groupResources(ctx context.Context, resources []*models.Resource, teamID *m
 		var project string
 
 		// Find the correct owner, either a team label or the user email
-		if k.user != nil {
+		if !k.user.IsEmpty() {
 			owner = email
 		} else {
 			for _, t := range teams {
-				if t.ID == *k.team {
+				if t.ID == k.team {
 					owner = string(t.Body.Label)
 				}
 			}
 		}
 
 		// Find the project label if any
-		if k.project != nil {
+		if !k.project.IsEmpty() {
 			list.totalProjects++
 			for _, p := range projects {
-				if p.ID == *k.project {
+				if p.ID == k.project {
 					project = string(p.Body.Label)
 				}
 			}
