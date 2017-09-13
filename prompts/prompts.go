@@ -38,23 +38,6 @@ func formatResourceListItem(r *mModels.Resource) string {
 	return fmt.Sprintf("%s/%s", r.Body.AppName, bold(r.Body.Label))
 }
 
-type productsSortByName []*cModels.Product
-
-func (p productsSortByName) Len() int {
-	return len(p)
-}
-
-func (p productsSortByName) Swap(i, j int) {
-	p[i], p[j] = p[j], p[i]
-}
-
-func (p productsSortByName) Less(i, j int) bool {
-	return strings.Compare(
-		strings.ToLower(fmt.Sprintf("%s", p[i].Body.Name)),
-		strings.ToLower(fmt.Sprintf("%s", p[j].Body.Name)),
-	) < 0
-}
-
 // SelectProduct prompts the user to select a product from the given list.
 func SelectProduct(products []*cModels.Product, label string) (int, string, error) {
 	line := func(p *cModels.Product) string {
@@ -81,7 +64,12 @@ func SelectProduct(products []*cModels.Product, label string) (int, string, erro
 		return idx, label, nil
 	}
 
-	sort.Sort(productsSortByName(products))
+	sort.Slice(products, func(i, j int) bool {
+		a := fmt.Sprintf("%s", products[i].Body.Name)
+		b := fmt.Sprintf("%s", products[j].Body.Name)
+		return strings.ToLower(a) < strings.ToLower(b)
+	})
+
 	labels := make([]string, len(products))
 	for i, p := range products {
 		labels[i] = line(p)
