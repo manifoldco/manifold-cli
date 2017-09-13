@@ -63,8 +63,9 @@ func init() {
 					updateProjectCmd),
 			},
 			{
-				Name:  "add",
-				Usage: "Adds or moves a resource to a project",
+				Name:      "add",
+				Usage:     "Adds or moves a resource to a project",
+				ArgsUsage: "[project-label] [resource-label]",
 				Flags: append(teamFlags, []cli.Flag{
 					skipFlag(),
 				}...),
