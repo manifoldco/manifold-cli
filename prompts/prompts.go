@@ -30,20 +30,6 @@ const NumberMask = '#'
 
 var errBad = promptui.NewValidationError("Bad Value")
 
-type plansSortByCost []*cModels.Plan
-
-func (p plansSortByCost) Len() int {
-	return len(p)
-}
-
-func (p plansSortByCost) Swap(i, j int) {
-	p[i], p[j] = p[j], p[i]
-}
-
-func (p plansSortByCost) Less(i, j int) bool {
-	return *p[i].Body.Cost < *p[j].Body.Cost
-}
-
 func formatResourceListItem(r *mModels.Resource) string {
 	bold := color.New(color.Bold).SprintFunc()
 	if r.Body.AppName == "" {
@@ -139,7 +125,9 @@ func SelectPlan(plans []*cModels.Plan, label string, filterLabelTop bool) (int, 
 		}
 	}
 
-	sort.Sort(plansSortByCost(plans))
+	sort.Slice(plans, func(i, j int) bool {
+		return *plans[i].Body.Cost < *plans[j].Body.Cost
+	})
 	labels := make([]string, len(plans))
 
 	var selectedIdx int
