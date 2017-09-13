@@ -11,7 +11,6 @@ import (
 	"github.com/urfave/cli"
 
 	"github.com/manifoldco/manifold-cli/clients"
-	"github.com/manifoldco/manifold-cli/config"
 	"github.com/manifoldco/manifold-cli/data/catalog"
 	"github.com/manifoldco/manifold-cli/errs"
 	"github.com/manifoldco/manifold-cli/middleware"
@@ -57,26 +56,19 @@ func view(cliCtx *cli.Context) error {
 		return err
 	}
 
-	cfg, err := config.Load()
+	marketplaceClient, err := loadMarketplaceClient()
 	if err != nil {
-		return cli.NewExitError(fmt.Sprintf("Could not load configuration: %s", err), -1)
+		return err
 	}
 
-	marketplaceClient, err := clients.NewMarketplace(cfg)
+	catalogClient, err := loadCatalogClient()
 	if err != nil {
-		return cli.NewExitError(fmt.Sprintf("Failed to create Maketplace Client: %s", err), -1)
+		return err
 	}
 
-	catalogClient, err := clients.NewCatalog(cfg)
+	pClient, err := loadProvisioningClient()
 	if err != nil {
-		return cli.NewExitError("Failed to create a Catalog API client: "+
-			err.Error(), -1)
-	}
-
-	pClient, err := clients.NewProvisioning(cfg)
-	if err != nil {
-		return cli.NewExitError("Failed to create a Provisioning API Client: "+
-			err.Error(), -1)
+		return err
 	}
 
 	// Get catalog
@@ -95,6 +87,14 @@ func view(cliCtx *cli.Context) error {
 		return errs.ErrNoResources
 	}
 
+	// Get operations
+	oRes, err := clients.FetchOperations(ctx, pClient, teamID)
+	if err != nil {
+		return cli.NewExitError("Failed to fetch the list of operations: "+err.Error(), -1)
+	}
+
+	resources, statuses := buildResourceList(resources, oRes)
+
 	var resource *mModels.Resource
 	if resourceLabel != "" {
 		resource, err = pickResourcesByLabel(resources, resourceLabel)
@@ -108,12 +108,6 @@ func view(cliCtx *cli.Context) error {
 			return prompts.HandleSelectError(err, "Could not select Resource")
 		}
 		resource = resources[idx]
-	}
-
-	// Get operations
-	oRes, err := clients.FetchOperations(ctx, pClient, nil)
-	if err != nil {
-		return cli.NewExitError("Failed to fetch the list of operations: "+err.Error(), -1)
 	}
 
 	bold := color.New(color.Bold).SprintFunc()
@@ -149,7 +143,6 @@ func view(cliCtx *cli.Context) error {
 		regionName = string(region.Body.Name)
 	}
 
-	_, statuses := buildResourceList(resources, oRes)
 	status, ok := statuses[resource.ID]
 	if !ok {
 		green := color.New(color.FgGreen).SprintFunc()
