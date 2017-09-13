@@ -11,9 +11,7 @@ import (
 
 	"github.com/urfave/cli"
 
-	"github.com/manifoldco/manifold-cli/analytics"
 	"github.com/manifoldco/manifold-cli/clients"
-	"github.com/manifoldco/manifold-cli/config"
 	"github.com/manifoldco/manifold-cli/errs"
 	"github.com/manifoldco/manifold-cli/middleware"
 	"github.com/manifoldco/manifold-cli/session"
@@ -142,25 +140,4 @@ func filterEnv() []string {
 	}
 
 	return env
-}
-
-func loadAnalytics() (*analytics.Analytics, error) {
-	ctx := context.Background()
-
-	cfg, err := config.Load()
-	if err != nil {
-		return nil, cli.NewExitError(fmt.Sprintf("Failed to load configuration: %s", err), -1)
-	}
-
-	s, err := session.Retrieve(ctx, cfg)
-	if err != nil {
-		return nil, cli.NewExitError(fmt.Sprintf("Failed to load authenticated session: %s", err), -1)
-	}
-
-	a, err := analytics.New(cfg, s)
-	if err != nil {
-		return nil, cli.NewExitError(fmt.Sprintf("Failed to load analytics agent: %s", err), -1)
-	}
-
-	return a, nil
 }

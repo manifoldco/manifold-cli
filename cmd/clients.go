@@ -1,8 +1,10 @@
 package main
 
 import (
+	"context"
 	"fmt"
 
+	"github.com/manifoldco/manifold-cli/analytics"
 	"github.com/manifoldco/manifold-cli/clients"
 	"github.com/manifoldco/manifold-cli/config"
 	billing "github.com/manifoldco/manifold-cli/generated/billing/client"
@@ -10,6 +12,7 @@ import (
 	identity "github.com/manifoldco/manifold-cli/generated/identity/client"
 	marketplace "github.com/manifoldco/manifold-cli/generated/marketplace/client"
 	provisioning "github.com/manifoldco/manifold-cli/generated/provisioning/client"
+	"github.com/manifoldco/manifold-cli/session"
 	"github.com/urfave/cli"
 )
 
@@ -87,4 +90,25 @@ func loadCatalogClient() (*catalog.Catalog, error) {
 	}
 
 	return c, nil
+}
+
+func loadAnalytics() (*analytics.Analytics, error) {
+	ctx := context.Background()
+
+	cfg, err := config.Load()
+	if err != nil {
+		return nil, cli.NewExitError(fmt.Sprintf("Failed to load configuration: %s", err), -1)
+	}
+
+	s, err := session.Retrieve(ctx, cfg)
+	if err != nil {
+		return nil, cli.NewExitError(fmt.Sprintf("Failed to load authenticated session: %s", err), -1)
+	}
+
+	a, err := analytics.New(cfg, s)
+	if err != nil {
+		return nil, cli.NewExitError(fmt.Sprintf("Failed to load analytics agent: %s", err), -1)
+	}
+
+	return a, nil
 }
