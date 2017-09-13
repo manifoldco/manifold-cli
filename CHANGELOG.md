@@ -26,6 +26,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 - Fetching resources or operations with nil team returns personal account
 - Operations not assigning team and project id
+- SelectResource to use project label instead of app name
 - `view` command to show project label instead of app name
 - `update` command to accept project label instead of app name
 - `export` command to accept project label instead of app name
