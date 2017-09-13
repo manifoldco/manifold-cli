@@ -179,7 +179,6 @@ func buildResourceList(resources []*models.Resource, operations []*pModels.Opera
 			out = append(out, &models.Resource{
 				ID: op.Body.ResourceID(),
 				Body: &models.ResourceBody{
-					AppName:   manifold.Name(body.AppName),
 					CreatedAt: op.Body.CreatedAt(),
 					UpdatedAt: op.Body.UpdatedAt(),
 					Label:     manifold.Label(*body.Label),
@@ -189,6 +188,8 @@ func buildResourceList(resources []*models.Resource, operations []*pModels.Opera
 					ProductID: body.ProductID,
 					RegionID:  body.RegionID,
 					UserID:    op.Body.UserID(),
+					TeamID:    op.Body.TeamID(),
+					ProjectID: body.ProjectID,
 				},
 			})
 		case "resize":
