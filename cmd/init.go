@@ -22,7 +22,7 @@ func init() {
 		Usage:    "Initialize the current directory for a specified project",
 		Category: "ADMINISTRATIVE",
 		Flags: append(teamFlags, []cli.Flag{
-			appFlag(),
+			projectFlag(),
 			cli.BoolFlag{
 				Name:  "force, f",
 				Usage: "Overwrite existing project",
