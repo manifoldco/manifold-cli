@@ -44,23 +44,6 @@ func (p plansSortByCost) Less(i, j int) bool {
 	return *p[i].Body.Cost < *p[j].Body.Cost
 }
 
-type resourcesSortByName []*mModels.Resource
-
-func (p resourcesSortByName) Len() int {
-	return len(p)
-}
-
-func (p resourcesSortByName) Swap(i, j int) {
-	p[i], p[j] = p[j], p[i]
-}
-
-func (p resourcesSortByName) Less(i, j int) bool {
-	return strings.Compare(
-		strings.ToLower(formatResourceListItem(p[i])),
-		strings.ToLower(formatResourceListItem(p[j])),
-	) < 0
-}
-
 func formatResourceListItem(r *mModels.Resource) string {
 	bold := color.New(color.Bold).SprintFunc()
 	if r.Body.AppName == "" {
@@ -206,7 +189,12 @@ func SelectResource(resources []*mModels.Resource, label string) (int, string, e
 		return idx, label, nil
 	}
 
-	sort.Sort(resourcesSortByName(resources))
+	sort.Slice(resources, func(i, j int) bool {
+		a := formatResourceListItem(resources[i])
+		b := formatResourceListItem(resources[j])
+		return strings.ToLower(a) < strings.ToLower(b)
+	})
+
 	labels := make([]string, len(resources))
 	for i, r := range resources {
 		labels[i] = line(r)
