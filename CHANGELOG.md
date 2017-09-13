@@ -18,13 +18,16 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - `verify $EMAIL_CODE` command to verify users e-mail with the CLI
 - `run` supports --project/-p
 - `init` saves project context instead of app context
+- `list` improved UI
 
 ### Fixed
 
+- Fetching resources or operations with nil team returns personal account
 - `view` command to show project label instead of app name
 - `update` command to accept project label instead of app name
-- Fetching resources or operations with nil team returns personal account
+- `list` accepts project flag instead of app name
 - `list` now adheres to team context for operations
+- `view` resource still in provision
 
 ### Removed
 

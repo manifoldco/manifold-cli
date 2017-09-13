@@ -17,7 +17,6 @@ import (
 	"github.com/manifoldco/go-manifold"
 	"github.com/manifoldco/go-manifold/idtype"
 	"github.com/manifoldco/manifold-cli/clients"
-	"github.com/manifoldco/manifold-cli/config"
 	"github.com/manifoldco/manifold-cli/errs"
 	mClient "github.com/manifoldco/manifold-cli/generated/marketplace/client"
 	projectClient "github.com/manifoldco/manifold-cli/generated/marketplace/client/project"
@@ -506,36 +505,6 @@ func updateResourceProject(ctx context.Context, uid, tid *manifold.ID, r *mModel
 
 	_, err = waitForOp(ctx, provisioningClient, res.Payload)
 	return err
-}
-
-// loadMarketplaceClient returns an identify client based on the configuration file.
-func loadMarketplaceClient() (*mClient.Marketplace, error) {
-	cfg, err := config.Load()
-	if err != nil {
-		return nil, cli.NewExitError(fmt.Sprintf("Could not load configuration: %s", err), -1)
-	}
-
-	identityClient, err := clients.NewMarketplace(cfg)
-	if err != nil {
-		return nil, cli.NewExitError(fmt.Sprintf("Failed to create Marketplace client: %s", err), -1)
-	}
-
-	return identityClient, nil
-}
-
-// loadProvisioningClient returns a provisioning client based on the configuration file.
-func loadProvisioningClient() (*pClient.Provisioning, error) {
-	cfg, err := config.Load()
-	if err != nil {
-		return nil, cli.NewExitError(fmt.Sprintf("Could not load configuration: %s", err), -1)
-	}
-
-	provisioningClient, err := clients.NewProvisioning(cfg)
-	if err != nil {
-		return nil, cli.NewExitError(fmt.Sprintf("Failed to create Provisioning client: %s", err), -1)
-	}
-
-	return provisioningClient, nil
 }
 
 // selectProject prompts a user to select a project (if selects the one provided automatically)
