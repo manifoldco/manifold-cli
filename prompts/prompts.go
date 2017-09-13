@@ -23,6 +23,7 @@ import (
 const (
 	namePattern   = "^[a-zA-Z\\s,\\.'\\-pL]{1,64}$"
 	couponPattern = "^[0-9A-Z]{1,128}$"
+	codePattern   = "^[0-9abcdefghjkmnpqrtuvwxyz]{16}$"
 )
 
 // NumberMask is the character used to mask number inputs
@@ -598,6 +599,25 @@ func CouponCode() (string, error) {
 			}
 			return promptui.NewValidationError("Please enter a valid code")
 		},
+	}
+
+	return p.Run()
+}
+
+// EmailVerificationCode prompts the user to input a person's name
+func EmailVerificationCode(defaultValue string) (string, error) {
+	p := promptui.Prompt{
+		Label: "E-mail Verification Code",
+		Validate: func(input string) error {
+			if govalidator.StringMatches(input, codePattern) {
+				return nil
+			}
+			return promptui.NewValidationError("Please enter a valid e-mail " +
+				"verification code")
+		},
+	}
+	if defaultValue != "" {
+		p.Default = defaultValue
 	}
 
 	return p.Run()

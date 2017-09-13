@@ -10,6 +10,7 @@ import (
 	"github.com/manifoldco/manifold-cli/clients"
 	"github.com/manifoldco/manifold-cli/config"
 	"github.com/manifoldco/manifold-cli/errs"
+	"github.com/manifoldco/manifold-cli/prompts"
 	"github.com/manifoldco/manifold-cli/session"
 
 	"github.com/manifoldco/manifold-cli/generated/identity/client/user"
@@ -31,7 +32,18 @@ func init() {
 func verifyEmailCode(cliCtx *cli.Context) error {
 	ctx := context.Background()
 
-	verificationCode, err := optionalArgCode(cliCtx, 0, "email verification")
+	if err := maxOptionalArgsLength(cliCtx, 1); err != nil {
+		return err
+	}
+
+	verificationCode, err := optionalArgCode(cliCtx, 0, "e-mail verification")
+	if err != nil {
+		return err
+	}
+
+	if verificationCode == "" {
+		verificationCode, err = prompts.EmailVerificationCode("")
+	}
 	if err != nil {
 		return err
 	}
