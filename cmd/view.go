@@ -95,6 +95,14 @@ func view(cliCtx *cli.Context) error {
 		return errs.ErrNoResources
 	}
 
+	// Get operations
+	oRes, err := clients.FetchOperations(ctx, pClient, teamID)
+	if err != nil {
+		return cli.NewExitError("Failed to fetch the list of operations: "+err.Error(), -1)
+	}
+
+	resources, statuses := buildResourceList(resources, oRes)
+
 	var resource *mModels.Resource
 	if resourceLabel != "" {
 		resource, err = pickResourcesByLabel(resources, resourceLabel)
@@ -108,12 +116,6 @@ func view(cliCtx *cli.Context) error {
 			return prompts.HandleSelectError(err, "Could not select Resource")
 		}
 		resource = resources[idx]
-	}
-
-	// Get operations
-	oRes, err := clients.FetchOperations(ctx, pClient, nil)
-	if err != nil {
-		return cli.NewExitError("Failed to fetch the list of operations: "+err.Error(), -1)
 	}
 
 	bold := color.New(color.Bold).SprintFunc()
@@ -149,7 +151,6 @@ func view(cliCtx *cli.Context) error {
 		regionName = string(region.Body.Name)
 	}
 
-	_, statuses := buildResourceList(resources, oRes)
 	status, ok := statuses[resource.ID]
 	if !ok {
 		green := color.New(color.FgGreen).SprintFunc()
