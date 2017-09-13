@@ -112,7 +112,6 @@ func list(cliCtx *cli.Context) error {
 		tw.ClearStyle(ansiterm.Bold)
 
 		if group.project != "" {
-
 			fmt.Fprint(tw, "/")
 			tw.SetStyle(ansiterm.Bold)
 			fmt.Fprint(tw, group.project)
@@ -123,7 +122,7 @@ func list(cliCtx *cli.Context) error {
 
 		tw.SetForeground(ansiterm.Gray)
 		fmt.Fprintln(tw, "Label\tType\tStatus")
-		tw.SetForeground(ansiterm.Default)
+		tw.Reset()
 
 		for _, resource := range group.resources {
 			rType := "Custom"

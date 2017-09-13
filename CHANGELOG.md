@@ -10,6 +10,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ### Added
 
 - Group commands into categories for better help output
+- Update sorting function to use `sort.Slice`
+- Sort plan by price and name during resource creation
 - `projects add` to add a resource to a project
 - `projects create` command to create new projects
 - `projects list` command to list projects
