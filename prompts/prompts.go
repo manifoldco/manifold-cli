@@ -31,12 +31,12 @@ const NumberMask = '#'
 
 var errBad = promptui.NewValidationError("Bad Value")
 
-func formatResourceListItem(r *mModels.Resource) string {
+func formatResourceListItem(r *mModels.Resource, project string) string {
 	bold := color.New(color.Bold).SprintFunc()
-	if r.Body.AppName == "" {
+	if project == "" {
 		return string(r.Body.Label)
 	}
-	return fmt.Sprintf("%s/%s", r.Body.AppName, bold(r.Body.Label))
+	return fmt.Sprintf("%s/%s", project, bold(r.Body.Label))
 }
 
 // SelectProduct prompts the user to select a product from the given list.
@@ -150,8 +150,17 @@ func SelectPlan(plans []*cModels.Plan, label string, filterLabelTop bool) (int, 
 // SelectResource promps the user to select a provisioned resource from the given list
 func SelectResource(resources []*mModels.Resource, projects []*mModels.Project,
 	label string) (int, string, error) {
+
+	projectLabels := make(map[manifold.ID]string)
+	for _, p := range projects {
+		projectLabels[p.ID] = string(p.Body.Label)
+	}
+
 	line := func(r *mModels.Resource) string {
-		return formatResourceListItem(r)
+		if r.Body.ProjectID == nil {
+			return formatResourceListItem(r, "")
+		}
+		return formatResourceListItem(r, projectLabels[*r.Body.ProjectID])
 	}
 
 	var idx int
@@ -176,8 +185,8 @@ func SelectResource(resources []*mModels.Resource, projects []*mModels.Project,
 	}
 
 	sort.Slice(resources, func(i, j int) bool {
-		a := formatResourceListItem(resources[i])
-		b := formatResourceListItem(resources[j])
+		a := line(resources[i])
+		b := line(resources[j])
 		return strings.ToLower(a) < strings.ToLower(b)
 	})
 
