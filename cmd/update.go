@@ -74,6 +74,12 @@ func updateResourceCmd(cliCtx *cli.Context) error {
 		return cli.NewExitError("No resources found for updating", -1)
 	}
 
+	projects, err := clients.FetchProjects(ctx, marketplaceClient, teamID)
+	if err != nil {
+		return cli.NewExitError(
+			fmt.Sprintf("Failed to fetch list of projects: %s", err), -1)
+	}
+
 	var resource *models.Resource
 	if label != "" {
 		var err error
@@ -82,7 +88,7 @@ func updateResourceCmd(cliCtx *cli.Context) error {
 			return cli.NewExitError(fmt.Sprintf("Failed to fetch resource: %s", err), -1)
 		}
 	} else {
-		idx, _, err := prompts.SelectResource(resources, label)
+		idx, _, err := prompts.SelectResource(resources, projects, label)
 		if err != nil {
 			return prompts.HandleSelectError(err, "Could not select Resource")
 		}

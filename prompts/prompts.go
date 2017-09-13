@@ -148,7 +148,8 @@ func SelectPlan(plans []*cModels.Plan, label string, filterLabelTop bool) (int, 
 }
 
 // SelectResource promps the user to select a provisioned resource from the given list
-func SelectResource(resources []*mModels.Resource, label string) (int, string, error) {
+func SelectResource(resources []*mModels.Resource, projects []*mModels.Project,
+	label string) (int, string, error) {
 	line := func(r *mModels.Resource) string {
 		return formatResourceListItem(r)
 	}

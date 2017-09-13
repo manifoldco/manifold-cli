@@ -16,7 +16,7 @@ import (
 	"github.com/manifoldco/manifold-cli/middleware"
 	"github.com/manifoldco/manifold-cli/prompts"
 
-	mModels "github.com/manifoldco/manifold-cli/generated/marketplace/models"
+	"github.com/manifoldco/manifold-cli/generated/marketplace/models"
 )
 
 func init() {
@@ -95,7 +95,13 @@ func view(cliCtx *cli.Context) error {
 
 	resources, statuses := buildResourceList(resources, oRes)
 
-	var resource *mModels.Resource
+	projects, err := clients.FetchProjects(ctx, marketplaceClient, teamID)
+	if err != nil {
+		return cli.NewExitError(
+			fmt.Sprintf("Failed to fetch list of projects: %s", err), -1)
+	}
+
+	var resource *models.Resource
 	if resourceLabel != "" {
 		resource, err = pickResourcesByLabel(resources, resourceLabel)
 		if err != nil {
@@ -103,7 +109,7 @@ func view(cliCtx *cli.Context) error {
 				fmt.Sprintf("Failed to find resource \"%s\": %s", resourceLabel, err), -1)
 		}
 	} else {
-		idx, _, err := prompts.SelectResource(resources, resourceLabel)
+		idx, _, err := prompts.SelectResource(resources, projects, resourceLabel)
 		if err != nil {
 			return prompts.HandleSelectError(err, "Could not select Resource")
 		}
@@ -152,8 +158,13 @@ func view(cliCtx *cli.Context) error {
 	projectID := resource.Body.ProjectID
 	projectLabel := "-"
 	if projectID != nil {
-		project, err := clients.FetchProject(ctx, marketplaceClient, projectID.String())
-		if err != nil {
+		var project *models.Project
+		for _, p := range projects {
+			if p.ID == *projectID {
+				project = p
+			}
+		}
+		if project == nil {
 			cli.NewExitError("Project referenced by resource does not exist: "+
 				err.Error(), -1)
 		}

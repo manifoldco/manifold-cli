@@ -87,6 +87,12 @@ func deleteCmd(cliCtx *cli.Context) error {
 		return errs.ErrNoResources
 	}
 
+	projects, err := clients.FetchProjects(ctx, marketplaceClient, teamID)
+	if err != nil {
+		return cli.NewExitError(
+			fmt.Sprintf("Failed to fetch list of projects: %s", err), -1)
+	}
+
 	var resource *mModels.Resource
 	if resourceLabel != "" {
 		resource, err = pickResourcesByLabel(res, resourceLabel)
@@ -95,7 +101,7 @@ func deleteCmd(cliCtx *cli.Context) error {
 				fmt.Sprintf("Failed to find resource \"%s\": %s", resourceLabel, err), -1)
 		}
 	} else {
-		resourceIdx, _, err := prompts.SelectResource(res, resourceLabel)
+		resourceIdx, _, err := prompts.SelectResource(res, projects, resourceLabel)
 		if err != nil {
 			return prompts.HandleSelectError(err, "Could not select Resource")
 		}

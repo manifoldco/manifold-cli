@@ -311,7 +311,7 @@ func addProjectCmd(cliCtx *cli.Context) error {
 	if len(res) == 0 {
 		return errs.ErrNoResources
 	}
-	resourceIdx, _, err := prompts.SelectResource(res, resourceLabel)
+	resourceIdx, _, err := prompts.SelectResource(res, ps, resourceLabel)
 	if err != nil {
 		return prompts.HandleSelectError(err, "Could not select Resource")
 	}
@@ -371,7 +371,13 @@ func removeProjectCmd(cliCtx *cli.Context) error {
 	if len(res) == 0 {
 		return errs.ErrNoResources
 	}
-	resourceIdx, _, err := prompts.SelectResource(res, resourceLabel)
+
+	projects, err := clients.FetchProjects(ctx, marketplaceClient, teamID)
+	if err != nil {
+		return cli.NewExitError(
+			fmt.Sprintf("Failed to fetch list of projects: %s", err), -1)
+	}
+	resourceIdx, _, err := prompts.SelectResource(res, projects, resourceLabel)
 	if err != nil {
 		return prompts.HandleSelectError(err, "Could not select Resource")
 	}
