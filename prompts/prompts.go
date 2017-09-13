@@ -65,8 +65,8 @@ func SelectProduct(products []*cModels.Product, label string) (int, string, erro
 	}
 
 	sort.Slice(products, func(i, j int) bool {
-		a := fmt.Sprintf("%s", products[i].Body.Name)
-		b := fmt.Sprintf("%s", products[j].Body.Name)
+		a := string(products[i].Body.Name)
+		b := string(products[j].Body.Name)
 		return strings.ToLower(a) < strings.ToLower(b)
 	})
 
@@ -114,8 +114,16 @@ func SelectPlan(plans []*cModels.Plan, label string, filterLabelTop bool) (int, 
 	}
 
 	sort.Slice(plans, func(i, j int) bool {
-		return *plans[i].Body.Cost < *plans[j].Body.Cost
+		a := plans[i]
+		b := plans[j]
+
+		if *a.Body.Cost == *b.Body.Cost {
+			return strings.ToLower(string(a.Body.Name)) <
+				strings.ToLower(string(b.Body.Name))
+		}
+		return *a.Body.Cost < *b.Body.Cost
 	})
+
 	labels := make([]string, len(plans))
 
 	var selectedIdx int
