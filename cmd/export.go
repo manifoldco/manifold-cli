@@ -15,7 +15,6 @@ import (
 	"github.com/manifoldco/manifold-cli/analytics"
 	"github.com/manifoldco/manifold-cli/clients"
 	"github.com/manifoldco/manifold-cli/config"
-	"github.com/manifoldco/manifold-cli/errs"
 	"github.com/manifoldco/manifold-cli/middleware"
 	"github.com/manifoldco/manifold-cli/prompts"
 	"github.com/manifoldco/manifold-cli/session"
@@ -34,10 +33,11 @@ func init() {
 		Name:     "export",
 		Usage:    "Export all environment variables from all resources",
 		Category: "CONFIGURATION",
-		Action:   middleware.Chain(middleware.LoadDirPrefs, middleware.LoadTeamPrefs, export),
+		Action: middleware.Chain(middleware.LoadDirPrefs, middleware.EnsureSession,
+			middleware.LoadTeamPrefs, export),
 		Flags: append(teamFlags, []cli.Flag{
 			formatFlag(formats[0], formatFlagStr),
-			appFlag(),
+			projectFlag(),
 		}...),
 	}
 
@@ -47,7 +47,7 @@ func init() {
 func export(cliCtx *cli.Context) error {
 	ctx := context.Background()
 
-	appName, err := validateName(cliCtx, "app")
+	projectLabel, err := validateLabel(cliCtx, "project")
 	if err != nil {
 		return err
 	}
@@ -72,23 +72,18 @@ func export(cliCtx *cli.Context) error {
 		return cli.NewExitError("Could not retrieve session: "+err.Error(), -1)
 	}
 
-	if !s.Authenticated() {
-		return errs.ErrMustLogin
-	}
-
 	marketplace, err := clients.NewMarketplace(cfg)
 	if err != nil {
 		return cli.NewExitError("Could not create marketplace client: "+err.Error(), -1)
 	}
 
 	prompts.SpinStart("Fetching Resources")
-	r, err := clients.FetchResources(ctx, marketplace, teamID, "")
+	resources, err := clients.FetchResources(ctx, marketplace, teamID, projectLabel)
 	prompts.SpinStop()
 	if err != nil {
 		return cli.NewExitError("Could not retrieve resources: "+err.Error(), -1)
 	}
 
-	resources := filterResourcesByAppName(r, appName)
 	sort.Slice(resources, func(i, j int) bool {
 		return resources[i].Body.Name < resources[j].Body.Name
 	})
@@ -106,8 +101,8 @@ func export(cliCtx *cli.Context) error {
 	params := map[string]string{
 		format: format,
 	}
-	if appName != "" {
-		params["app"] = appName
+	if projectLabel != "" {
+		params["project"] = projectLabel
 	}
 
 	a.Track(ctx, "Exported Credentials", &params)
@@ -201,21 +196,6 @@ func indexResources(resources []*models.Resource) map[manifold.ID]*models.Resour
 	}
 
 	return index
-}
-
-func filterResourcesByAppName(resources []*models.Resource, appName string) []*models.Resource {
-	list := []*models.Resource{}
-	if appName == "" {
-		return resources
-	}
-
-	for _, resource := range resources {
-		if string(resource.Body.AppName) == appName {
-			list = append(list, resource)
-		}
-	}
-
-	return list
 }
 
 func fetchCredentials(ctx context.Context, m *mClient.Marketplace, resources []*models.Resource) (map[manifold.ID][]*models.Credential, error) {

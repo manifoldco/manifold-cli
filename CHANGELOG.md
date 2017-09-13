@@ -28,7 +28,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - Operations not assigning team and project id
 - `view` command to show project label instead of app name
 - `update` command to accept project label instead of app name
-- `list` accepts project flag instead of app name
+- `export` command to accept project label instead of app name
+- `list` command to accept project flag instead of app name
 - `list` now adheres to team context for operations
 - `view` resource still in provision
 
