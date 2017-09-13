@@ -30,60 +30,12 @@ const NumberMask = '#'
 
 var errBad = promptui.NewValidationError("Bad Value")
 
-type plansSortByCost []*cModels.Plan
-
-func (p plansSortByCost) Len() int {
-	return len(p)
-}
-
-func (p plansSortByCost) Swap(i, j int) {
-	p[i], p[j] = p[j], p[i]
-}
-
-func (p plansSortByCost) Less(i, j int) bool {
-	return *p[i].Body.Cost < *p[j].Body.Cost
-}
-
-type resourcesSortByName []*mModels.Resource
-
-func (p resourcesSortByName) Len() int {
-	return len(p)
-}
-
-func (p resourcesSortByName) Swap(i, j int) {
-	p[i], p[j] = p[j], p[i]
-}
-
-func (p resourcesSortByName) Less(i, j int) bool {
-	return strings.Compare(
-		strings.ToLower(formatResourceListItem(p[i])),
-		strings.ToLower(formatResourceListItem(p[j])),
-	) < 0
-}
-
 func formatResourceListItem(r *mModels.Resource) string {
 	bold := color.New(color.Bold).SprintFunc()
 	if r.Body.AppName == "" {
 		return string(r.Body.Label)
 	}
 	return fmt.Sprintf("%s/%s", r.Body.AppName, bold(r.Body.Label))
-}
-
-type productsSortByName []*cModels.Product
-
-func (p productsSortByName) Len() int {
-	return len(p)
-}
-
-func (p productsSortByName) Swap(i, j int) {
-	p[i], p[j] = p[j], p[i]
-}
-
-func (p productsSortByName) Less(i, j int) bool {
-	return strings.Compare(
-		strings.ToLower(fmt.Sprintf("%s", p[i].Body.Name)),
-		strings.ToLower(fmt.Sprintf("%s", p[j].Body.Name)),
-	) < 0
 }
 
 // SelectProduct prompts the user to select a product from the given list.
@@ -112,7 +64,12 @@ func SelectProduct(products []*cModels.Product, label string) (int, string, erro
 		return idx, label, nil
 	}
 
-	sort.Sort(productsSortByName(products))
+	sort.Slice(products, func(i, j int) bool {
+		a := string(products[i].Body.Name)
+		b := string(products[j].Body.Name)
+		return strings.ToLower(a) < strings.ToLower(b)
+	})
+
 	labels := make([]string, len(products))
 	for i, p := range products {
 		labels[i] = line(p)
@@ -156,7 +113,17 @@ func SelectPlan(plans []*cModels.Plan, label string, filterLabelTop bool) (int, 
 		}
 	}
 
-	sort.Sort(plansSortByCost(plans))
+	sort.Slice(plans, func(i, j int) bool {
+		a := plans[i]
+		b := plans[j]
+
+		if *a.Body.Cost == *b.Body.Cost {
+			return strings.ToLower(string(a.Body.Name)) <
+				strings.ToLower(string(b.Body.Name))
+		}
+		return *a.Body.Cost < *b.Body.Cost
+	})
+
 	labels := make([]string, len(plans))
 
 	var selectedIdx int
@@ -206,7 +173,12 @@ func SelectResource(resources []*mModels.Resource, label string) (int, string, e
 		return idx, label, nil
 	}
 
-	sort.Sort(resourcesSortByName(resources))
+	sort.Slice(resources, func(i, j int) bool {
+		a := formatResourceListItem(resources[i])
+		b := formatResourceListItem(resources[j])
+		return strings.ToLower(a) < strings.ToLower(b)
+	})
+
 	labels := make([]string, len(resources))
 	for i, r := range resources {
 		labels[i] = line(r)
