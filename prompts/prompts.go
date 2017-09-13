@@ -346,56 +346,6 @@ func selectTeam(teams []*iModels.Team, prefix, label string, userTuple *[]string
 	return teamIdx, name, err
 }
 
-// SelectCreateAppName prompts the user to select or create an application
-// name, a -1 idx will be returned if the app name requires creation.
-func SelectCreateAppName(names []string, label string, filterToTop bool) (int, string, error) {
-	labels := make([]string, len(names))
-
-	var idx int
-	for i, n := range names {
-		labels[i] = n
-
-		if label != "" && labels[i] == label {
-			if !filterToTop {
-				fmt.Println(promptui.SuccessfulValue("App Name", label))
-				return i, label, nil
-			}
-
-			idx = i
-		}
-	}
-
-	if label != "" && !filterToTop {
-		prompt := promptui.Prompt{
-			Label:   "App Name",
-			Default: label,
-		}
-
-		value, err := prompt.Run()
-		return -1, value, err
-	}
-
-	if filterToTop {
-		labels[0], labels[idx] = labels[idx], labels[0]
-	}
-
-	prompt := promptui.SelectWithAdd{
-		Label:    "App Name",
-		Items:    labels,
-		AddLabel: "Create a New App",
-		Validate: func(input string) error {
-			n := manifold.Name(input)
-			if err := n.Validate(nil); err != nil {
-				return promptui.NewValidationError("Please provide a valid App Name")
-			}
-
-			return nil
-		},
-	}
-
-	return prompt.Run()
-}
-
 // ResourceName prompts the user to provide a resource name or to accept empty
 // to let the system generate one.
 func ResourceName(defaultValue string, autoSelect bool) (string, error) {
