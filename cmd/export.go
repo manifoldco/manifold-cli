@@ -89,7 +89,10 @@ func export(cliCtx *cli.Context) error {
 	}
 
 	resources := filterResourcesByAppName(r, appName)
-	sort.Sort(resourcesSortByName(resources))
+	sort.Slice(resources, func(i, j int) bool {
+		return resources[i].Body.Name < resources[j].Body.Name
+	})
+
 	cMap, err := fetchCredentials(ctx, marketplace, resources)
 	if err != nil {
 		return cli.NewExitError("Could not retrieve credentials: "+err.Error(), -1)

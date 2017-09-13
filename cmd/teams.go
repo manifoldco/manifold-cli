@@ -14,7 +14,6 @@ import (
 	"strings"
 
 	"github.com/manifoldco/manifold-cli/clients"
-	"github.com/manifoldco/manifold-cli/config"
 	"github.com/manifoldco/manifold-cli/errs"
 	"github.com/manifoldco/manifold-cli/generated/identity/client"
 	inviteClient "github.com/manifoldco/manifold-cli/generated/identity/client/invite"
@@ -382,21 +381,6 @@ func leaveTeam(ctx context.Context, membershipID manifold.ID,
 	default:
 		return err
 	}
-}
-
-// loadIdentityClient returns an identify client based on the configuration file.
-func loadIdentityClient() (*client.Identity, error) {
-	cfg, err := config.Load()
-	if err != nil {
-		return nil, cli.NewExitError(fmt.Sprintf("Could not load configuration: %s", err), -1)
-	}
-
-	identityClient, err := clients.NewIdentity(cfg)
-	if err != nil {
-		return nil, cli.NewExitError(fmt.Sprintf("Failed to create Identity client: %s", err), -1)
-	}
-
-	return identityClient, nil
 }
 
 // fetchTeams retrieves all user's team and prompt to select which team the cmd

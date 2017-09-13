@@ -11,7 +11,6 @@ import (
 	"github.com/urfave/cli"
 
 	"github.com/manifoldco/manifold-cli/clients"
-	"github.com/manifoldco/manifold-cli/config"
 	"github.com/manifoldco/manifold-cli/data/catalog"
 	"github.com/manifoldco/manifold-cli/errs"
 	"github.com/manifoldco/manifold-cli/middleware"
@@ -57,26 +56,19 @@ func view(cliCtx *cli.Context) error {
 		return err
 	}
 
-	cfg, err := config.Load()
+	marketplaceClient, err := loadMarketplaceClient()
 	if err != nil {
-		return cli.NewExitError(fmt.Sprintf("Could not load configuration: %s", err), -1)
+		return err
 	}
 
-	marketplaceClient, err := clients.NewMarketplace(cfg)
+	catalogClient, err := loadCatalogClient()
 	if err != nil {
-		return cli.NewExitError(fmt.Sprintf("Failed to create Maketplace Client: %s", err), -1)
+		return err
 	}
 
-	catalogClient, err := clients.NewCatalog(cfg)
+	pClient, err := loadProvisioningClient()
 	if err != nil {
-		return cli.NewExitError("Failed to create a Catalog API client: "+
-			err.Error(), -1)
-	}
-
-	pClient, err := clients.NewProvisioning(cfg)
-	if err != nil {
-		return cli.NewExitError("Failed to create a Provisioning API Client: "+
-			err.Error(), -1)
+		return err
 	}
 
 	// Get catalog
