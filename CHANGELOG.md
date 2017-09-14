@@ -21,6 +21,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - `run` supports --project/-p
 - `init` saves project context instead of app context
 - `list` improved UI
+- Add `reszie` for resizing a resource
 
 ### Fixed
 

@@ -61,6 +61,9 @@ var ErrNoProjects = cli.NewExitError("No projects found", -1)
 // ErrNoResources represents an error where no resources exist to preform some action on
 var ErrNoResources = cli.NewExitError("No resources found", -1)
 
+// ErrNoPlans represents an error where no plans exist for the resource being created or updated
+var ErrNoPlans = cli.NewExitError("No plans found for this product", -1)
+
 // ErrTooManyArgs represents an error where a user has provided too many
 // command line arguments
 var ErrTooManyArgs = cli.NewExitError("You've provided too many command line arguments!", -1)
