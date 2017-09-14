@@ -34,7 +34,6 @@ import:
 - package: github.com/reconquest/hierr-go
 - package: github.com/rhymond/go-money
 - package: github.com/briandowns/spinner
-- package: github.com/fatih/color
 - package: gopkg.in/oleiade/reflections.v1
   version: ^1.0.0
 - package: github.com/stripe/stripe-go

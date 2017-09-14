@@ -104,25 +104,25 @@ func list(cliCtx *cli.Context) error {
 	fmt.Printf("%d resources in %d projects\n", list.totalResources, list.totalProjects)
 	fmt.Println("Use `manifold view [label]` to display resource details")
 
-	tw := ansiterm.NewTabWriter(os.Stdout, 0, 0, 8, ' ', 0)
+	w := ansiterm.NewTabWriter(os.Stdout, 0, 0, 8, ' ', 0)
 
 	for _, group := range list.groups {
-		tw.SetStyle(ansiterm.Bold)
-		fmt.Fprintf(tw, "\n%s", group.owner)
-		tw.ClearStyle(ansiterm.Bold)
+		w.SetStyle(ansiterm.Bold)
+		fmt.Fprintf(w, "\n%s", group.owner)
+		w.ClearStyle(ansiterm.Bold)
 
 		if group.project != "" {
-			fmt.Fprint(tw, "/")
-			tw.SetStyle(ansiterm.Bold)
-			fmt.Fprint(tw, group.project)
-			tw.ClearStyle(ansiterm.Bold)
+			fmt.Fprint(w, "/")
+			w.SetStyle(ansiterm.Bold)
+			fmt.Fprint(w, group.project)
+			w.ClearStyle(ansiterm.Bold)
 		}
 
-		fmt.Fprintf(tw, "\n")
+		fmt.Fprintf(w, "\n")
 
-		tw.SetForeground(ansiterm.Gray)
-		fmt.Fprintln(tw, "Label\tType\tStatus")
-		tw.Reset()
+		w.SetForeground(ansiterm.Gray)
+		fmt.Fprintln(w, "Label\tType\tStatus")
+		w.Reset()
 
 		for _, resource := range group.resources {
 			rType := "Custom"
@@ -148,11 +148,11 @@ func list(cliCtx *cli.Context) error {
 				status = "Ready"
 			}
 
-			fmt.Fprintf(tw, "%s\t%s\t%s\n", resource.Body.Label, rType, status)
+			fmt.Fprintf(w, "%s\t%s\t%s\n", resource.Body.Label, rType, status)
 		}
 	}
 
-	tw.Flush()
+	w.Flush()
 	return nil
 }
 

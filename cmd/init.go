@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"text/tabwriter"
 
+	"github.com/juju/ansiterm"
 	"github.com/urfave/cli"
 
 	"github.com/manifoldco/manifold-cli/clients"
@@ -88,18 +88,16 @@ func initDir(cliCtx *cli.Context) error {
 		return err
 	}
 
+	w := ansiterm.NewTabWriter(os.Stdout, 2, 0, 1, ' ', 0)
+
 	if mYaml.Project == "" {
 		fmt.Println("\nThis directory and its subdirectories have been unlinked from:")
-		w := tabwriter.NewWriter(os.Stdout, 2, 0, 1, ' ', 0)
 		fmt.Fprintf(w, "Project:\t%s\n", oldLabel)
-		w.Flush()
 	} else {
 		// Display the output
 		fmt.Println("\nThis directory and its subdirectories have been linked to:")
-		w := tabwriter.NewWriter(os.Stdout, 2, 0, 1, ' ', 0)
 		fmt.Fprintf(w, "Project:\t%s\n", projectLabel)
-		w.Flush()
 	}
 
-	return nil
+	return w.Flush()
 }
