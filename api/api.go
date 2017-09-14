@@ -13,7 +13,9 @@ import (
 	"github.com/urfave/cli"
 )
 
-type Api struct {
+// API is a composition of all clients generated from the spec. Use the `New`
+// function to load the necessary clients for the operation.
+type API struct {
 	*bClient.Billing
 	*cClient.Catalog
 	*iClient.Identity
@@ -21,18 +23,30 @@ type Api struct {
 	*pClient.Provisioning
 }
 
+// Client represents one of the clients generated from the spec.
 type Client int
 
 const (
+	// Billing represents the billing client
 	Billing Client = iota
+
+	// Catalog represents the catalog client
 	Catalog
+
+	// Identity represents the identity client
 	Identity
+
+	// Marketplace represents the marketplace client
 	Marketplace
+
+	// Provisioning represents the provisioning client
 	Provisioning
 )
 
-func New(list ...Client) (*Api, error) {
-	api := &Api{}
+// New loads all clients passed on the list. If any of the clients fails to load
+// an error is returned.
+func New(list ...Client) (*API, error) {
+	api := &API{}
 
 	cfg, err := config.Load()
 	if err != nil {
@@ -63,6 +77,7 @@ func New(list ...Client) (*Api, error) {
 	return api, nil
 }
 
+// String returns a string representation of the client type.
 func (c Client) String() string {
 	switch c {
 	case Billing:

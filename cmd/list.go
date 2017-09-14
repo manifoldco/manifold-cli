@@ -214,7 +214,7 @@ func buildResourceList(resources []*models.Resource, operations []*pModels.Opera
 	return out, statuses
 }
 
-func groupResources(ctx context.Context, client *api.Api, resources []*models.Resource, teamID *manifold.ID) (resourceList, error) {
+func groupResources(ctx context.Context, client *api.API, resources []*models.Resource, teamID *manifold.ID) (resourceList, error) {
 	list := resourceList{
 		totalResources: len(resources),
 	}
