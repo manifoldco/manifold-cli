@@ -31,12 +31,12 @@ const NumberMask = '#'
 
 var errBad = promptui.NewValidationError("Bad Value")
 
-func formatResourceListItem(r *mModels.Resource) string {
+func formatResourceListItem(r *mModels.Resource, project string) string {
 	bold := color.New(color.Bold).SprintFunc()
-	if r.Body.AppName == "" {
+	if project == "" {
 		return string(r.Body.Label)
 	}
-	return fmt.Sprintf("%s/%s", r.Body.AppName, bold(r.Body.Label))
+	return fmt.Sprintf("%s/%s", project, bold(r.Body.Label))
 }
 
 // SelectProduct prompts the user to select a product from the given list.
@@ -148,9 +148,19 @@ func SelectPlan(plans []*cModels.Plan, label string, filterLabelTop bool) (int, 
 }
 
 // SelectResource promps the user to select a provisioned resource from the given list
-func SelectResource(resources []*mModels.Resource, label string) (int, string, error) {
+func SelectResource(resources []*mModels.Resource, projects []*mModels.Project,
+	label string) (int, string, error) {
+
+	projectLabels := make(map[manifold.ID]string)
+	for _, p := range projects {
+		projectLabels[p.ID] = string(p.Body.Label)
+	}
+
 	line := func(r *mModels.Resource) string {
-		return formatResourceListItem(r)
+		if r.Body.ProjectID == nil {
+			return formatResourceListItem(r, "")
+		}
+		return formatResourceListItem(r, projectLabels[*r.Body.ProjectID])
 	}
 
 	var idx int
@@ -175,8 +185,8 @@ func SelectResource(resources []*mModels.Resource, label string) (int, string, e
 	}
 
 	sort.Slice(resources, func(i, j int) bool {
-		a := formatResourceListItem(resources[i])
-		b := formatResourceListItem(resources[j])
+		a := line(resources[i])
+		b := line(resources[j])
 		return strings.ToLower(a) < strings.ToLower(b)
 	})
 
@@ -334,56 +344,6 @@ func selectTeam(teams []*iModels.Team, prefix, label string, userTuple *[]string
 	}
 
 	return teamIdx, name, err
-}
-
-// SelectCreateAppName prompts the user to select or create an application
-// name, a -1 idx will be returned if the app name requires creation.
-func SelectCreateAppName(names []string, label string, filterToTop bool) (int, string, error) {
-	labels := make([]string, len(names))
-
-	var idx int
-	for i, n := range names {
-		labels[i] = n
-
-		if label != "" && labels[i] == label {
-			if !filterToTop {
-				fmt.Println(promptui.SuccessfulValue("App Name", label))
-				return i, label, nil
-			}
-
-			idx = i
-		}
-	}
-
-	if label != "" && !filterToTop {
-		prompt := promptui.Prompt{
-			Label:   "App Name",
-			Default: label,
-		}
-
-		value, err := prompt.Run()
-		return -1, value, err
-	}
-
-	if filterToTop {
-		labels[0], labels[idx] = labels[idx], labels[0]
-	}
-
-	prompt := promptui.SelectWithAdd{
-		Label:    "App Name",
-		Items:    labels,
-		AddLabel: "Create a New App",
-		Validate: func(input string) error {
-			n := manifold.Name(input)
-			if err := n.Validate(nil); err != nil {
-				return promptui.NewValidationError("Please provide a valid App Name")
-			}
-
-			return nil
-		},
-	}
-
-	return prompt.Run()
 }
 
 // ResourceName prompts the user to provide a resource name or to accept empty
