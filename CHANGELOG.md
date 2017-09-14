@@ -12,12 +12,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - Group commands into categories for better help output
 - Update sorting function to use `sort.Slice`
 - Sort plan by price and name during resource creation
-- `projects add` to add a resource to a project
-- `projects create` command to create new projects
-- `projects list` command to list projects
-- `projects remove` to remove a resource from a project
-- `projects update` command to update an existing project
-- `verify $EMAIL_CODE` command to verify users e-mail with the CLI
+- `projects add` adds a resource to a project
+- `projects create` creates new projects
+- `projects list` lists projects
+- `projects remove` removes a resource from a project
+- `projects update` updates an existing project
+- `verify $EMAIL_CODE` verifys users e-mail with the CLI
 - `run` supports --project/-p
 - `init` saves project context instead of app context
 - `list` improved UI
@@ -26,13 +26,14 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 - Fetching resources or operations with nil team returns personal account
 - Operations not assigning team and project id
-- SelectResource to use project label instead of app name
-- `view` command to show project label instead of app name
-- `update` command to accept project label instead of app name
-- `export` command to accept project label instead of app name
-- `list` command to accept project flag instead of app name
+- SelectResource uses project label instead of app name
+- `export` accepts project label instead of app name
+- `export` lists resources without projects
+- `list` accepts project flag instead of app name
 - `list` now adheres to team context for operations
-- `view` resource still in provision
+- `update` accepts project label instead of app name
+- `view` shows project label instead of app name
+- `view` shows resource still in provision
 
 ### Removed
 
