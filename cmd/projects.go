@@ -16,6 +16,7 @@ import (
 
 	"github.com/manifoldco/go-manifold"
 	"github.com/manifoldco/go-manifold/idtype"
+	"github.com/manifoldco/manifold-cli/api"
 	"github.com/manifoldco/manifold-cli/clients"
 	"github.com/manifoldco/manifold-cli/errs"
 	mClient "github.com/manifoldco/manifold-cli/generated/marketplace/client"
@@ -146,7 +147,7 @@ func createProjectCmd(cliCtx *cli.Context) error {
 func listProjectsCmd(cliCtx *cli.Context) error {
 	ctx := context.Background()
 
-	marketplaceClient, err := loadMarketplaceClient()
+	client, err := api.New(api.Marketplace)
 	if err != nil {
 		return err
 	}
@@ -160,9 +161,9 @@ func listProjectsCmd(cliCtx *cli.Context) error {
 
 	prompts.SpinStart("Fetching Projects")
 	if cliCtx.Bool("all") {
-		projects, err = clients.FetchAllProjects(ctx, marketplaceClient)
+		projects, err = clients.FetchAllProjects(ctx, client.Marketplace)
 	} else {
-		projects, err = clients.FetchProjects(ctx, marketplaceClient, teamID)
+		projects, err = clients.FetchProjects(ctx, client.Marketplace, teamID)
 	}
 	prompts.SpinStop()
 
@@ -206,12 +207,12 @@ func updateProjectCmd(cliCtx *cli.Context) error {
 
 	projectDescription := cliCtx.String("description")
 
-	marketplaceClient, err := loadMarketplaceClient()
+	client, err := api.New(api.Marketplace)
 	if err != nil {
 		return err
 	}
 
-	p, err := selectProject(ctx, projectLabel, teamID, marketplaceClient)
+	p, err := selectProject(ctx, projectLabel, teamID, client.Marketplace)
 	if err != nil {
 		return err
 	}
@@ -284,17 +285,12 @@ func addProjectCmd(cliCtx *cli.Context) error {
 		return err
 	}
 
-	marketplaceClient, err := loadMarketplaceClient()
+	client, err := api.New(api.Marketplace, api.Provisioning)
 	if err != nil {
 		return err
 	}
 
-	provisioningClient, err := loadProvisioningClient()
-	if err != nil {
-		return err
-	}
-
-	ps, err := clients.FetchProjects(ctx, marketplaceClient, teamID)
+	ps, err := clients.FetchProjects(ctx, client.Marketplace, teamID)
 	if err != nil {
 		return cli.NewExitError(fmt.Sprintf("Failed to fetch projects list: %s", err), -1)
 	}
@@ -304,7 +300,7 @@ func addProjectCmd(cliCtx *cli.Context) error {
 	}
 	p := ps[projectIdx]
 
-	res, err := clients.FetchResources(ctx, marketplaceClient, teamID, "")
+	res, err := clients.FetchResources(ctx, client.Marketplace, teamID, "")
 	if err != nil {
 		return cli.NewExitError(fmt.Sprintf("Failed to fetch list of provisioned resources: %s", err), -1)
 	}
@@ -317,7 +313,7 @@ func addProjectCmd(cliCtx *cli.Context) error {
 	}
 	r := res[resourceIdx]
 
-	if err := updateResourceProject(ctx, userID, teamID, r, p, provisioningClient, dontWait); err != nil {
+	if err := updateResourceProject(ctx, userID, teamID, r, p, client.Provisioning, dontWait); err != nil {
 		return cli.NewExitError(fmt.Sprintf("Could not add resource to project: %s", err), -1)
 	}
 
@@ -354,17 +350,12 @@ func removeProjectCmd(cliCtx *cli.Context) error {
 		return err
 	}
 
-	marketplaceClient, err := loadMarketplaceClient()
+	client, err := api.New(api.Marketplace, api.Provisioning)
 	if err != nil {
 		return err
 	}
 
-	provisioningClient, err := loadProvisioningClient()
-	if err != nil {
-		return err
-	}
-
-	res, err := clients.FetchResources(ctx, marketplaceClient, teamID, "")
+	res, err := clients.FetchResources(ctx, client.Marketplace, teamID, "")
 	if err != nil {
 		return cli.NewExitError(fmt.Sprintf("Failed to fetch list of provisioned resource: %s", err), -1)
 	}
@@ -372,7 +363,7 @@ func removeProjectCmd(cliCtx *cli.Context) error {
 		return errs.ErrNoResources
 	}
 
-	projects, err := clients.FetchProjects(ctx, marketplaceClient, teamID)
+	projects, err := clients.FetchProjects(ctx, client.Marketplace, teamID)
 	if err != nil {
 		return cli.NewExitError(
 			fmt.Sprintf("Failed to fetch list of projects: %s", err), -1)
@@ -383,7 +374,7 @@ func removeProjectCmd(cliCtx *cli.Context) error {
 	}
 	r := res[resourceIdx]
 
-	if err := updateResourceProject(ctx, userID, teamID, r, nil, provisioningClient, dontWait); err != nil {
+	if err := updateResourceProject(ctx, userID, teamID, r, nil, client.Provisioning, dontWait); err != nil {
 		return cli.NewExitError(fmt.Sprintf("Could not remove the project from the resource: %s", err), -1)
 	}
 
@@ -393,12 +384,12 @@ func removeProjectCmd(cliCtx *cli.Context) error {
 }
 
 func createProject(params *projectClient.PostProjectsParams) error {
-	marketplaceClient, err := loadMarketplaceClient()
+	client, err := api.New(api.Marketplace)
 	if err != nil {
 		return err
 	}
 
-	_, err = marketplaceClient.Project.PostProjects(params, nil)
+	_, err = client.Project.PostProjects(params, nil)
 	if err != nil {
 		switch e := err.(type) {
 		case *projectClient.PostProjectsBadRequest:
@@ -418,12 +409,12 @@ func createProject(params *projectClient.PostProjectsParams) error {
 }
 
 func updateProject(params *projectClient.PatchProjectsIDParams) error {
-	marketplaceClient, err := loadMarketplaceClient()
+	client, err := api.New(api.Marketplace)
 	if err != nil {
 		return err
 	}
 
-	_, err = marketplaceClient.Project.PatchProjectsID(params, nil)
+	_, err = client.Project.PatchProjectsID(params, nil)
 	if err != nil {
 		switch e := err.(type) {
 		case *projectClient.PatchProjectsIDBadRequest:

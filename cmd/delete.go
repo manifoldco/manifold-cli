@@ -11,6 +11,7 @@ import (
 	"github.com/manifoldco/go-manifold"
 	"github.com/manifoldco/go-manifold/idtype"
 	"github.com/manifoldco/manifold-cli/analytics"
+	"github.com/manifoldco/manifold-cli/api"
 	"github.com/manifoldco/manifold-cli/clients"
 	"github.com/manifoldco/manifold-cli/config"
 	"github.com/manifoldco/manifold-cli/errs"
@@ -67,17 +68,12 @@ func deleteCmd(cliCtx *cli.Context) error {
 		return cli.NewExitError(fmt.Sprintf("Could not retrieve session: %s", err), -1)
 	}
 
-	marketplaceClient, err := clients.NewMarketplace(cfg)
+	client, err := api.New(api.Marketplace, api.Provisioning)
 	if err != nil {
-		return cli.NewExitError(fmt.Sprintf("Failed to create Maketplace Client: %s", err), -1)
+		return err
 	}
 
-	provisioningClient, err := clients.NewProvisioning(cfg)
-	if err != nil {
-		return cli.NewExitError(fmt.Sprintf("Failed to create Provision Client: %s", err), -1)
-	}
-
-	res, err := clients.FetchResources(ctx, marketplaceClient, teamID, "")
+	res, err := clients.FetchResources(ctx, client.Marketplace, teamID, "")
 	if err != nil {
 		return cli.NewExitError(
 			fmt.Sprintf("Failed to fetch the list of provisioned resources: %s", err), -1)
@@ -87,7 +83,7 @@ func deleteCmd(cliCtx *cli.Context) error {
 		return errs.ErrNoResources
 	}
 
-	projects, err := clients.FetchProjects(ctx, marketplaceClient, teamID)
+	projects, err := clients.FetchProjects(ctx, client.Marketplace, teamID)
 	if err != nil {
 		return cli.NewExitError(
 			fmt.Sprintf("Failed to fetch list of projects: %s", err), -1)
@@ -119,7 +115,7 @@ func deleteCmd(cliCtx *cli.Context) error {
 		spin.Start()
 	}
 
-	err = deleteResource(ctx, cfg, teamID, s, resource, provisioningClient, dontWait)
+	err = deleteResource(ctx, cfg, teamID, s, resource, client.Provisioning, dontWait)
 	if err != nil {
 		return cli.NewExitError(fmt.Sprintf("Failed to delete resource: %s", err), -1)
 	}
