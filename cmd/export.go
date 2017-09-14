@@ -12,12 +12,9 @@ import (
 	"github.com/manifoldco/go-manifold"
 	"github.com/urfave/cli"
 
-	"github.com/manifoldco/manifold-cli/analytics"
 	"github.com/manifoldco/manifold-cli/clients"
-	"github.com/manifoldco/manifold-cli/config"
 	"github.com/manifoldco/manifold-cli/middleware"
 	"github.com/manifoldco/manifold-cli/prompts"
-	"github.com/manifoldco/manifold-cli/session"
 
 	mClient "github.com/manifoldco/manifold-cli/generated/marketplace/client"
 	"github.com/manifoldco/manifold-cli/generated/marketplace/client/credential"
@@ -62,19 +59,9 @@ func export(cliCtx *cli.Context) error {
 		return err
 	}
 
-	cfg, err := config.Load()
+	marketplace, err := loadMarketplaceClient()
 	if err != nil {
-		return cli.NewExitError("Could not load config: "+err.Error(), -1)
-	}
-
-	s, err := session.Retrieve(ctx, cfg)
-	if err != nil {
-		return cli.NewExitError("Could not retrieve session: "+err.Error(), -1)
-	}
-
-	marketplace, err := clients.NewMarketplace(cfg)
-	if err != nil {
-		return cli.NewExitError("Could not create marketplace client: "+err.Error(), -1)
+		return err
 	}
 
 	prompts.SpinStart("Fetching Resources")
@@ -82,6 +69,10 @@ func export(cliCtx *cli.Context) error {
 	prompts.SpinStop()
 	if err != nil {
 		return cli.NewExitError("Could not retrieve resources: "+err.Error(), -1)
+	}
+
+	if projectLabel == "" {
+		resources = filterResourcesWithoutProjects(resources)
 	}
 
 	sort.Slice(resources, func(i, j int) bool {
@@ -93,7 +84,7 @@ func export(cliCtx *cli.Context) error {
 		return cli.NewExitError("Could not retrieve credentials: "+err.Error(), -1)
 	}
 
-	a, err := analytics.New(cfg, s)
+	a, err := loadAnalytics()
 	if err != nil {
 		return cli.NewExitError("Something went horribly wrong: "+err.Error(), -1)
 	}
@@ -220,4 +211,15 @@ func fetchCredentials(ctx context.Context, m *mClient.Marketplace, resources []*
 	}
 
 	return cMap, nil
+}
+
+// filterResourcesWithoutProjects returns resources without a project id
+func filterResourcesWithoutProjects(resources []*models.Resource) []*models.Resource {
+	var results []*models.Resource
+	for _, r := range resources {
+		if r.Body.ProjectID == nil {
+			results = append(results, r)
+		}
+	}
+	return results
 }
