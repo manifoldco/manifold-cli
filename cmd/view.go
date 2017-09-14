@@ -117,7 +117,7 @@ func view(cliCtx *cli.Context) error {
 	}
 
 	faint := func(i interface{}) string {
-		return color.Color(ansiterm.Blue, i)
+		return color.Color(ansiterm.Gray, i)
 	}
 
 	productName := faint("-")
