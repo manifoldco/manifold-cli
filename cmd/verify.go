@@ -23,13 +23,13 @@ func init() {
 		ArgsUsage: "[code]",
 		Usage:     "Verify an e-mail address with an e-mail verification code",
 		Category:  "ADMINISTRATIVE",
-		Action:    verifyEmailCode,
+		Action:    verify,
 	}
 
 	cmds = append(cmds, verifyCmd)
 }
 
-func verifyEmailCode(cliCtx *cli.Context) error {
+func verify(cliCtx *cli.Context) error {
 	ctx := context.Background()
 
 	if err := maxOptionalArgsLength(cliCtx, 1); err != nil {
@@ -37,13 +37,6 @@ func verifyEmailCode(cliCtx *cli.Context) error {
 	}
 
 	verificationCode, err := optionalArgCode(cliCtx, 0, "e-mail verification")
-	if err != nil {
-		return err
-	}
-
-	if verificationCode == "" {
-		verificationCode, err = prompts.EmailVerificationCode("")
-	}
 	if err != nil {
 		return err
 	}
@@ -60,6 +53,20 @@ func verifyEmailCode(cliCtx *cli.Context) error {
 
 	if !s.Authenticated() {
 		return errs.ErrMustLogin
+	}
+
+	return verifyEmailCode(ctx, cfg, s, verificationCode)
+}
+
+func verifyEmailCode(ctx context.Context, cfg *config.Config,
+	s session.Session, verificationCode string) error {
+
+	var err error
+	if verificationCode == "" {
+		verificationCode, err = prompts.EmailVerificationCode("")
+	}
+	if err != nil {
+		return err
 	}
 
 	client, err := api.New(api.Identity)
