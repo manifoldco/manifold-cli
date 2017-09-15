@@ -73,5 +73,8 @@ func signup(_ *cli.Context) error {
 	a.Track(ctx, "Logged In", nil)
 
 	fmt.Println("Account created. You are logged in.")
-	return nil
+
+	fmt.Println("A verification code has been sent to your e-mail address.")
+
+	return verifyEmailCode(ctx, cfg, s, "")
 }

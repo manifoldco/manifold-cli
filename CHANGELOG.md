@@ -7,9 +7,15 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
 
+### Added
+
+- Chained e-mail verification step to the end of the signup command
+
 ### Fixed
 
 - colors breaking alignment of tabwriter
+
+### Removed
 
 ## [0.5.0] - 2017-09-14
 
