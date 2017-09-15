@@ -122,7 +122,7 @@ func resizeResourceCmd(cliCtx *cli.Context) error {
 		return cli.NewExitError(fmt.Sprintf("Could not update resource \"%s\": %s", string(r.Body.Label), err), -1)
 	}
 
-	fmt.Printf("\nYour resource \"%s\" has been resized to the plan \"%s\"", r.Body.Label, p.Body.Label)
+	fmt.Printf("\nYour resource %q has been resized to the plan %q\n", r.Body.Label, p.Body.Label)
 
 	return nil
 }
