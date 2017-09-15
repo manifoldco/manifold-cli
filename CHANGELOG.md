@@ -5,6 +5,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [Unreleased]
+
+### Added
+
+- Chained e-mail verification step to the end of the signup command
+
+### Fixed
+
+
+### Removed
+
+
 ## [0.5.0] - 2017-08-14
 
 ### Added
