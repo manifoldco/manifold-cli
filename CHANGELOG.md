@@ -13,11 +13,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Fixed
 
+- `resize` message output
 
 ### Removed
 
 
-## [0.5.0] - 2017-08-14
+## [0.5.0] - 2017-09-14
 
 ### Added
 
