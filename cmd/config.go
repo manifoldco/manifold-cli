@@ -99,7 +99,7 @@ func patchConfig(cliCtx *cli.Context, req map[string]*string) error {
 	spin := prompts.NewSpinner("Setting resource config")
 	spin.Start()
 	defer spin.Stop()
-	_, err = client.Credential.PatchResourcesIDConfig(&credential.PatchResourcesIDConfigParams{
+	_, err = client.Marketplace.Credential.PatchResourcesIDConfig(&credential.PatchResourcesIDConfigParams{
 		ID:      resource.ID.String(),
 		Body:    req,
 		Context: ctx,

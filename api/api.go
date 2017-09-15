@@ -16,11 +16,11 @@ import (
 // API is a composition of all clients generated from the spec. Use the `New`
 // function to load the necessary clients for the operation.
 type API struct {
-	*bClient.Billing
-	*cClient.Catalog
-	*iClient.Identity
-	*mClient.Marketplace
-	*pClient.Provisioning
+	Billing      *bClient.Billing
+	Catalog      *cClient.Catalog
+	Identity     *iClient.Identity
+	Marketplace  *mClient.Marketplace
+	Provisioning *pClient.Provisioning
 }
 
 // Client represents one of the clients generated from the spec.

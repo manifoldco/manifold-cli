@@ -80,7 +80,7 @@ func verifyEmailCode(ctx context.Context, cfg *config.Config,
 			VerificationCode: &verificationCode,
 		},
 	})
-	_, err = client.User.PostUsersVerify(params, nil)
+	_, err = client.Identity.User.PostUsersVerify(params, nil)
 	if err != nil {
 		return cli.NewExitError(
 			fmt.Sprintf("Failed to verify e-mail code: %s", err), -1)

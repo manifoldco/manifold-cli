@@ -389,7 +389,7 @@ func createProject(params *projectClient.PostProjectsParams) error {
 		return err
 	}
 
-	_, err = client.Project.PostProjects(params, nil)
+	_, err = client.Marketplace.Project.PostProjects(params, nil)
 	if err != nil {
 		switch e := err.(type) {
 		case *projectClient.PostProjectsBadRequest:
@@ -414,7 +414,7 @@ func updateProject(params *projectClient.PatchProjectsIDParams) error {
 		return err
 	}
 
-	_, err = client.Project.PatchProjectsID(params, nil)
+	_, err = client.Marketplace.Project.PatchProjectsID(params, nil)
 	if err != nil {
 		switch e := err.(type) {
 		case *projectClient.PatchProjectsIDBadRequest:
