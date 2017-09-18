@@ -342,13 +342,13 @@ func deleteProjectCmd(cliCtx *cli.Context) error {
 	if err != nil {
 		switch e := err.(type) {
 		case *operation.PutOperationsIDBadRequest:
-			return e.Payload
+			return cli.NewExitError(e.Payload, -1)
 		case *operation.PutOperationsIDUnauthorized:
-			return e.Payload
+			return cli.NewExitError(e.Payload, -1)
 		case *operation.PutOperationsIDNotFound:
-			return e.Payload
+			return cli.NewExitError(e.Payload, -1)
 		case *operation.PutOperationsIDConflict:
-			return e.Payload
+			return cli.NewExitError(e.Payload, -1)
 		case *operation.PutOperationsIDInternalServerError:
 			return errs.ErrSomethingWentHorriblyWrong
 		default:
