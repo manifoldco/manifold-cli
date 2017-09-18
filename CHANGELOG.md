@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - `manifold projects delete` can delete projects, provided they contain
   no resources
 - Refactor loading of different API clients into `api` package
+- `delete` supports project flag
 
 ## [0.5.1] - 2017-09-15
 
