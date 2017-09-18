@@ -10,6 +10,7 @@ import (
 	"github.com/rhymond/go-money"
 	"github.com/urfave/cli"
 
+	"github.com/manifoldco/manifold-cli/api"
 	"github.com/manifoldco/manifold-cli/clients"
 	"github.com/manifoldco/manifold-cli/data/catalog"
 	"github.com/manifoldco/manifold-cli/errs"
@@ -56,29 +57,19 @@ func view(cliCtx *cli.Context) error {
 		return err
 	}
 
-	marketplaceClient, err := loadMarketplaceClient()
-	if err != nil {
-		return err
-	}
-
-	catalogClient, err := loadCatalogClient()
-	if err != nil {
-		return err
-	}
-
-	pClient, err := loadProvisioningClient()
+	client, err := api.New(api.Catalog, api.Marketplace, api.Provisioning)
 	if err != nil {
 		return err
 	}
 
 	// Get catalog
-	catalog, err := catalog.New(ctx, catalogClient)
+	catalog, err := catalog.New(ctx, client.Catalog)
 	if err != nil {
 		return cli.NewExitError("Failed to fetch catalog data: "+err.Error(), -1)
 	}
 
 	// Get resources
-	resources, err := clients.FetchResources(ctx, marketplaceClient, teamID, project)
+	resources, err := clients.FetchResources(ctx, client.Marketplace, teamID, project)
 	if err != nil {
 		return cli.NewExitError(
 			fmt.Sprintf("Failed to fetch the list of provisioned resources: %s", err), -1)
@@ -88,14 +79,14 @@ func view(cliCtx *cli.Context) error {
 	}
 
 	// Get operations
-	oRes, err := clients.FetchOperations(ctx, pClient, teamID)
+	oRes, err := clients.FetchOperations(ctx, client.Provisioning, teamID)
 	if err != nil {
 		return cli.NewExitError("Failed to fetch the list of operations: "+err.Error(), -1)
 	}
 
 	resources, statuses := buildResourceList(resources, oRes)
 
-	projects, err := clients.FetchProjects(ctx, marketplaceClient, teamID)
+	projects, err := clients.FetchProjects(ctx, client.Marketplace, teamID)
 	if err != nil {
 		return cli.NewExitError(
 			fmt.Sprintf("Failed to fetch list of projects: %s", err), -1)

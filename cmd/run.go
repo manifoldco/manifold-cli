@@ -11,6 +11,7 @@ import (
 
 	"github.com/urfave/cli"
 
+	"github.com/manifoldco/manifold-cli/api"
 	"github.com/manifoldco/manifold-cli/clients"
 	"github.com/manifoldco/manifold-cli/errs"
 	"github.com/manifoldco/manifold-cli/middleware"
@@ -52,17 +53,17 @@ func run(cliCtx *cli.Context) error {
 		return err
 	}
 
-	marketplace, err := loadMarketplaceClient()
+	client, err := api.New(api.Marketplace)
 	if err != nil {
-		return cli.NewExitError("Could not create marketplace client: "+err.Error(), -1)
+		return err
 	}
 
-	rs, err := clients.FetchResources(ctx, marketplace, teamID, projectLabel)
+	rs, err := clients.FetchResources(ctx, client.Marketplace, teamID, projectLabel)
 	if err != nil {
 		return cli.NewExitError("Could not retrieve resources: "+err.Error(), -1)
 	}
 
-	cMap, err := fetchCredentials(ctx, marketplace, rs)
+	cMap, err := fetchCredentials(ctx, client.Marketplace, rs)
 	if err != nil {
 		return cli.NewExitError("Could not retrieve credentials: "+err.Error(), -1)
 	}

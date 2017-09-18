@@ -13,6 +13,7 @@ import (
 
 	"strings"
 
+	"github.com/manifoldco/manifold-cli/api"
 	"github.com/manifoldco/manifold-cli/clients"
 	"github.com/manifoldco/manifold-cli/errs"
 	"github.com/manifoldco/manifold-cli/generated/identity/client"
@@ -83,7 +84,7 @@ func createTeamCmd(cliCtx *cli.Context) error {
 		return err
 	}
 
-	identityClient, err := loadIdentityClient()
+	client, err := api.New(api.Identity)
 	if err != nil {
 		return err
 	}
@@ -94,7 +95,7 @@ func createTeamCmd(cliCtx *cli.Context) error {
 		return prompts.HandleSelectError(err, "Failed to name team")
 	}
 
-	if err := createTeam(ctx, teamName, identityClient); err != nil {
+	if err := createTeam(ctx, teamName, client.Identity); err != nil {
 		return cli.NewExitError(fmt.Sprintf("Could not create team: %s", err), -1)
 	}
 
@@ -119,12 +120,12 @@ func updateTeamCmd(cliCtx *cli.Context) error {
 		return err
 	}
 
-	identityClient, err := loadIdentityClient()
+	client, err := api.New(api.Identity)
 	if err != nil {
 		return err
 	}
 
-	team, err := selectTeam(ctx, teamName, identityClient)
+	team, err := selectTeam(ctx, teamName, client.Identity)
 	if err != nil {
 		return err
 	}
@@ -135,7 +136,7 @@ func updateTeamCmd(cliCtx *cli.Context) error {
 		return prompts.HandleSelectError(err, "Could not validate name")
 	}
 
-	if err := updateTeam(ctx, team, newTeamName, identityClient); err != nil {
+	if err := updateTeam(ctx, team, newTeamName, client.Identity); err != nil {
 		return cli.NewExitError(fmt.Sprintf("Could not update team: %s", err), -1)
 	}
 
@@ -160,12 +161,12 @@ func inviteToTeamCmd(cliCtx *cli.Context) error {
 		return err
 	}
 
-	identityClient, err := loadIdentityClient()
+	client, err := api.New(api.Identity)
 	if err != nil {
 		return err
 	}
 
-	team, err := selectTeam(ctx, teamName, identityClient)
+	team, err := selectTeam(ctx, teamName, client.Identity)
 	if err != nil {
 		return err
 	}
@@ -184,7 +185,7 @@ func inviteToTeamCmd(cliCtx *cli.Context) error {
 		}
 	}
 
-	if err := inviteToTeam(ctx, team, email, name, identityClient); err != nil {
+	if err := inviteToTeam(ctx, team, email, name, client.Identity); err != nil {
 		return cli.NewExitError(fmt.Sprintf("Could not invite to team: %s", err), -1)
 	}
 
@@ -195,13 +196,13 @@ func inviteToTeamCmd(cliCtx *cli.Context) error {
 func listTeamCmd(cliCtx *cli.Context) error {
 	ctx := context.Background()
 
-	identityClient, err := loadIdentityClient()
+	client, err := api.New(api.Identity)
 	if err != nil {
 		return err
 	}
 
 	prompts.SpinStart("Fetching Team Members")
-	teams, err := clients.FetchTeamsMembersCount(ctx, identityClient)
+	teams, err := clients.FetchTeamsMembersCount(ctx, client.Identity)
 	prompts.SpinStop()
 	if err != nil {
 		return cli.NewExitError(fmt.Sprintf("Failed to fetch list of teams: %s", err), -1)
@@ -239,17 +240,17 @@ func leaveTeamCmd(cliCtx *cli.Context) error {
 		return err
 	}
 
-	identityClient, err := loadIdentityClient()
+	client, err := api.New(api.Identity)
 	if err != nil {
 		return err
 	}
 
-	team, err := selectTeam(ctx, teamName, identityClient)
+	team, err := selectTeam(ctx, teamName, client.Identity)
 	if err != nil {
 		return err
 	}
 
-	memberships, err := clients.FetchMemberships(ctx, identityClient)
+	memberships, err := clients.FetchMemberships(ctx, client.Identity)
 	if err != nil {
 		return cli.NewExitError(fmt.Sprintf("Failed to fetch user memberships: %s", err), -1)
 	}
@@ -266,7 +267,7 @@ func leaveTeamCmd(cliCtx *cli.Context) error {
 		return cli.NewExitError("No memberships found", -1)
 	}
 
-	if err := leaveTeam(ctx, membershipID, identityClient); err != nil {
+	if err := leaveTeam(ctx, membershipID, client.Identity); err != nil {
 		return cli.NewExitError(fmt.Sprintf("Could not leave team: %s", err), -1)
 	}
 

@@ -9,6 +9,7 @@ import (
 
 	"github.com/urfave/cli"
 
+	"github.com/manifoldco/manifold-cli/api"
 	"github.com/manifoldco/manifold-cli/clients"
 	"github.com/manifoldco/manifold-cli/config"
 	"github.com/manifoldco/manifold-cli/errs"
@@ -52,12 +53,12 @@ func initDir(cliCtx *cli.Context) error {
 		return cli.NewExitError(fmt.Sprintf("This directory is already linked to project `%s`.", mYaml.Project), -1)
 	}
 
-	mClient, err := loadMarketplaceClient()
+	client, err := api.New(api.Marketplace)
 	if err != nil {
 		return err
 	}
 
-	ps, err := clients.FetchProjects(ctx, mClient, teamID)
+	ps, err := clients.FetchProjects(ctx, client.Marketplace, teamID)
 	if err != nil {
 		return cli.NewExitError(fmt.Sprintf("Failed to load projects: %s", err), -1)
 	}

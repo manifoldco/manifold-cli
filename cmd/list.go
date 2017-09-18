@@ -10,6 +10,7 @@ import (
 	"github.com/manifoldco/go-manifold"
 	"github.com/urfave/cli"
 
+	"github.com/manifoldco/manifold-cli/api"
 	"github.com/manifoldco/manifold-cli/clients"
 	"github.com/manifoldco/manifold-cli/config"
 	"github.com/manifoldco/manifold-cli/data/catalog"
@@ -60,43 +61,33 @@ func list(cliCtx *cli.Context) error {
 		return err
 	}
 
-	catalogClient, err := loadCatalogClient()
-	if err != nil {
-		return err
-	}
-
-	marketplaceClient, err := loadMarketplaceClient()
-	if err != nil {
-		return err
-	}
-
-	provisionClient, err := loadProvisioningClient()
+	client, err := api.New(api.Catalog, api.Identity, api.Marketplace, api.Provisioning)
 	if err != nil {
 		return err
 	}
 
 	// Get catalog
-	catalog, err := catalog.New(ctx, catalogClient)
+	catalog, err := catalog.New(ctx, client.Catalog)
 	if err != nil {
 		return cli.NewExitError("Failed to fetch catalog data: "+err.Error(), -1)
 	}
 
 	// Get resources
-	res, err := clients.FetchResources(ctx, marketplaceClient, teamID, projectLabel)
+	res, err := clients.FetchResources(ctx, client.Marketplace, teamID, projectLabel)
 	if err != nil {
 		return cli.NewExitError("Failed to fetch the list of provisioned "+
 			"resources: "+err.Error(), -1)
 	}
 
 	// Get operations
-	oRes, err := clients.FetchOperations(ctx, provisionClient, teamID)
+	oRes, err := clients.FetchOperations(ctx, client.Provisioning, teamID)
 	if err != nil {
 		return cli.NewExitError("Failed to fetch the list of operations: "+err.Error(), -1)
 	}
 
 	resources, statuses := buildResourceList(res, oRes)
 
-	list, err := groupResources(ctx, resources, teamID)
+	list, err := groupResources(ctx, client, resources, teamID)
 	if err != nil {
 		return err
 	}
@@ -223,7 +214,7 @@ func buildResourceList(resources []*models.Resource, operations []*pModels.Opera
 	return out, statuses
 }
 
-func groupResources(ctx context.Context, resources []*models.Resource, teamID *manifold.ID) (resourceList, error) {
+func groupResources(ctx context.Context, client *api.API, resources []*models.Resource, teamID *manifold.ID) (resourceList, error) {
 	list := resourceList{
 		totalResources: len(resources),
 	}
@@ -233,22 +224,12 @@ func groupResources(ctx context.Context, resources []*models.Resource, teamID *m
 		return list, err
 	}
 
-	marketplaceClient, err := loadMarketplaceClient()
-	if err != nil {
-		return list, err
-	}
-
-	identityClient, err := loadIdentityClient()
-	if err != nil {
-		return list, err
-	}
-
-	projects, err := clients.FetchProjects(ctx, marketplaceClient, teamID)
+	projects, err := clients.FetchProjects(ctx, client.Marketplace, teamID)
 	if err != nil {
 		return list, cli.NewExitError("Failed to fetch the list of projects: "+err.Error(), -1)
 	}
 
-	teams, err := clients.FetchTeams(ctx, identityClient)
+	teams, err := clients.FetchTeams(ctx, client.Identity)
 	if err != nil {
 		return list, err
 	}
