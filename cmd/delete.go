@@ -32,6 +32,7 @@ func init() {
 		Category:  "RESOURCES",
 		Action:    middleware.Chain(middleware.EnsureSession, middleware.LoadTeamPrefs, deleteCmd),
 		Flags: append(teamFlags, []cli.Flag{
+			projectFlag(),
 			skipFlag(),
 		}...),
 	}
@@ -58,6 +59,11 @@ func deleteCmd(cliCtx *cli.Context) error {
 		return err
 	}
 
+	projectLabel, err := validateLabel(cliCtx, "project")
+	if err != nil {
+		return err
+	}
+
 	cfg, err := config.Load()
 	if err != nil {
 		return cli.NewExitError(fmt.Sprintf("Could not load configuration: %s", err), -1)
@@ -73,7 +79,7 @@ func deleteCmd(cliCtx *cli.Context) error {
 		return err
 	}
 
-	res, err := clients.FetchResources(ctx, client.Marketplace, teamID, "")
+	res, err := clients.FetchResources(ctx, client.Marketplace, teamID, projectLabel)
 	if err != nil {
 		return cli.NewExitError(
 			fmt.Sprintf("Failed to fetch the list of provisioned resources: %s", err), -1)
