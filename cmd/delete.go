@@ -151,7 +151,8 @@ func deleteResource(ctx context.Context, cfg *config.Config, teamID *manifold.ID
 		Type:    &typeStr,
 		Version: &version,
 		Body: &pModels.Deprovision{
-			State: &state,
+			ResourceID: resource.ID,
+			State:      &state,
 		},
 	}
 
@@ -162,7 +163,6 @@ func deleteResource(ctx context.Context, cfg *config.Config, teamID *manifold.ID
 	} else {
 		op.Body.SetTeamID(teamID)
 	}
-	op.Body.SetResourceID(resource.ID)
 
 	d := operation.NewPutOperationsIDParamsWithContext(ctx)
 	d.SetBody(op)

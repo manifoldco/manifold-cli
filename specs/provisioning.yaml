@@ -241,8 +241,6 @@ definitions:
       type:
         type: string
         description: Type of operation this object represents
-      resource_id:
-        $ref: '#/definitions/ID'
       user_id:
         $ref: '#/definitions/OptionalID'
         description: User owning the operation, cannot be supplied if team_id defined
@@ -264,7 +262,6 @@ definitions:
     additionalProperties: false
     required:
     - type
-    - resource_id
     - message
     - created_at
     - updated_at
@@ -274,6 +271,8 @@ definitions:
     - $ref: '#/definitions/OperationBody'
     - type: object
       properties:
+        resource_id:
+          $ref: '#/definitions/ID'
         state:
           description: State must be specified as creating on a PUT operation
           type: string
@@ -317,12 +316,15 @@ definitions:
       - name
       - label
       - source
+      - resource_id
   resize:
     type: object
     allOf:
     - $ref: '#/definitions/OperationBody'
     - type: object
       properties:
+        resource_id:
+          $ref: '#/definitions/ID'
         state:
           description: State must be specified as resize on a PUT operation
           type: string
@@ -338,33 +340,41 @@ definitions:
       required:
       - state
       - plan_id
+      - resource_id
   move:
     type: object
     allOf:
-      - $ref: '#/definitions/OperationBody'
-      - type: object
-        properties:
-          state:
-            description: State must be specified as move on a PUT operation
-            type: string
-            enum:
-              - move
-              - commit
-              - error
-              - done
-          project_id:
-            $ref: '#/definitions/OptionalID'
-            description: Project in which the operation is grouped.
-        additionalProperties: false
-        required:
-          - state
-          - project_id
+    - $ref: '#/definitions/OperationBody'
+    - type: object
+      properties:
+        resource_id:
+          $ref: '#/definitions/ID'
+        state:
+          description: State must be specified as move on a PUT operation
+          type: string
+          enum:
+          - move
+          - commit
+          - error
+          - done
+        project_id:
+          $ref: '#/definitions/OptionalID'
+          description: |
+            The new project for this resource. If `null`, remove
+            any existing project from this resource.
+      additionalProperties: false
+      required:
+      - state
+      - project_id
+      - resource_id
   deprovision:
     type: object
     allOf:
     - $ref: '#/definitions/OperationBody'
     - type: object
       properties:
+        resource_id:
+          $ref: '#/definitions/ID'
         state:
           description: State must be specified as deprovision on a PUT operation.
           type: string
@@ -377,6 +387,29 @@ definitions:
       additionalProperties: false
       required:
       - state
+      - resource_id
+  project_delete:
+    type: object
+    allOf:
+    - $ref: '#/definitions/OperationBody'
+    - type: object
+      properties:
+        project_id:
+          $ref: '#/definitions/ID'
+          description: |
+            The the project to delete.
+        state:
+          description: State must be specified as delete on a PUT operation
+          type: string
+          enum:
+          - delete
+          - commit
+          - error
+          - done
+      additionalProperties: false
+      required:
+      - state
+      - project_id
   Operation:
     type: object
     properties:

@@ -9,15 +9,23 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Added
 
+- `manifold projects delete` can delete projects, provided they contain
+  no resources
+
+## [0.5.1] - 2017-09-15
+
+### Added
+
 - Chained e-mail verification step to the end of the signup command
 
 ### Fixed
 
+- `resize` message output
 
 ### Removed
 
 
-## [0.5.0] - 2017-08-14
+## [0.5.0] - 2017-09-14
 
 ### Added
 

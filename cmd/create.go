@@ -250,20 +250,20 @@ func createResource(ctx context.Context, cfg *config.Config, teamID *manifold.ID
 		Type:    &typeStr,
 		Version: &version,
 		Body: &pModels.Provision{
-			Label:     &empty,
-			Name:      &resourceName,
-			Source:    &source,
-			PlanID:    planID,
-			ProductID: productID,
-			RegionID:  regionID,
-			State:     &state,
-			ProjectID: projectID,
+			ResourceID: resourceID,
+			Label:      &empty,
+			Name:       &resourceName,
+			Source:     &source,
+			PlanID:     planID,
+			ProductID:  productID,
+			RegionID:   regionID,
+			State:      &state,
+			ProjectID:  projectID,
 		},
 	}
 
 	op.Body.SetCreatedAt(&curTime)
 	op.Body.SetUpdatedAt(&curTime)
-	op.Body.SetResourceID(resourceID)
 	if teamID == nil {
 		op.Body.SetUserID(&s.User().ID)
 	} else {
@@ -378,6 +378,13 @@ func waitForOp(ctx context.Context, pClient *provisioning.Provisioning, op *pMod
 				return op, nil
 			case "error":
 				return nil, fmt.Errorf("Error completing move")
+			}
+		case *pModels.ProjectDelete:
+			switch *provision.State {
+			case "done":
+				return op, nil
+			case "error":
+				return nil, fmt.Errorf("Error completing project delete")
 			}
 		default:
 			return nil, fmt.Errorf("Unknown provision operation")

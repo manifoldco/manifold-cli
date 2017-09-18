@@ -165,9 +165,9 @@ func buildResourceList(resources []*models.Resource, operations []*pModels.Opera
 				continue
 			}
 
-			statuses[op.Body.ResourceID()] = "Creating"
+			statuses[body.ResourceID] = "Creating"
 			out = append(out, &models.Resource{
-				ID: op.Body.ResourceID(),
+				ID: body.ResourceID,
 				Body: &models.ResourceBody{
 					CreatedAt: op.Body.CreatedAt(),
 					UpdatedAt: op.Body.UpdatedAt(),
@@ -192,7 +192,7 @@ func buildResourceList(resources []*models.Resource, operations []*pModels.Opera
 				continue
 			}
 
-			statuses[op.Body.ResourceID()] = "Resizing"
+			statuses[body.ResourceID] = "Resizing"
 		case "deprovision":
 			body := op.Body.(*pModels.Deprovision)
 			if body.State == nil {
@@ -203,7 +203,7 @@ func buildResourceList(resources []*models.Resource, operations []*pModels.Opera
 				continue
 			}
 
-			statuses[op.Body.ResourceID()] = "Deleting"
+			statuses[body.ResourceID] = "Deleting"
 		}
 	}
 
