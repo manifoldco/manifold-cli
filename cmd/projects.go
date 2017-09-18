@@ -289,17 +289,12 @@ func deleteProjectCmd(cliCtx *cli.Context) error {
 		return err
 	}
 
-	marketplaceClient, err := loadMarketplaceClient()
+	client, err := api.New(api.Marketplace, api.Provisioning)
 	if err != nil {
 		return err
 	}
 
-	provisioningClient, err := loadProvisioningClient()
-	if err != nil {
-		return err
-	}
-
-	p, err := selectProject(ctx, projectLabel, teamID, marketplaceClient)
+	p, err := selectProject(ctx, projectLabel, teamID, client.Marketplace)
 	if err != nil {
 		return err
 	}
@@ -339,7 +334,7 @@ func deleteProjectCmd(cliCtx *cli.Context) error {
 	d.SetBody(op)
 	d.SetID(ID.String())
 
-	res, err := provisioningClient.Operation.PutOperationsID(d, nil)
+	res, err := client.Provisioning.Operation.PutOperationsID(d, nil)
 	if err != nil {
 		switch e := err.(type) {
 		case *operation.PutOperationsIDBadRequest:
@@ -357,7 +352,7 @@ func deleteProjectCmd(cliCtx *cli.Context) error {
 		}
 	}
 
-	waitForOp(ctx, provisioningClient, res.Payload)
+	waitForOp(ctx, client.Provisioning, res.Payload)
 	spin.Stop()
 	fmt.Printf("Your project '%s' has been deleted\n", projectLabel)
 	return nil
