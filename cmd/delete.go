@@ -79,13 +79,13 @@ func deleteCmd(cliCtx *cli.Context) error {
 		return err
 	}
 
-	res, err := clients.FetchResources(ctx, client.Marketplace, teamID, projectLabel)
+	resources, err := clients.FetchResources(ctx, client.Marketplace, teamID, projectLabel)
 	if err != nil {
 		return cli.NewExitError(
 			fmt.Sprintf("Failed to fetch the list of provisioned resources: %s", err), -1)
 	}
 
-	if len(res) == 0 {
+	if len(resources) == 0 {
 		return errs.ErrNoResources
 	}
 
@@ -97,22 +97,39 @@ func deleteCmd(cliCtx *cli.Context) error {
 
 	var resource *mModels.Resource
 	if resourceLabel != "" {
-		resource, err = pickResourcesByLabel(res, resourceLabel)
+		resource, err = pickResourcesByLabel(resources, resourceLabel)
 		if err != nil {
 			return cli.NewExitError(
 				fmt.Sprintf("Failed to find resource \"%s\": %s", resourceLabel, err), -1)
 		}
 	} else {
-		resourceIdx, _, err := prompts.SelectResource(res, projects, resourceLabel)
+		idx, _, err := prompts.SelectResource(resources, projects, resourceLabel)
 		if err != nil {
 			return prompts.HandleSelectError(err, "Could not select Resource")
 		}
 
-		resource = res[resourceIdx]
+		resource = resources[idx]
 	}
 
-	if _, err := prompts.Confirm(
-		fmt.Sprintf("Are you sure you want to delete \"%s\"", resource.Body.Label)); err != nil {
+	var project *mModels.Project
+	if resource.Body.ProjectID != nil {
+		for _, p := range projects {
+			if p.ID == *resource.Body.ProjectID {
+				project = p
+			}
+		}
+	}
+
+	var msg string
+	if project == nil {
+		msg = fmt.Sprintf("Are you sure you want to delete %q", resource.Body.Label)
+	} else {
+		msg = fmt.Sprintf("Are you sure you want to delete \"%s/%s\"",
+			project.Body.Label, resource.Body.Label)
+	}
+
+	_, err = prompts.Confirm(msg)
+	if err != nil {
 		return cli.NewExitError("Resource not deleted", -1)
 	}
 
