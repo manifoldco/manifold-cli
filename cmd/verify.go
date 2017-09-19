@@ -7,7 +7,7 @@ import (
 	"github.com/urfave/cli"
 
 	"github.com/manifoldco/manifold-cli/analytics"
-	"github.com/manifoldco/manifold-cli/clients"
+	"github.com/manifoldco/manifold-cli/api"
 	"github.com/manifoldco/manifold-cli/config"
 	"github.com/manifoldco/manifold-cli/errs"
 	"github.com/manifoldco/manifold-cli/prompts"
@@ -69,10 +69,9 @@ func verifyEmailCode(ctx context.Context, cfg *config.Config,
 		return err
 	}
 
-	identityClient, err := clients.NewIdentity(cfg)
+	client, err := api.New(api.Identity)
 	if err != nil {
-		return cli.NewExitError(
-			fmt.Sprintf("Failed to create Identity API client: %s", err), -1)
+		return err
 	}
 
 	params := user.NewPostUsersVerifyParams()
@@ -81,7 +80,7 @@ func verifyEmailCode(ctx context.Context, cfg *config.Config,
 			VerificationCode: &verificationCode,
 		},
 	})
-	_, err = identityClient.User.PostUsersVerify(params, nil)
+	_, err = client.Identity.User.PostUsersVerify(params, nil)
 	if err != nil {
 		return cli.NewExitError(
 			fmt.Sprintf("Failed to verify e-mail code: %s", err), -1)

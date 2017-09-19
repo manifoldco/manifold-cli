@@ -12,6 +12,7 @@ import (
 	"github.com/urfave/cli"
 
 	"github.com/manifoldco/manifold-cli/analytics"
+	"github.com/manifoldco/manifold-cli/api"
 	"github.com/manifoldco/manifold-cli/clients"
 	"github.com/manifoldco/manifold-cli/config"
 	"github.com/manifoldco/manifold-cli/data/catalog"
@@ -108,29 +109,13 @@ func create(cliCtx *cli.Context) error {
 	if err != nil {
 		return cli.NewExitError("Could not retrieve session: "+err.Error(), -1)
 	}
-	if !s.Authenticated() {
-		return errs.ErrNotLoggedIn
-	}
 
-	cClient, err := clients.NewCatalog(cfg)
+	client, err := api.New(api.Catalog, api.Marketplace, api.Provisioning)
 	if err != nil {
-		return cli.NewExitError("Failed to create a Catalog API client: "+
-			err.Error(), -1)
+		return err
 	}
 
-	mClient, err := clients.NewMarketplace(cfg)
-	if err != nil {
-		return cli.NewExitError("Failed to create Marketplace API client: "+
-			err.Error(), -1)
-	}
-
-	pClient, err := clients.NewProvisioning(cfg)
-	if err != nil {
-		return cli.NewExitError("Failed to create a Provisioning API client: "+
-			err.Error(), -1)
-	}
-
-	catalog, err := catalog.New(ctx, cClient)
+	catalog, err := catalog.New(ctx, client.Catalog)
 	if err != nil {
 		return cli.NewExitError("Failed to fetch catalog data: "+err.Error(), -1)
 	}
@@ -163,7 +148,7 @@ func create(cliCtx *cli.Context) error {
 		region = regions[regionIdx]
 	}
 
-	projects, err := clients.FetchProjects(ctx, mClient, teamID)
+	projects, err := clients.FetchProjects(ctx, client.Marketplace, teamID)
 	if err != nil {
 		return cli.NewExitError("Failed to fetch projects list: "+err.Error(), -1)
 	}
@@ -196,7 +181,7 @@ func create(cliCtx *cli.Context) error {
 		defer spin.Stop()
 	}
 
-	op, err := createResource(ctx, cfg, teamID, s, pClient, custom, product, plan, region,
+	op, err := createResource(ctx, cfg, teamID, s, client.Provisioning, custom, product, plan, region,
 		project, resourceName, dontWait)
 	if err != nil {
 		return cli.NewExitError("Could not create resource: "+err.Error(), -1)
@@ -265,20 +250,20 @@ func createResource(ctx context.Context, cfg *config.Config, teamID *manifold.ID
 		Type:    &typeStr,
 		Version: &version,
 		Body: &pModels.Provision{
-			Label:     &empty,
-			Name:      &resourceName,
-			Source:    &source,
-			PlanID:    planID,
-			ProductID: productID,
-			RegionID:  regionID,
-			State:     &state,
-			ProjectID: projectID,
+			ResourceID: resourceID,
+			Label:      &empty,
+			Name:       &resourceName,
+			Source:     &source,
+			PlanID:     planID,
+			ProductID:  productID,
+			RegionID:   regionID,
+			State:      &state,
+			ProjectID:  projectID,
 		},
 	}
 
 	op.Body.SetCreatedAt(&curTime)
 	op.Body.SetUpdatedAt(&curTime)
-	op.Body.SetResourceID(resourceID)
 	if teamID == nil {
 		op.Body.SetUserID(&s.User().ID)
 	} else {
@@ -393,6 +378,13 @@ func waitForOp(ctx context.Context, pClient *provisioning.Provisioning, op *pMod
 				return op, nil
 			case "error":
 				return nil, fmt.Errorf("Error completing move")
+			}
+		case *pModels.ProjectDelete:
+			switch *provision.State {
+			case "done":
+				return op, nil
+			case "error":
+				return nil, fmt.Errorf("Error completing project delete")
 			}
 		default:
 			return nil, fmt.Errorf("Unknown provision operation")

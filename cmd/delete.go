@@ -11,6 +11,7 @@ import (
 	"github.com/manifoldco/go-manifold"
 	"github.com/manifoldco/go-manifold/idtype"
 	"github.com/manifoldco/manifold-cli/analytics"
+	"github.com/manifoldco/manifold-cli/api"
 	"github.com/manifoldco/manifold-cli/clients"
 	"github.com/manifoldco/manifold-cli/config"
 	"github.com/manifoldco/manifold-cli/errs"
@@ -31,6 +32,7 @@ func init() {
 		Category:  "RESOURCES",
 		Action:    middleware.Chain(middleware.EnsureSession, middleware.LoadTeamPrefs, deleteCmd),
 		Flags: append(teamFlags, []cli.Flag{
+			projectFlag(),
 			skipFlag(),
 		}...),
 	}
@@ -57,6 +59,11 @@ func deleteCmd(cliCtx *cli.Context) error {
 		return err
 	}
 
+	projectLabel, err := validateLabel(cliCtx, "project")
+	if err != nil {
+		return err
+	}
+
 	cfg, err := config.Load()
 	if err != nil {
 		return cli.NewExitError(fmt.Sprintf("Could not load configuration: %s", err), -1)
@@ -67,27 +74,22 @@ func deleteCmd(cliCtx *cli.Context) error {
 		return cli.NewExitError(fmt.Sprintf("Could not retrieve session: %s", err), -1)
 	}
 
-	marketplaceClient, err := clients.NewMarketplace(cfg)
+	client, err := api.New(api.Marketplace, api.Provisioning)
 	if err != nil {
-		return cli.NewExitError(fmt.Sprintf("Failed to create Maketplace Client: %s", err), -1)
+		return err
 	}
 
-	provisioningClient, err := clients.NewProvisioning(cfg)
-	if err != nil {
-		return cli.NewExitError(fmt.Sprintf("Failed to create Provision Client: %s", err), -1)
-	}
-
-	res, err := clients.FetchResources(ctx, marketplaceClient, teamID, "")
+	resources, err := clients.FetchResources(ctx, client.Marketplace, teamID, projectLabel)
 	if err != nil {
 		return cli.NewExitError(
 			fmt.Sprintf("Failed to fetch the list of provisioned resources: %s", err), -1)
 	}
 
-	if len(res) == 0 {
+	if len(resources) == 0 {
 		return errs.ErrNoResources
 	}
 
-	projects, err := clients.FetchProjects(ctx, marketplaceClient, teamID)
+	projects, err := clients.FetchProjects(ctx, client.Marketplace, teamID)
 	if err != nil {
 		return cli.NewExitError(
 			fmt.Sprintf("Failed to fetch list of projects: %s", err), -1)
@@ -95,22 +97,39 @@ func deleteCmd(cliCtx *cli.Context) error {
 
 	var resource *mModels.Resource
 	if resourceLabel != "" {
-		resource, err = pickResourcesByLabel(res, resourceLabel)
+		resource, err = pickResourcesByLabel(resources, resourceLabel)
 		if err != nil {
 			return cli.NewExitError(
 				fmt.Sprintf("Failed to find resource \"%s\": %s", resourceLabel, err), -1)
 		}
 	} else {
-		resourceIdx, _, err := prompts.SelectResource(res, projects, resourceLabel)
+		idx, _, err := prompts.SelectResource(resources, projects, resourceLabel)
 		if err != nil {
 			return prompts.HandleSelectError(err, "Could not select Resource")
 		}
 
-		resource = res[resourceIdx]
+		resource = resources[idx]
 	}
 
-	if _, err := prompts.Confirm(
-		fmt.Sprintf("Are you sure you want to delete \"%s\"", resource.Body.Label)); err != nil {
+	var project *mModels.Project
+	if resource.Body.ProjectID != nil {
+		for _, p := range projects {
+			if p.ID == *resource.Body.ProjectID {
+				project = p
+			}
+		}
+	}
+
+	var msg string
+	if project == nil {
+		msg = fmt.Sprintf("Are you sure you want to delete %q", resource.Body.Label)
+	} else {
+		msg = fmt.Sprintf("Are you sure you want to delete \"%s/%s\"",
+			project.Body.Label, resource.Body.Label)
+	}
+
+	_, err = prompts.Confirm(msg)
+	if err != nil {
 		return cli.NewExitError("Resource not deleted", -1)
 	}
 
@@ -119,7 +138,7 @@ func deleteCmd(cliCtx *cli.Context) error {
 		spin.Start()
 	}
 
-	err = deleteResource(ctx, cfg, teamID, s, resource, provisioningClient, dontWait)
+	err = deleteResource(ctx, cfg, teamID, s, resource, client.Provisioning, dontWait)
 	if err != nil {
 		return cli.NewExitError(fmt.Sprintf("Failed to delete resource: %s", err), -1)
 	}
@@ -155,7 +174,8 @@ func deleteResource(ctx context.Context, cfg *config.Config, teamID *manifold.ID
 		Type:    &typeStr,
 		Version: &version,
 		Body: &pModels.Deprovision{
-			State: &state,
+			ResourceID: resource.ID,
+			State:      &state,
 		},
 	}
 
@@ -166,7 +186,6 @@ func deleteResource(ctx context.Context, cfg *config.Config, teamID *manifold.ID
 	} else {
 		op.Body.SetTeamID(teamID)
 	}
-	op.Body.SetResourceID(resource.ID)
 
 	d := operation.NewPutOperationsIDParamsWithContext(ctx)
 	d.SetBody(op)

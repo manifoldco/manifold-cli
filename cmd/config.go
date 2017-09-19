@@ -8,8 +8,8 @@ import (
 
 	"github.com/urfave/cli"
 
+	"github.com/manifoldco/manifold-cli/api"
 	"github.com/manifoldco/manifold-cli/clients"
-	"github.com/manifoldco/manifold-cli/config"
 	"github.com/manifoldco/manifold-cli/middleware"
 	"github.com/manifoldco/manifold-cli/prompts"
 
@@ -70,17 +70,12 @@ func patchConfig(cliCtx *cli.Context, req map[string]*string) error {
 		return err
 	}
 
-	cfg, err := config.Load()
+	client, err := api.New(api.Marketplace)
 	if err != nil {
-		return cli.NewExitError("Could not load config: "+err.Error(), -1)
+		return err
 	}
 
-	marketplace, err := clients.NewMarketplace(cfg)
-	if err != nil {
-		return cli.NewExitError("Could not create marketplace client: "+err.Error(), -1)
-	}
-
-	resources, err := clients.FetchResources(ctx, marketplace, teamID, "")
+	resources, err := clients.FetchResources(ctx, client.Marketplace, teamID, "")
 	if err != nil {
 		return cli.NewExitError("Could not retrieve resources: "+err.Error(), -1)
 	}
@@ -104,7 +99,7 @@ func patchConfig(cliCtx *cli.Context, req map[string]*string) error {
 	spin := prompts.NewSpinner("Setting resource config")
 	spin.Start()
 	defer spin.Stop()
-	_, err = marketplace.Credential.PatchResourcesIDConfig(&credential.PatchResourcesIDConfigParams{
+	_, err = client.Marketplace.Credential.PatchResourcesIDConfig(&credential.PatchResourcesIDConfigParams{
 		ID:      resource.ID.String(),
 		Body:    req,
 		Context: ctx,

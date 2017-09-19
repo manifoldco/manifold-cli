@@ -12,6 +12,7 @@ import (
 	"github.com/manifoldco/go-manifold"
 	"github.com/urfave/cli"
 
+	"github.com/manifoldco/manifold-cli/api"
 	"github.com/manifoldco/manifold-cli/clients"
 	"github.com/manifoldco/manifold-cli/middleware"
 	"github.com/manifoldco/manifold-cli/prompts"
@@ -59,13 +60,13 @@ func export(cliCtx *cli.Context) error {
 		return err
 	}
 
-	marketplace, err := loadMarketplaceClient()
+	client, err := api.New(api.Marketplace)
 	if err != nil {
 		return err
 	}
 
 	prompts.SpinStart("Fetching Resources")
-	resources, err := clients.FetchResources(ctx, marketplace, teamID, projectLabel)
+	resources, err := clients.FetchResources(ctx, client.Marketplace, teamID, projectLabel)
 	prompts.SpinStop()
 	if err != nil {
 		return cli.NewExitError("Could not retrieve resources: "+err.Error(), -1)
@@ -79,7 +80,7 @@ func export(cliCtx *cli.Context) error {
 		return resources[i].Body.Name < resources[j].Body.Name
 	})
 
-	cMap, err := fetchCredentials(ctx, marketplace, resources)
+	cMap, err := fetchCredentials(ctx, client.Marketplace, resources)
 	if err != nil {
 		return cli.NewExitError("Could not retrieve credentials: "+err.Error(), -1)
 	}

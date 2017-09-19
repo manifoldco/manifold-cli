@@ -10,6 +10,7 @@ import (
 
 	"github.com/manifoldco/go-manifold"
 	"github.com/manifoldco/go-manifold/idtype"
+	"github.com/manifoldco/manifold-cli/api"
 	"github.com/manifoldco/manifold-cli/clients"
 	catalogcache "github.com/manifoldco/manifold-cli/data/catalog"
 	"github.com/manifoldco/manifold-cli/errs"
@@ -65,27 +66,17 @@ func resizeResourceCmd(cliCtx *cli.Context) error {
 	dontWait := cliCtx.Bool("no-wait")
 	planLabel := cliCtx.String("plan")
 
-	marketplaceClient, err := loadMarketplaceClient()
+	client, err := api.New(api.Catalog, api.Marketplace, api.Provisioning)
 	if err != nil {
 		return err
 	}
 
-	provisioningClient, err := loadProvisioningClient()
-	if err != nil {
-		return err
-	}
-
-	catalogClient, err := loadCatalogClient()
-	if err != nil {
-		return err
-	}
-
-	catalog, err := catalogcache.New(ctx, catalogClient)
+	catalog, err := catalogcache.New(ctx, client.Catalog)
 	if err != nil {
 		return cli.NewExitError(fmt.Sprintf("Could not load client catalog: %s", err), -1)
 	}
 
-	res, err := clients.FetchResources(ctx, marketplaceClient, teamID, cliCtx.String("project"))
+	res, err := clients.FetchResources(ctx, client.Marketplace, teamID, cliCtx.String("project"))
 	if err != nil {
 		return cli.NewExitError(fmt.Sprintf("Could not load resources: %s", err), -1)
 	}
@@ -93,7 +84,7 @@ func resizeResourceCmd(cliCtx *cli.Context) error {
 		return errs.ErrNoResources
 	}
 
-	projects, err := clients.FetchProjects(ctx, marketplaceClient, teamID)
+	projects, err := clients.FetchProjects(ctx, client.Marketplace, teamID)
 	if err != nil {
 		return cli.NewExitError(fmt.Sprintf("Could not load projects: %s", err), -1)
 	}
@@ -118,11 +109,11 @@ func resizeResourceCmd(cliCtx *cli.Context) error {
 	spin.Start()
 	defer spin.Stop()
 
-	if err := resizeResource(ctx, r, p, provisioningClient, teamID, userID, dontWait); err != nil {
+	if err := resizeResource(ctx, r, p, client.Provisioning, teamID, userID, dontWait); err != nil {
 		return cli.NewExitError(fmt.Sprintf("Could not update resource \"%s\": %s", string(r.Body.Label), err), -1)
 	}
 
-	fmt.Printf("\nYour resource \"%s\" has been resized to the plan \"%s\"", r.Body.Label, p.Body.Label)
+	fmt.Printf("\nYour resource %q has been resized to the plan %q\n", r.Body.Label, p.Body.Label)
 
 	return nil
 }
@@ -149,14 +140,14 @@ func resizeResource(ctx context.Context, r *mModels.Resource, p *cModels.Plan,
 		Type:    &typeStr,
 		Version: &version,
 		Body: &models.Resize{
-			PlanID: p.ID,
-			State:  &state,
+			PlanID:     p.ID,
+			ResourceID: r.ID,
+			State:      &state,
 		},
 	}
 
 	op.Body.SetCreatedAt(&curTime)
 	op.Body.SetUpdatedAt(&curTime)
-	op.Body.SetResourceID(r.ID)
 
 	if tid == nil {
 		op.Body.SetUserID(uid)

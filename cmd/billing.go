@@ -8,6 +8,7 @@ import (
 	"github.com/manifoldco/go-manifold"
 	"github.com/urfave/cli"
 
+	"github.com/manifoldco/manifold-cli/api"
 	"github.com/manifoldco/manifold-cli/config"
 	"github.com/manifoldco/manifold-cli/errs"
 	"github.com/manifoldco/manifold-cli/middleware"
@@ -71,7 +72,7 @@ func addBillingProfileCmd(cliCtx *cli.Context) error {
 		return err
 	}
 
-	bClient, err := loadBillingClient()
+	client, err := api.New(api.Billing)
 	if err != nil {
 		return err
 	}
@@ -93,7 +94,7 @@ func addBillingProfileCmd(cliCtx *cli.Context) error {
 	spin := prompts.NewSpinner("Creating billing profile")
 	spin.Start()
 	defer spin.Stop()
-	_, err = bClient.Profile.PostProfiles(params, nil)
+	_, err = client.Billing.Profile.PostProfiles(params, nil)
 	if err != nil {
 		return cli.NewExitError("Failed to add billing profile: "+err.Error(), -1)
 	}
@@ -120,7 +121,7 @@ func updateBillingProfileCmd(cliCtx *cli.Context) error {
 		return err
 	}
 
-	bClient, err := loadBillingClient()
+	client, err := api.New(api.Billing)
 	if err != nil {
 		return err
 	}
@@ -140,7 +141,7 @@ func updateBillingProfileCmd(cliCtx *cli.Context) error {
 	spin := prompts.NewSpinner("Updating billing profile")
 	spin.Start()
 	defer spin.Stop()
-	_, err = bClient.Profile.PatchProfilesID(params, nil)
+	_, err = client.Billing.Profile.PatchProfilesID(params, nil)
 	if err != nil {
 		return cli.NewExitError("Failed to update billing profile: "+err.Error(), -1)
 	}
@@ -171,7 +172,7 @@ func redeemCouponCmd(cliCtx *cli.Context) error {
 		return err
 	}
 
-	bClient, err := loadBillingClient()
+	client, err := api.New(api.Billing)
 	if err != nil {
 		return err
 	}
@@ -192,7 +193,7 @@ func redeemCouponCmd(cliCtx *cli.Context) error {
 	params := discount.NewPostDiscountsParamsWithContext(ctx)
 	params.SetBody(body)
 
-	_, err = bClient.Discount.PostDiscounts(params, nil)
+	_, err = client.Billing.Discount.PostDiscounts(params, nil)
 
 	if err != nil {
 		switch e := err.(type) {

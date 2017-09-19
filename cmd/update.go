@@ -7,6 +7,7 @@ import (
 	"github.com/urfave/cli"
 
 	"github.com/manifoldco/go-manifold"
+	"github.com/manifoldco/manifold-cli/api"
 	"github.com/manifoldco/manifold-cli/clients"
 	"github.com/manifoldco/manifold-cli/errs"
 	"github.com/manifoldco/manifold-cli/generated/marketplace/client/resource"
@@ -56,14 +57,14 @@ func updateResourceCmd(cliCtx *cli.Context) error {
 		return err
 	}
 
-	marketplaceClient, err := loadMarketplaceClient()
+	client, err := api.New(api.Marketplace)
 	if err != nil {
 		return err
 	}
 
 	var resources []*models.Resource
 
-	resources, err = clients.FetchResources(ctx, marketplaceClient, teamID, project)
+	resources, err = clients.FetchResources(ctx, client.Marketplace, teamID, project)
 
 	if err != nil {
 		return cli.NewExitError(
@@ -74,7 +75,7 @@ func updateResourceCmd(cliCtx *cli.Context) error {
 		return cli.NewExitError("No resources found for updating", -1)
 	}
 
-	projects, err := clients.FetchProjects(ctx, marketplaceClient, teamID)
+	projects, err := clients.FetchProjects(ctx, client.Marketplace, teamID)
 	if err != nil {
 		return cli.NewExitError(
 			fmt.Sprintf("Failed to fetch list of projects: %s", err), -1)
@@ -110,7 +111,7 @@ func updateResourceCmd(cliCtx *cli.Context) error {
 
 	prompts.SpinStart(fmt.Sprintf("Updating resource %q", resource.Body.Label))
 
-	mrb, err := updateResource(ctx, resource, marketplaceClient, newName)
+	mrb, err := updateResource(ctx, resource, client.Marketplace, newName)
 	if err != nil {
 		return cli.NewExitError(fmt.Sprintf("Failed to update resource: %s", err), -1)
 	}

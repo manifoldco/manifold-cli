@@ -5,7 +5,21 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
-## Unreleased
+## [Unreleased]
+
+### Added
+
+- `manifold projects delete` can delete projects, provided they contain
+  no resources
+- Refactor loading of different API clients into `api` package
+- `delete` supports project flag
+
+### Fixed
+
+- `project add` fails when there is no project
+- colors breaking alignment of tabwriter
+
+## [0.5.1] - 2017-09-15
 
 ### Added
 
@@ -13,9 +27,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Fixed
 
-- colors breaking alignment of tabwriter
-
-### Removed
+- `resize` message output
 
 ## [0.5.0] - 2017-09-14
 
