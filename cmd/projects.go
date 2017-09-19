@@ -5,11 +5,10 @@ import (
 	"fmt"
 	"os"
 	"strings"
-	"text/tabwriter"
 
 	"time"
 
-	"github.com/fatih/color"
+	"github.com/juju/ansiterm"
 
 	"github.com/go-openapi/strfmt"
 	"github.com/urfave/cli"
@@ -18,6 +17,7 @@ import (
 	"github.com/manifoldco/go-manifold/idtype"
 	"github.com/manifoldco/manifold-cli/api"
 	"github.com/manifoldco/manifold-cli/clients"
+	"github.com/manifoldco/manifold-cli/color"
 	"github.com/manifoldco/manifold-cli/errs"
 	mClient "github.com/manifoldco/manifold-cli/generated/marketplace/client"
 	projectClient "github.com/manifoldco/manifold-cli/generated/marketplace/client/project"
@@ -181,11 +181,9 @@ func listProjectsCmd(cliCtx *cli.Context) error {
 		return cli.NewExitError(fmt.Sprintf("Failed to fetch list of projects: %s", err), -1)
 	}
 
-	w := tabwriter.NewWriter(os.Stdout, 0, 0, 8, ' ', 0)
+	w := ansiterm.NewTabWriter(os.Stdout, 0, 0, 8, ' ', 0)
 
-	bold := color.New(color.Bold).SprintFunc()
-
-	fmt.Fprintf(w, "%s\n\n", bold("Project"))
+	fmt.Fprintf(w, "%s\n\n", color.Bold("Project"))
 
 	for _, project := range projects {
 		fmt.Fprintf(w, "%s\n", project.Body.Label)

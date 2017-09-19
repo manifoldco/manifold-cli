@@ -1,5 +1,5 @@
-hash: 21e1465facd47112801da0cbfd3ef92ee918574d68a8b7281bb1a4e65ae78b85
-updated: 2017-09-12T10:45:26.46256735-03:00
+hash: 479bdafb769ffb8a3b98b07e6027ea9722992ba841d3e08e48dc544747ec2c2a
+updated: 2017-09-14T10:55:04.599373899-03:00
 imports:
 - name: github.com/alecthomas/gometalinter
   version: bae2f1293d092fd8167939d5108d1b025eaef9de
@@ -80,10 +80,8 @@ imports:
   - promptui
 - name: github.com/mattn/go-colorable
   version: 5411d3eea5978e6cdc258b30de592b60df6aba96
-  repo: https://github.com/mattn/go-colorable
 - name: github.com/mattn/go-isatty
   version: 57fdcb988a5c543893cc61bce354a6e24ab70022
-  repo: https://github.com/mattn/go-isatty
 - name: github.com/mitchellh/mapstructure
   version: 53818660ed4955e899c0bcafa97299a388bd7c8e
 - name: github.com/PuerkitoBio/purell
@@ -117,8 +115,7 @@ imports:
   - context/ctxhttp
   - idna
 - name: golang.org/x/sys
-  version: e24f485414aeafb646f6fca458b0bf869c0880a1
-  repo: https://go.googlesource.com/sys
+  version: f3918c30c5c2cb527c0b071a27c35120a6c0719a
   subpackages:
   - unix
 - name: golang.org/x/text

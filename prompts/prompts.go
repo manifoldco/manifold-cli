@@ -6,8 +6,8 @@ import (
 	"strings"
 
 	"github.com/asaskevich/govalidator"
-	"github.com/fatih/color"
 	"github.com/manifoldco/go-manifold"
+	"github.com/manifoldco/manifold-cli/color"
 	"github.com/manifoldco/torus-cli/promptui"
 	"github.com/rhymond/go-money"
 	"github.com/stripe/stripe-go"
@@ -32,11 +32,13 @@ const NumberMask = '#'
 var errBad = promptui.NewValidationError("Bad Value")
 
 func formatResourceListItem(r *mModels.Resource, project string) string {
-	bold := color.New(color.Bold).SprintFunc()
+	label := string(r.Body.Label)
+
 	if project == "" {
-		return string(r.Body.Label)
+		return label
 	}
-	return fmt.Sprintf("%s/%s", project, bold(r.Body.Label))
+
+	return fmt.Sprintf("%s/%s", project, color.Bold(label))
 }
 
 // SelectProduct prompts the user to select a product from the given list.

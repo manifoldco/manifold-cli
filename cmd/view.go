@@ -4,14 +4,14 @@ import (
 	"context"
 	"fmt"
 	"os"
-	"text/tabwriter"
 
-	"github.com/fatih/color"
+	"github.com/juju/ansiterm"
 	"github.com/rhymond/go-money"
 	"github.com/urfave/cli"
 
 	"github.com/manifoldco/manifold-cli/api"
 	"github.com/manifoldco/manifold-cli/clients"
+	"github.com/manifoldco/manifold-cli/color"
 	"github.com/manifoldco/manifold-cli/data/catalog"
 	"github.com/manifoldco/manifold-cli/errs"
 	"github.com/manifoldco/manifold-cli/middleware"
@@ -107,8 +107,10 @@ func view(cliCtx *cli.Context) error {
 		resource = resources[idx]
 	}
 
-	bold := color.New(color.Bold).SprintFunc()
-	faint := color.New(color.Faint).SprintFunc()
+	faint := func(i interface{}) string {
+		return color.Color(ansiterm.Gray, i)
+	}
+
 	productName := faint("-")
 	planName := faint("-")
 	regionName := faint("-")
@@ -142,8 +144,7 @@ func view(cliCtx *cli.Context) error {
 
 	status, ok := statuses[resource.ID]
 	if !ok {
-		green := color.New(color.FgGreen).SprintFunc()
-		status = green("Ready")
+		status = color.Color(ansiterm.Green, "Ready")
 	}
 
 	projectID := resource.Body.ProjectID
@@ -164,8 +165,8 @@ func view(cliCtx *cli.Context) error {
 
 	fmt.Println("Use `manifold update [label] --project [project]` to edit your resource")
 	fmt.Println("")
-	w := tabwriter.NewWriter(os.Stdout, 0, 0, 8, ' ', 0)
-	fmt.Fprintln(w, fmt.Sprintf("%s\t%s", faint("Name"), bold(resource.Body.Name)))
+	w := ansiterm.NewTabWriter(os.Stdout, 0, 0, 8, ' ', 0)
+	fmt.Fprintln(w, fmt.Sprintf("%s\t%s", faint("Name"), color.Bold(resource.Body.Name)))
 	fmt.Fprintln(w, fmt.Sprintf("%s\t%s", faint("Label"), resource.Body.Label))
 	fmt.Fprintln(w, fmt.Sprintf("%s\t%s", faint("Project"), projectLabel))
 	fmt.Fprintln(w, fmt.Sprintf("%s\t%s", faint("State"), status))

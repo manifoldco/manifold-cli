@@ -18,6 +18,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 - `project add` fails when there is no project
 - `project remove` should not list resources without project
+- colors breaking alignment of tabwriter
 
 ## [0.5.1] - 2017-09-15
 
@@ -28,9 +29,6 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ### Fixed
 
 - `resize` message output
-
-### Removed
-
 
 ## [0.5.0] - 2017-09-14
 
