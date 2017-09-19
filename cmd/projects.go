@@ -457,12 +457,22 @@ func removeProjectCmd(cliCtx *cli.Context) error {
 		return err
 	}
 
-	res, err := clients.FetchResources(ctx, client.Marketplace, teamID, "")
+	resources, err := clients.FetchResources(ctx, client.Marketplace, teamID, "")
 	if err != nil {
 		return cli.NewExitError(fmt.Sprintf("Failed to fetch list of provisioned resource: %s", err), -1)
 	}
-	if len(res) == 0 {
+	if len(resources) == 0 {
 		return errs.ErrNoResources
+	}
+
+	var filtered []*mModels.Resource
+	for _, r := range resources {
+		if r.Body.ProjectID != nil {
+			filtered = append(filtered, r)
+		}
+	}
+	if len(filtered) == 0 {
+		return cli.NewExitError("No resources with projects found", -1)
 	}
 
 	projects, err := clients.FetchProjects(ctx, client.Marketplace, teamID)
@@ -470,11 +480,11 @@ func removeProjectCmd(cliCtx *cli.Context) error {
 		return cli.NewExitError(
 			fmt.Sprintf("Failed to fetch list of projects: %s", err), -1)
 	}
-	resourceIdx, _, err := prompts.SelectResource(res, projects, resourceLabel)
+	idx, _, err := prompts.SelectResource(filtered, projects, resourceLabel)
 	if err != nil {
 		return prompts.HandleSelectError(err, "Could not select Resource")
 	}
-	r := res[resourceIdx]
+	r := filtered[idx]
 
 	if err := updateResourceProject(ctx, userID, teamID, r, nil, client.Provisioning, dontWait); err != nil {
 		return cli.NewExitError(fmt.Sprintf("Could not remove the project from the resource: %s", err), -1)

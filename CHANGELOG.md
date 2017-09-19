@@ -17,6 +17,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ### Fixed
 
 - `project add` fails when there is no project
+- `project remove` should not list resources without project
 
 ## [0.5.1] - 2017-09-15
 
