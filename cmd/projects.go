@@ -396,11 +396,11 @@ func addProjectCmd(cliCtx *cli.Context) error {
 	if err != nil {
 		return cli.NewExitError(fmt.Sprintf("Failed to fetch projects list: %s", err), -1)
 	}
-	projectIdx, _, err := prompts.SelectProject(ps, projectLabel, false)
+
+	p, err := selectProject(ctx, projectLabel, teamID, client.Marketplace)
 	if err != nil {
-		return prompts.HandleSelectError(err, "Could not select Project")
+		return err
 	}
-	p := ps[projectIdx]
 
 	res, err := clients.FetchResources(ctx, client.Marketplace, teamID, "")
 	if err != nil {

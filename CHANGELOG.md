@@ -14,6 +14,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - Refactor loading of different API clients into `api` package
 - `delete` supports project flag
 
+### Fixed
+
+- `project add` fails when there is no project
+
 ## [0.5.1] - 2017-09-15
 
 ### Added
