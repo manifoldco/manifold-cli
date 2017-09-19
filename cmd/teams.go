@@ -5,9 +5,8 @@ import (
 	"fmt"
 	"os"
 	"sort"
-	"text/tabwriter"
 
-	"github.com/fatih/color"
+	"github.com/juju/ansiterm"
 	"github.com/manifoldco/go-manifold"
 	"github.com/urfave/cli"
 
@@ -15,6 +14,7 @@ import (
 
 	"github.com/manifoldco/manifold-cli/api"
 	"github.com/manifoldco/manifold-cli/clients"
+	"github.com/manifoldco/manifold-cli/color"
 	"github.com/manifoldco/manifold-cli/errs"
 	"github.com/manifoldco/manifold-cli/generated/identity/client"
 	inviteClient "github.com/manifoldco/manifold-cli/generated/identity/client/invite"
@@ -208,13 +208,9 @@ func listTeamCmd(cliCtx *cli.Context) error {
 		return cli.NewExitError(fmt.Sprintf("Failed to fetch list of teams: %s", err), -1)
 	}
 
-	w := tabwriter.NewWriter(os.Stdout, 0, 0, 8, ' ', 0)
+	w := ansiterm.NewTabWriter(os.Stdout, 0, 0, 8, ' ', 0)
 
-	bold := color.New(color.Faint).SprintFunc()
-	str := color.New().SprintFunc() // TODO: find solution for tabwriter color support and remove this
-
-	fmt.Fprintf(w, "%s\t%s\n", bold("Name"), bold("Members"))
-	fmt.Fprintf(w, "%s\t%s\n", str(""), str(""))
+	fmt.Fprintf(w, "%s\t%s\n", color.Bold("Name"), color.Bold("Members"))
 
 	sort.Slice(teams, func(i int, j int) bool {
 		a := strings.ToLower(teams[i].Name)
@@ -223,7 +219,7 @@ func listTeamCmd(cliCtx *cli.Context) error {
 	})
 
 	for _, team := range teams {
-		fmt.Fprintf(w, "%s\t%s\n", str(team.Name), str(team.Members))
+		fmt.Fprintf(w, "%s\t%d\n", team.Name, team.Members)
 	}
 	return w.Flush()
 }
