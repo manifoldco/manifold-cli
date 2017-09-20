@@ -3,6 +3,8 @@ PKG=github.com/manifoldco/manifold-cli
 STRIPE_PKEY=${STRIPE_PUBLISHABLE_KEY}
 GO_BUILD=CGO_ENABLED=0 go build -i --ldflags="-w -X $(PKG)/config.Version=$(VERSION) -X $(PKG)/config.StripePublishableKey=$(STRIPE_PKEY)"
 
+PROMULGATE_VERSION=0.0.6
+
 rwildcard=$(foreach d,$(wildcard $1*),$(call rwildcard,$d/,$2) \
     $(filter $(subst *,%,$2),$d))
 
@@ -143,7 +145,7 @@ $(NO_WINDOWS:%=build/manifold-cli_$(VERSION)_%.zip): build/manifold-cli_$(VERSIO
 zips: $(OS_ARCH:%=build/manifold-cli_$(VERSION)_%.zip)
 
 release: zips
-	curl -LO https://releases.manifold.co/promulgate/0.0.5/promulgate_0.0.5_linux_amd64.zip
+	curl -LO https://releases.manifold.co/promulgate/$(PROMULGATE_VERSION)/promulgate_$(PROMULGATE_VERSION)_linux_amd64.zip
 	unzip promulgate_*
 	./promulgate release v$(VERSION)
 

@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - Refactor loading of different API clients into `api` package
 - `delete` supports project flag
 - `sso` command for getting resource single sign-on link
+- build for high sierra in brew
 
 ### Fixed
 
