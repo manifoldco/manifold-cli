@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
   no resources
 - Refactor loading of different API clients into `api` package
 - `delete` supports project flag
+- `sso` command for getting resource single sign-on link
 
 ### Fixed
 
