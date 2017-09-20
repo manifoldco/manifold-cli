@@ -1,5 +1,5 @@
-hash: 479bdafb769ffb8a3b98b07e6027ea9722992ba841d3e08e48dc544747ec2c2a
-updated: 2017-09-14T10:55:04.599373899-03:00
+hash: 0bc9afff06de6761b150f2536d945f934074ca6dfbc035bb92f79c5a7cdf6690
+updated: 2017-09-19T21:01:15.319898792-03:00
 imports:
 - name: github.com/alecthomas/gometalinter
   version: bae2f1293d092fd8167939d5108d1b025eaef9de
@@ -92,6 +92,10 @@ imports:
   version: 5322b90dda9c2b563e915c9af76bf20a8b95f630
 - name: github.com/rhymond/go-money
   version: b9b9af789ed62b7458e1f5c5f9a31eb0fc35f3c6
+- name: github.com/skratchdot/open-golang
+  version: 75fb7ed4208cf72d323d7d02fd1a5964a7a9073c
+  subpackages:
+  - open
 - name: github.com/stripe/stripe-go
   version: 924076d66af652a2a686a609dad8225f187a0f17
   subpackages:

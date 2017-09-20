@@ -13,6 +13,7 @@ import (
 
 	bClient "github.com/manifoldco/manifold-cli/generated/billing/client"
 	cClient "github.com/manifoldco/manifold-cli/generated/catalog/client"
+	conClient "github.com/manifoldco/manifold-cli/generated/connector/client"
 	iClient "github.com/manifoldco/manifold-cli/generated/identity/client"
 	mClient "github.com/manifoldco/manifold-cli/generated/marketplace/client"
 	pClient "github.com/manifoldco/manifold-cli/generated/provisioning/client"
@@ -129,6 +130,28 @@ func NewProvisioning(cfg *config.Config) (*pClient.Provisioning, error) {
 	}
 
 	return pClient.New(transport, strfmt.Default), nil
+}
+
+// NewConnector returns a new swagger generated client for the Connector service
+func NewConnector(cfg *config.Config) (*conClient.Connector, error) {
+	u, err := deriveURL(cfg, "connector")
+	if err != nil {
+		return nil, err
+	}
+
+	c := conClient.DefaultTransportConfig()
+	c.WithHost(u.Host)
+	c.WithBasePath(u.Path)
+	c.WithSchemes([]string{u.Scheme})
+
+	transport := httptransport.New(c.Host, c.BasePath, c.Schemes)
+	transport.Transport = newRoundTripper(transport.Transport)
+
+	if cfg.AuthToken != "" {
+		transport.DefaultAuthentication = NewBearerToken(cfg.AuthToken)
+	}
+
+	return conClient.New(transport, strfmt.Default), nil
 }
 
 // NewBearerToken returns a bearer token authenticator for use with a

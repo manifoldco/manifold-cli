@@ -94,3 +94,11 @@ func skipFlag() cli.Flag {
 		EnvVar: "MANIFOLD_DONT_WAIT",
 	}
 }
+
+func openFlag() cli.Flag {
+	return cli.BoolFlag{
+		Name:   "open, o",
+		Usage:  "Opens a browser for a URL instead of printing",
+		EnvVar: "MANIFOLD_OPEN_BROWSER",
+	}
+}

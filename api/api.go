@@ -7,6 +7,7 @@ import (
 	"github.com/manifoldco/manifold-cli/config"
 	bClient "github.com/manifoldco/manifold-cli/generated/billing/client"
 	cClient "github.com/manifoldco/manifold-cli/generated/catalog/client"
+	conClient "github.com/manifoldco/manifold-cli/generated/connector/client"
 	iClient "github.com/manifoldco/manifold-cli/generated/identity/client"
 	mClient "github.com/manifoldco/manifold-cli/generated/marketplace/client"
 	pClient "github.com/manifoldco/manifold-cli/generated/provisioning/client"
@@ -21,6 +22,7 @@ type API struct {
 	Identity     *iClient.Identity
 	Marketplace  *mClient.Marketplace
 	Provisioning *pClient.Provisioning
+	Connector    *conClient.Connector
 }
 
 // Client represents one of the clients generated from the spec.
@@ -41,6 +43,9 @@ const (
 
 	// Provisioning represents the provisioning client
 	Provisioning
+
+	// Connector represents the connector client
+	Connector
 )
 
 // New loads all clients passed on the list. If any of the clients fails to load
@@ -66,6 +71,8 @@ func New(list ...Client) (*API, error) {
 			api.Marketplace, err = clients.NewMarketplace(cfg)
 		case Provisioning:
 			api.Provisioning, err = clients.NewProvisioning(cfg)
+		case Connector:
+			api.Connector, err = clients.NewConnector(cfg)
 		}
 
 		if err != nil {
