@@ -352,7 +352,7 @@ func deleteProjectCmd(cliCtx *cli.Context) error {
 
 	waitForOp(ctx, client.Provisioning, res.Payload)
 	spin.Stop()
-	fmt.Printf("Your project '%s' has been deleted\n", projectLabel)
+	fmt.Printf("Your project '%s' has been deleted\n", p.Body.Label)
 	return nil
 }
 
