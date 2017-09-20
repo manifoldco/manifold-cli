@@ -362,17 +362,6 @@ definitions:
     type: object
     allOf:
     - $ref: '#/definitions/AccessTokenRequest'
-  authorization_code:
-    type: object
-    allOf:
-    - $ref: '#/definitions/AccessTokenRequest'
-    - type: object
-      properties:
-        code:
-          $ref: '#/definitions/Code'
-      additionalProperties: false
-      required:
-      - code
   AccessToken:
     description: |
       A granted access token used for performing requests on behalf o a user
