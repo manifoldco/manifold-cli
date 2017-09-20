@@ -278,9 +278,9 @@ definitions:
       id:
         $ref: '#/definitions/ID'
       version:
-        type: string
+        type: number
         enum:
-        - "1"
+        - 1
       type:
         type: string
         enum:
