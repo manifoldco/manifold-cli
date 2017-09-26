@@ -15,6 +15,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - `delete` supports project flag
 - `sso` command for getting resource single sign-on link
 - build for high sierra in brew
+- `projects add` and `projects remove` event
 
 ### Fixed
 
