@@ -423,6 +423,21 @@ func addProjectCmd(cliCtx *cli.Context) error {
 		fmt.Printf("Moving %s to %s\n", r.Body.Label, p.Body.Label)
 	}
 
+	analytics, err := loadAnalytics()
+	if err != nil {
+		return err
+	}
+
+	params := map[string]string{
+		"resource_id":    r.ID.String(),
+		"resource_name":  string(r.Body.Name),
+		"resource_label": string(r.Body.Label),
+		"project_id":     p.ID.String(),
+		"project_name":   string(p.Body.Name),
+		"project_label":  string(p.Body.Label),
+	}
+	analytics.Track(ctx, "Added a Resource to a Project", &params)
+
 	return nil
 }
 
