@@ -505,6 +505,18 @@ func removeProjectCmd(cliCtx *cli.Context) error {
 
 	fmt.Printf("Removed %s from project\n", r.Body.Label)
 
+	analytics, err := loadAnalytics()
+	if err != nil {
+		return err
+	}
+
+	params := map[string]string{
+		"resource_id":    r.ID.String(),
+		"resource_name":  string(r.Body.Name),
+		"resource_label": string(r.Body.Label),
+	}
+	analytics.Track(ctx, "Removed a Resource from a Project", &params)
+
 	return nil
 }
 
