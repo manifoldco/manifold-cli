@@ -1,12 +1,16 @@
 package api
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/manifoldco/manifold-cli/clients"
 	"github.com/manifoldco/manifold-cli/config"
 	bClient "github.com/manifoldco/manifold-cli/generated/billing/client"
 	cClient "github.com/manifoldco/manifold-cli/generated/catalog/client"
+	"github.com/manifoldco/manifold-cli/generated/catalog/client/product"
+	"github.com/manifoldco/manifold-cli/generated/catalog/client/provider"
+	cModels "github.com/manifoldco/manifold-cli/generated/catalog/models"
 	conClient "github.com/manifoldco/manifold-cli/generated/connector/client"
 	iClient "github.com/manifoldco/manifold-cli/generated/identity/client"
 	mClient "github.com/manifoldco/manifold-cli/generated/marketplace/client"
@@ -17,6 +21,7 @@ import (
 // API is a composition of all clients generated from the spec. Use the `New`
 // function to load the necessary clients for the operation.
 type API struct {
+	ctx          context.Context
 	Billing      *bClient.Billing
 	Catalog      *cClient.Catalog
 	Identity     *iClient.Identity
@@ -51,7 +56,9 @@ const (
 // New loads all clients passed on the list. If any of the clients fails to load
 // an error is returned.
 func New(list ...Client) (*API, error) {
-	api := &API{}
+	api := &API{
+		ctx: context.Background(),
+	}
 
 	cfg, err := config.Load()
 	if err != nil {
@@ -100,4 +107,48 @@ func (c Client) String() string {
 	default:
 		return "Unknown"
 	}
+}
+
+// FetchProviders returns a list of all available providers
+func (api *API) FetchProviders() ([]*cModels.Provider, error) {
+	params := provider.NewGetProvidersParamsWithContext(api.ctx)
+	res, err := api.Catalog.Provider.GetProviders(params)
+	if err != nil {
+		return nil, err
+	}
+
+	return res.Payload, nil
+}
+
+// FetchProvider returns a provider based on a label
+func (api *API) FetchProvider(label string) (*cModels.Provider, error) {
+	if label == "" {
+		return nil, fmt.Errorf("Provider label is missing")
+	}
+
+	params := provider.NewGetProvidersParamsWithContext(api.ctx)
+	params.SetLabel(&label)
+	res, err := api.Catalog.Provider.GetProviders(params)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(res.Payload) == 0 {
+		return nil, fmt.Errorf("Provider with label %q not found", label)
+	}
+
+	return res.Payload[0], nil
+}
+
+// FetchProducts returns a list of all products for a provider
+func (api *API) FetchProducts(providerID string) ([]*cModels.Product, error) {
+	params := product.NewGetProductsParamsWithContext(api.ctx)
+	params.SetProviderID(&providerID)
+
+	res, err := api.Catalog.Product.GetProducts(params, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return res.Payload, nil
 }

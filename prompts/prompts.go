@@ -704,3 +704,24 @@ func CreditCard() (*stripe.Token, error) {
 
 	return tkn, nil
 }
+
+// SelectProvider prompts the user to select a provider resource from the given list
+func SelectProvider(providers []*cModels.Provider) (int, string, error) {
+	sort.Slice(providers, func(i, j int) bool {
+		a := string(providers[i].Body.Label)
+		b := string(providers[j].Body.Label)
+		return strings.ToLower(a) < strings.ToLower(b)
+	})
+
+	labels := make([]string, len(providers))
+	for i, p := range providers {
+		labels[i] = fmt.Sprintf("%s - %s", p.Body.Label, p.Body.Name)
+	}
+
+	prompt := promptui.Select{
+		Label: "Select Provider",
+		Items: labels,
+	}
+
+	return prompt.Run()
+}

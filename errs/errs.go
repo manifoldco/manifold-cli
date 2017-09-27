@@ -64,6 +64,12 @@ var ErrNoResources = cli.NewExitError("No resources found", -1)
 // ErrNoPlans represents an error where no plans exist for the resource being created or updated
 var ErrNoPlans = cli.NewExitError("No plans found for this product", -1)
 
+// ErrNoProviders represents an error where no providers exist
+var ErrNoProviders = cli.NewExitError("No providers found", -1)
+
+// ErrNoProducts represents an error where no products exist
+var ErrNoProducts = cli.NewExitError("No products found", -1)
+
 // ErrTooManyArgs represents an error where a user has provided too many
 // command line arguments
 var ErrTooManyArgs = cli.NewExitError("You've provided too many command line arguments!", -1)
