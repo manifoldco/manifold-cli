@@ -67,12 +67,6 @@ func SelectProduct(products []*cModels.Product, label string) (int, string, erro
 		return idx, label, nil
 	}
 
-	sort.Slice(products, func(i, j int) bool {
-		a := string(products[i].Body.Name)
-		b := string(products[j].Body.Name)
-		return strings.ToLower(a) < strings.ToLower(b)
-	})
-
 	labels := make([]string, len(products))
 	for i, p := range products {
 		labels[i] = line(p)
@@ -707,12 +701,6 @@ func CreditCard() (*stripe.Token, error) {
 
 // SelectProvider prompts the user to select a provider resource from the given list
 func SelectProvider(providers []*cModels.Provider) (int, string, error) {
-	sort.Slice(providers, func(i, j int) bool {
-		a := string(providers[i].Body.Label)
-		b := string(providers[j].Body.Label)
-		return strings.ToLower(a) < strings.ToLower(b)
-	})
-
 	labels := make([]string, len(providers))
 	for i, p := range providers {
 		labels[i] = fmt.Sprintf("%s - %s", p.Body.Label, p.Body.Name)
