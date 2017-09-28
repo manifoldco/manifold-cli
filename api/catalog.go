@@ -51,13 +51,18 @@ func (api *API) FetchProvider(label string) (*cModels.Provider, error) {
 }
 
 // FetchProduct returns a product based on a label.
-func (api *API) FetchProduct(label string) (*cModels.Product, error) {
+func (api *API) FetchProduct(label string, providerID string) (*cModels.Product, error) {
 	if label == "" {
 		return nil, fmt.Errorf("Product label is missing")
 	}
 
+	if providerID == "" {
+		return nil, fmt.Errorf("Provider id is missing")
+	}
+
 	params := product.NewGetProductsParamsWithContext(api.ctx)
 	params.SetLabel(&label)
+	params.SetProviderID(&providerID)
 	res, err := api.Catalog.Product.GetProducts(params, nil)
 	if err != nil {
 		return nil, err

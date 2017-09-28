@@ -21,16 +21,16 @@ func init() {
 		Category: "RESOURCES",
 		Subcommands: []cli.Command{
 			{
-				Name:      "providers",
-				Usage:     "List all providers",
-				ArgsUsage: "[provider label]",
-				Action:    listProvidersCmd,
+				Name:   "providers",
+				Usage:  "List all providers",
+				Flags:  []cli.Flag{providerFlag()},
+				Action: listProvidersCmd,
 			},
 			{
 				Name:      "products",
 				Usage:     "List all products for a provider",
 				ArgsUsage: "[product label]",
-				Flags:     []cli.Flag{providerFlag()},
+				Flags:     []cli.Flag{providerFlag(), productFlag()},
 				Action:    listProductsCmd,
 			},
 			{
@@ -51,24 +51,24 @@ func listProvidersCmd(cliCtx *cli.Context) error {
 		return err
 	}
 
-	if err := maxOptionalArgsLength(cliCtx, 1); err != nil {
+	if err := maxOptionalArgsLength(cliCtx, 0); err != nil {
 		return err
 	}
 
-	label, err := optionalArgName(cliCtx, 0, "provider")
+	providerLabel, err := validateLabel(cliCtx, "provider")
 	if err != nil {
 		return err
 	}
 
 	var providers []*models.Provider
 
-	if label == "" {
+	if providerLabel == "" {
 		providers, err = client.FetchProviders()
 		if err != nil {
 			return cli.NewExitError(err, -1)
 		}
 	} else {
-		provider, err := client.FetchProvider(label)
+		provider, err := client.FetchProvider(providerLabel)
 		if err != nil {
 			return cli.NewExitError(err, -1)
 		}
@@ -100,12 +100,7 @@ func listProductsCmd(cliCtx *cli.Context) error {
 		return err
 	}
 
-	if err := maxOptionalArgsLength(cliCtx, 1); err != nil {
-		return err
-	}
-
-	label, err := optionalArgName(cliCtx, 0, "product")
-	if err != nil {
+	if err := maxOptionalArgsLength(cliCtx, 0); err != nil {
 		return err
 	}
 
@@ -114,42 +109,44 @@ func listProductsCmd(cliCtx *cli.Context) error {
 		return err
 	}
 
+	productLabel, err := validateLabel(cliCtx, "product")
+	if err != nil {
+		return err
+	}
+
 	var products []*models.Product
+	var provider *models.Provider
 
-	if label == "" {
-		var provider *models.Provider
-
-		if providerLabel == "" {
-			providers, err := client.FetchProviders()
-			if err != nil {
-				return cli.NewExitError(err, -1)
-			}
-
-			if len(providers) == 0 {
-				return errs.ErrNoProviders
-			}
-
-			provider, err = prompts.SelectProvider(providers)
-			if err != nil {
-				return cli.NewExitError(err, -1)
-			}
-		} else {
-			provider, err = client.FetchProvider(providerLabel)
-			if err != nil {
-				return cli.NewExitError(err, -1)
-			}
+	if providerLabel == "" {
+		providers, err := client.FetchProviders()
+		if err != nil {
+			return cli.NewExitError(err, -1)
 		}
 
-		id := ""
-		if provider != nil {
-			id = provider.ID.String()
+		if len(providers) == 0 {
+			return errs.ErrNoProviders
 		}
-		products, err = client.FetchProducts(id)
+
+		provider, err = prompts.SelectProvider(providers)
 		if err != nil {
 			return cli.NewExitError(err, -1)
 		}
 	} else {
-		product, err := client.FetchProduct(label)
+		provider, err = client.FetchProvider(providerLabel)
+		if err != nil {
+			return cli.NewExitError(err, -1)
+		}
+	}
+
+	providerID := provider.ID.String()
+
+	if productLabel == "" {
+		products, err = client.FetchProducts(providerID)
+		if err != nil {
+			return cli.NewExitError(err, -1)
+		}
+	} else {
+		product, err := client.FetchProduct(productLabel, providerID)
 		if err != nil {
 			return cli.NewExitError(err, -1)
 		}
@@ -171,7 +168,7 @@ func listProductsCmd(cliCtx *cli.Context) error {
 		fmt.Fprintf(w, "%s\t%s\t%s\t%s\n", p.Body.Label, p.Body.Name, *p.Body.State, p.Body.Tagline)
 	}
 
-	fmt.Fprintf(w, "\nSee product plans with `manifold services plans [--product label]`\n")
+	fmt.Fprintf(w, "\nSee product plans with `manifold services plans [--provider label] [--product label]`\n")
 
 	return w.Flush()
 }
@@ -197,42 +194,38 @@ func listPlansCmd(cliCtx *cli.Context) error {
 	}
 
 	var product *models.Product
+	var provider *models.Provider
 
-	if productLabel != "" {
-		product, err = client.FetchProduct(productLabel)
+	if providerLabel != "" {
+		provider, err = client.FetchProvider(providerLabel)
 		if err != nil {
 			return cli.NewExitError(err, -1)
 		}
 	} else {
-		var provider *models.Provider
-
-		if providerLabel != "" {
-			provider, err = client.FetchProvider(providerLabel)
-			if err != nil {
-				return cli.NewExitError(err, -1)
-			}
-		} else {
-			providers, err := client.FetchProviders()
-			if err != nil {
-				return cli.NewExitError(err, -1)
-			}
-
-			if len(providers) == 0 {
-				return errs.ErrNoProviders
-			}
-
-			provider, err = prompts.SelectProvider(providers)
-			if err != nil {
-				return cli.NewExitError(err, -1)
-			}
+		providers, err := client.FetchProviders()
+		if err != nil {
+			return cli.NewExitError(err, -1)
 		}
 
-		id := ""
-		if provider != nil {
-			id = provider.ID.String()
+		if len(providers) == 0 {
+			return errs.ErrNoProviders
 		}
 
-		products, err := client.FetchProducts(id)
+		provider, err = prompts.SelectProvider(providers)
+		if err != nil {
+			return cli.NewExitError(err, -1)
+		}
+	}
+
+	providerID := provider.ID.String()
+
+	if productLabel != "" {
+		product, err = client.FetchProduct(productLabel, providerID)
+		if err != nil {
+			return cli.NewExitError(err, -1)
+		}
+	} else {
+		products, err := client.FetchProducts(providerID)
 		if err != nil {
 			return cli.NewExitError(err, -1)
 		}
@@ -248,8 +241,8 @@ func listPlansCmd(cliCtx *cli.Context) error {
 		product = products[idx]
 	}
 
-	id := product.ID.String()
-	plans, err := client.FetchPlans(id)
+	productID := product.ID.String()
+	plans, err := client.FetchPlans(productID)
 	if err != nil {
 		return cli.NewExitError(err, -1)
 	}
