@@ -8,7 +8,6 @@ import (
 	"github.com/manifoldco/manifold-cli/api"
 	"github.com/manifoldco/manifold-cli/errs"
 	"github.com/manifoldco/manifold-cli/generated/catalog/models"
-	"github.com/manifoldco/manifold-cli/middleware"
 	"github.com/manifoldco/manifold-cli/prompts"
 	money "github.com/rhymond/go-money"
 
@@ -22,21 +21,24 @@ func init() {
 		Category: "RESOURCES",
 		Subcommands: []cli.Command{
 			{
-				Name:   "providers",
-				Usage:  "List all providers",
-				Action: middleware.Chain(middleware.EnsureSession, listProvidersCmd),
+				Name:      "providers",
+				Usage:     "List all providers",
+				ArgsUsage: "[provider label]",
+				Action:    listProvidersCmd,
 			},
 			{
 				Name:      "products",
 				Usage:     "List all products for a provider",
-				ArgsUsage: "[provider]",
-				Action:    middleware.Chain(middleware.EnsureSession, listProductsCmd),
+				ArgsUsage: "[product label]",
+				Flags:     []cli.Flag{providerFlag()},
+				Action:    listProductsCmd,
 			},
 			{
 				Name:      "plans",
 				Usage:     "List all plans for a product",
-				ArgsUsage: "[product]",
-				Action:    middleware.Chain(middleware.EnsureSession, listPlansCmd),
+				ArgsUsage: "[plan label]",
+				Flags:     []cli.Flag{providerFlag(), productFlag()},
+				Action:    listPlansCmd,
 			},
 		},
 	}
@@ -50,9 +52,28 @@ func listProvidersCmd(cliCtx *cli.Context) error {
 		return err
 	}
 
-	providers, err := client.FetchProviders()
+	if err := maxOptionalArgsLength(cliCtx, 1); err != nil {
+		return err
+	}
+
+	label, err := optionalArgName(cliCtx, 0, "provider")
 	if err != nil {
-		return cli.NewExitError(err, -1)
+		return err
+	}
+
+	var providers []*models.Provider
+
+	if label == "" {
+		providers, err = client.FetchProviders()
+		if err != nil {
+			return cli.NewExitError(err, -1)
+		}
+	} else {
+		provider, err := client.FetchProvider(label)
+		if err != nil {
+			return cli.NewExitError(err, -1)
+		}
+		providers = append(providers, provider)
 	}
 
 	if len(providers) == 0 {
@@ -69,7 +90,7 @@ func listProvidersCmd(cliCtx *cli.Context) error {
 		fmt.Fprintf(w, "%s\t%s\t%s\n", p.Body.Label, p.Body.Name, p.Body.DocumentationURL)
 	}
 
-	fmt.Fprintf(w, "\nSee provider products with `manifold services products [provider]`\n")
+	fmt.Fprintf(w, "\nSee provider products with `manifold services products [--provider label]`\n")
 
 	return w.Flush()
 }
@@ -84,40 +105,57 @@ func listProductsCmd(cliCtx *cli.Context) error {
 		return err
 	}
 
-	label, err := optionalArgName(cliCtx, 0, "provider")
+	label, err := optionalArgName(cliCtx, 0, "product")
 	if err != nil {
 		return err
 	}
 
-	var provider *models.Provider
-
-	if label != "" {
-		provider, err = client.FetchProvider(label)
-		if err != nil {
-			return err
-		}
-	} else {
-		providers, err := client.FetchProviders()
-		if err != nil {
-			return cli.NewExitError(err, -1)
-		}
-
-		if len(providers) == 0 {
-			return errs.ErrNoProviders
-		}
-
-		idx, _, err := prompts.SelectProvider(providers)
-		if err != nil {
-			return cli.NewExitError(err, -1)
-		}
-
-		provider = providers[idx]
+	providerLabel, err := validateLabel(cliCtx, "provider")
+	if err != nil {
+		return err
 	}
 
-	id := provider.ID.String()
-	products, err := client.FetchProducts(id)
-	if err != nil {
-		return cli.NewExitError(err, -1)
+	var products []*models.Product
+
+	if label == "" {
+		var provider *models.Provider
+
+		if providerLabel == "" {
+			providers, err := client.FetchProviders()
+			if err != nil {
+				return cli.NewExitError(err, -1)
+			}
+
+			if len(providers) == 0 {
+				return errs.ErrNoProviders
+			}
+
+			provider, err = prompts.SelectProvider(providers)
+			if err != nil {
+				return cli.NewExitError(err, -1)
+			}
+		} else {
+			provider, err = client.FetchProvider(providerLabel)
+			if err != nil {
+				return cli.NewExitError(err, -1)
+			}
+		}
+
+		id := ""
+		if provider != nil {
+			id = provider.ID.String()
+		}
+		products, err = client.FetchProducts(id)
+		if err != nil {
+			return cli.NewExitError(err, -1)
+		}
+	} else {
+		product, err := client.FetchProduct(label)
+		if err != nil {
+			return cli.NewExitError(err, -1)
+		}
+
+		products = append(products, product)
 	}
 
 	if len(products) == 0 {
@@ -134,7 +172,7 @@ func listProductsCmd(cliCtx *cli.Context) error {
 		fmt.Fprintf(w, "%s\t%s\t%s\t%s\n", p.Body.Label, p.Body.Name, *p.Body.State, p.Body.Tagline)
 	}
 
-	fmt.Fprintf(w, "\nSee product plans with `manifold services plans [product]`\n")
+	fmt.Fprintf(w, "\nSee product plans with `manifold services plans [--product label]`\n")
 
 	return w.Flush()
 }
@@ -149,55 +187,88 @@ func listPlansCmd(cliCtx *cli.Context) error {
 		return err
 	}
 
-	label, err := optionalArgName(cliCtx, 0, "product")
+	label, err := optionalArgName(cliCtx, 0, "plan")
 	if err != nil {
 		return err
 	}
 
-	var product *models.Product
-
-	if label != "" {
-		product, err = client.FetchProduct(label)
-		if err != nil {
-			return err
-		}
-	} else {
-		providers, err := client.FetchProviders()
-		if err != nil {
-			return cli.NewExitError(err, -1)
-		}
-
-		if len(providers) == 0 {
-			return errs.ErrNoProviders
-		}
-
-		idx, _, err := prompts.SelectProvider(providers)
-		if err != nil {
-			return cli.NewExitError(err, -1)
-		}
-
-		provider := providers[idx]
-		products, err := client.FetchProducts(provider.ID.String())
-		if err != nil {
-			return cli.NewExitError(err, -1)
-		}
-
-		if len(products) == 0 {
-			return errs.ErrNoProducts
-		}
-
-		idx, _, err = prompts.SelectProduct(products, "")
-		if err != nil {
-			return cli.NewExitError(err, -1)
-		}
-
-		product = products[idx]
+	providerLabel, err := validateLabel(cliCtx, "provider")
+	if err != nil {
+		return err
 	}
 
-	id := product.ID.String()
-	plans, err := client.FetchPlans(id)
+	productLabel, err := validateLabel(cliCtx, "product")
 	if err != nil {
-		return cli.NewExitError(err, -1)
+		return err
+	}
+
+	var plans []*models.Plan
+
+	if label == "" {
+		var product *models.Product
+
+		if productLabel != "" {
+			product, err = client.FetchProduct(productLabel)
+			if err != nil {
+				return cli.NewExitError(err, -1)
+			}
+		} else {
+			var provider *models.Provider
+
+			if providerLabel != "" {
+				provider, err = client.FetchProvider(providerLabel)
+				if err != nil {
+					return cli.NewExitError(err, -1)
+				}
+			} else {
+				providers, err := client.FetchProviders()
+				if err != nil {
+					return cli.NewExitError(err, -1)
+				}
+
+				if len(providers) == 0 {
+					return errs.ErrNoProviders
+				}
+
+				provider, err = prompts.SelectProvider(providers)
+				if err != nil {
+					return cli.NewExitError(err, -1)
+				}
+			}
+
+			id := ""
+			if provider != nil {
+				id = provider.ID.String()
+			}
+
+			products, err := client.FetchProducts(id)
+			if err != nil {
+				return cli.NewExitError(err, -1)
+			}
+			if len(products) == 0 {
+				return errs.ErrNoProducts
+			}
+
+			idx, _, err := prompts.SelectProduct(products, "")
+			if err != nil {
+				return cli.NewExitError(err, -1)
+			}
+
+			product = products[idx]
+		}
+
+		id := product.ID.String()
+		plans, err = client.FetchPlans(id)
+		if err != nil {
+			return cli.NewExitError(err, -1)
+		}
+	} else {
+		plan, err := client.FetchPlan(label)
+		if err != nil {
+			return cli.NewExitError(err, -1)
+		}
+
+		plans = append(plans, plan)
 	}
 
 	if len(plans) == 0 {
@@ -211,12 +282,15 @@ func listPlansCmd(cliCtx *cli.Context) error {
 	w.Reset()
 
 	for _, p := range plans {
-		cost := money.New(*p.Body.Cost, "USD").Display()
+		price := *p.Body.Cost
+		cost := "Free"
+		if price != 0 {
+			cost = money.New(price, "USD").Display()
+		}
+
 		fmt.Fprintf(w, "%s\t%s\t%s\t%s\t%d\n", p.Body.Label, p.Body.Name,
 			*p.Body.State, cost, *p.Body.TrialDays)
 	}
-
-	fmt.Fprintf(w, "\nSee plan details with `manifold services plan [plan]`\n")
 
 	return w.Flush()
 }

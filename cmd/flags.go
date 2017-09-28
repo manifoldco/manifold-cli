@@ -87,6 +87,20 @@ func resourceFlag() cli.Flag {
 	}
 }
 
+func providerFlag() cli.Flag {
+	return cli.StringFlag{
+		Name:  "provider",
+		Usage: "Specify a provider",
+	}
+}
+
+func productFlag() cli.Flag {
+	return cli.StringFlag{
+		Name:  "product",
+		Usage: "Specify a product",
+	}
+}
+
 func skipFlag() cli.Flag {
 	return cli.BoolFlag{
 		Name:   "no-wait, w",

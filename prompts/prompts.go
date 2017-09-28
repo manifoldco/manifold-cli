@@ -699,11 +699,13 @@ func CreditCard() (*stripe.Token, error) {
 	return tkn, nil
 }
 
-// SelectProvider prompts the user to select a provider resource from the given list
-func SelectProvider(providers []*cModels.Provider) (int, string, error) {
-	labels := make([]string, len(providers))
-	for i, p := range providers {
-		labels[i] = fmt.Sprintf("%s - %s", p.Body.Label, p.Body.Name)
+// SelectProvider prompts the user to select a provider resource from the given
+// list.
+func SelectProvider(providers []*cModels.Provider) (*cModels.Provider, error) {
+	labels := []string{"All Providers"}
+
+	for _, p := range providers {
+		labels = append(labels, fmt.Sprintf("%s - %s", p.Body.Label, p.Body.Name))
 	}
 
 	prompt := promptui.Select{
@@ -711,5 +713,14 @@ func SelectProvider(providers []*cModels.Provider) (int, string, error) {
 		Items: labels,
 	}
 
-	return prompt.Run()
+	idx, _, err := prompt.Run()
+	if err != nil {
+		return nil, err
+	}
+
+	if idx == 0 {
+		return nil, nil
+	}
+
+	return providers[idx-1], nil
 }

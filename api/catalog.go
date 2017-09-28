@@ -91,6 +91,26 @@ func (api *API) FetchProducts(providerID string) ([]*cModels.Product, error) {
 	return products, nil
 }
 
+// FetchPlan returns a product based on a label.
+func (api *API) FetchPlan(label string) (*cModels.Plan, error) {
+	if label == "" {
+		return nil, fmt.Errorf("Plan label is missing")
+	}
+
+	params := plan.NewGetPlansParamsWithContext(api.ctx)
+	params.SetLabel(&label)
+	res, err := api.Catalog.Plan.GetPlans(params, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(res.Payload) == 0 {
+		return nil, fmt.Errorf("Plan with label %q not found", label)
+	}
+
+	return res.Payload[0], nil
+}
+
 // FetchPlans returns a list of all plans for a product.
 func (api *API) FetchPlans(productID string) ([]*cModels.Plan, error) {
 	params := plan.NewGetPlansParamsWithContext(api.ctx)
