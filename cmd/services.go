@@ -6,6 +6,7 @@ import (
 
 	"github.com/juju/ansiterm"
 	"github.com/manifoldco/manifold-cli/api"
+	"github.com/manifoldco/manifold-cli/color"
 	"github.com/manifoldco/manifold-cli/errs"
 	"github.com/manifoldco/manifold-cli/generated/catalog/models"
 	"github.com/manifoldco/manifold-cli/prompts"
@@ -214,11 +215,34 @@ func viewProduct(cliCtx *cli.Context, productLabel string) error {
 		return cli.NewExitError(err, -1)
 	}
 
+	faint := func(i interface{}) string {
+		return color.Color(ansiterm.Gray, i)
+	}
+
 	w := ansiterm.NewTabWriter(os.Stdout, 0, 0, 8, ' ', 0)
 
 	fmt.Fprintf(w, "Use `manifold services plans --product [label] --provider [label]` to view plan details\n\n")
+	fmt.Fprintf(w, "%s (%s)\n", product.Body.Name, faint(product.Body.Label))
+	fmt.Fprintf(w, "%s\n\n", product.Body.Tagline)
+	fmt.Fprintf(w, "%s\t%s\n", faint("Support"), product.Body.SupportEmail)
+	if product.Body.DocumentationURL != nil {
+		fmt.Fprintf(w, "%s\t%s\n", faint("Documentation"), *product.Body.DocumentationURL)
+	}
 
-	fmt.Fprintf(w, "%s\t%s\t%s\t%s\n", product.Body.Label, product.Body.Name, provider.Body.Label, product.Body.Tagline)
+	if product.Body.Terms.Provided {
+		fmt.Fprintf(w, "%s\t%s\n", faint("Terms"), *product.Body.Terms.URL)
+	}
+
+	if product.Body.Integration.Features.Sso {
+		fmt.Fprintf(w, "%s\t%s\n\n", faint("SSO"), "Available")
+	} else {
+		fmt.Fprintf(w, "%s\t%s\n\n", faint("SSO"), "Unavailable")
+	}
+
+	for _, prop := range product.Body.ValueProps {
+		fmt.Fprintf(w, "%s\n", prop.Header)
+		fmt.Fprintf(w, "\t%s\n\n", prop.Body)
+	}
 
 	return w.Flush()
 }
@@ -308,7 +332,7 @@ func listPlansCmd(cliCtx *cli.Context) error {
 	w := ansiterm.NewTabWriter(os.Stdout, 0, 0, 8, ' ', 0)
 
 	w.SetForeground(ansiterm.Gray)
-	fmt.Fprintln(w, "Label\tName\tState\tCost\tTrial Days")
+	fmt.Fprintln(w, "Label\tName\tCost\tTrial Days")
 	w.Reset()
 
 	for _, p := range plans {
@@ -318,8 +342,8 @@ func listPlansCmd(cliCtx *cli.Context) error {
 			cost = money.New(price, "USD").Display()
 		}
 
-		fmt.Fprintf(w, "%s\t%s\t%s\t%s\t%d\n", p.Body.Label, p.Body.Name,
-			*p.Body.State, cost, *p.Body.TrialDays)
+		fmt.Fprintf(w, "%s\t%s\t%s\t%d\n", p.Body.Label, p.Body.Name, cost,
+			*p.Body.TrialDays)
 	}
 
 	return w.Flush()
