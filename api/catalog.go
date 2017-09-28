@@ -88,8 +88,8 @@ func (api *API) FetchProducts(providerID string) ([]*cModels.Product, error) {
 	products := res.Payload
 
 	sort.Slice(products, func(i, j int) bool {
-		a := string(products[i].Body.Name)
-		b := string(products[j].Body.Name)
+		a := string(products[i].Body.Label)
+		b := string(products[j].Body.Label)
 		return strings.ToLower(a) < strings.ToLower(b)
 	})
 
