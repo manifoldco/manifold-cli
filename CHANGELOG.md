@@ -16,6 +16,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - `sso` command for getting resource single sign-on link
 - build for high sierra in brew
 - `projects add` and `projects remove` event
+- `services providers` to list providers
+- `services products` to list products
+- `services plans` to list plans
 
 ### Fixed
 
