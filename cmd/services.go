@@ -138,7 +138,11 @@ func listProductsCmd(cliCtx *cli.Context) error {
 		}
 	}
 
-	providerID := provider.ID.String()
+	providerID := ""
+
+	if provider != nil {
+		providerID = provider.ID.String()
+	}
 
 	if productLabel == "" {
 		products, err = client.FetchProducts(providerID)
@@ -217,7 +221,11 @@ func listPlansCmd(cliCtx *cli.Context) error {
 		}
 	}
 
-	providerID := provider.ID.String()
+	providerID := ""
+
+	if provider != nil {
+		providerID = provider.ID.String()
+	}
 
 	if productLabel != "" {
 		product, err = client.FetchProduct(productLabel, providerID)
