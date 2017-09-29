@@ -107,13 +107,9 @@ func view(cliCtx *cli.Context) error {
 		resource = resources[idx]
 	}
 
-	faint := func(i interface{}) string {
-		return color.Color(ansiterm.Gray, i)
-	}
-
-	productName := faint("-")
-	planName := faint("-")
-	regionName := faint("-")
+	productName := color.Faint("-")
+	planName := color.Faint("-")
+	regionName := color.Faint("-")
 	isCustom := "Yes"
 
 	if *resource.Body.Source != "custom" {
@@ -166,14 +162,14 @@ func view(cliCtx *cli.Context) error {
 	fmt.Println("Use `manifold update [label] --project [project]` to edit your resource")
 	fmt.Println("")
 	w := ansiterm.NewTabWriter(os.Stdout, 0, 0, 8, ' ', 0)
-	fmt.Fprintln(w, fmt.Sprintf("%s\t%s", faint("Name"), color.Bold(resource.Body.Name)))
-	fmt.Fprintln(w, fmt.Sprintf("%s\t%s", faint("Label"), resource.Body.Label))
-	fmt.Fprintln(w, fmt.Sprintf("%s\t%s", faint("Project"), projectLabel))
-	fmt.Fprintln(w, fmt.Sprintf("%s\t%s", faint("State"), status))
-	fmt.Fprintln(w, fmt.Sprintf("%s\t%s", faint("Custom"), isCustom))
-	fmt.Fprintln(w, fmt.Sprintf("%s\t%s", faint("Product"), productName))
-	fmt.Fprintln(w, fmt.Sprintf("%s\t%s", faint("Plan"), planName))
-	fmt.Fprintln(w, fmt.Sprintf("%s\t%s", faint("Region"), regionName))
+	fmt.Fprintln(w, fmt.Sprintf("%s\t%s", color.Faint("Name"), color.Bold(resource.Body.Name)))
+	fmt.Fprintln(w, fmt.Sprintf("%s\t%s", color.Faint("Label"), resource.Body.Label))
+	fmt.Fprintln(w, fmt.Sprintf("%s\t%s", color.Faint("Project"), projectLabel))
+	fmt.Fprintln(w, fmt.Sprintf("%s\t%s", color.Faint("State"), status))
+	fmt.Fprintln(w, fmt.Sprintf("%s\t%s", color.Faint("Custom"), isCustom))
+	fmt.Fprintln(w, fmt.Sprintf("%s\t%s", color.Faint("Product"), productName))
+	fmt.Fprintln(w, fmt.Sprintf("%s\t%s", color.Faint("Plan"), planName))
+	fmt.Fprintln(w, fmt.Sprintf("%s\t%s", color.Faint("Region"), regionName))
 	w.Flush()
 
 	return nil

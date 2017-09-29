@@ -8,11 +8,12 @@ import (
 	"github.com/manifoldco/manifold-cli/generated/catalog/client/plan"
 	"github.com/manifoldco/manifold-cli/generated/catalog/client/product"
 	"github.com/manifoldco/manifold-cli/generated/catalog/client/provider"
-	cModels "github.com/manifoldco/manifold-cli/generated/catalog/models"
+	"github.com/manifoldco/manifold-cli/generated/catalog/client/region"
+	"github.com/manifoldco/manifold-cli/generated/catalog/models"
 )
 
 // FetchProviders returns a list of all available providers.
-func (api *API) FetchProviders() ([]*cModels.Provider, error) {
+func (api *API) FetchProviders() ([]*models.Provider, error) {
 	params := provider.NewGetProvidersParamsWithContext(api.ctx)
 	res, err := api.Catalog.Provider.GetProviders(params)
 	if err != nil {
@@ -22,8 +23,8 @@ func (api *API) FetchProviders() ([]*cModels.Provider, error) {
 	providers := res.Payload
 
 	sort.Slice(providers, func(i, j int) bool {
-		a := string(providers[i].Body.Name)
-		b := string(providers[j].Body.Name)
+		a := string(providers[i].Body.Label)
+		b := string(providers[j].Body.Label)
 		return strings.ToLower(a) < strings.ToLower(b)
 	})
 
@@ -31,7 +32,7 @@ func (api *API) FetchProviders() ([]*cModels.Provider, error) {
 }
 
 // FetchProvider returns a provider based on a label.
-func (api *API) FetchProvider(label string) (*cModels.Provider, error) {
+func (api *API) FetchProvider(label string) (*models.Provider, error) {
 	if label == "" {
 		return nil, fmt.Errorf("Provider label is missing")
 	}
@@ -51,7 +52,7 @@ func (api *API) FetchProvider(label string) (*cModels.Provider, error) {
 }
 
 // FetchProduct returns a product based on a label.
-func (api *API) FetchProduct(label string, providerID string) (*cModels.Product, error) {
+func (api *API) FetchProduct(label string, providerID string) (*models.Product, error) {
 	if label == "" {
 		return nil, fmt.Errorf("Product label is missing")
 	}
@@ -76,7 +77,7 @@ func (api *API) FetchProduct(label string, providerID string) (*cModels.Product,
 }
 
 // FetchProducts returns a list of all products for a provider.
-func (api *API) FetchProducts(providerID string) ([]*cModels.Product, error) {
+func (api *API) FetchProducts(providerID string) ([]*models.Product, error) {
 	params := product.NewGetProductsParamsWithContext(api.ctx)
 	params.SetProviderID(&providerID)
 
@@ -97,7 +98,7 @@ func (api *API) FetchProducts(providerID string) ([]*cModels.Product, error) {
 }
 
 // FetchPlans returns a list of all plans for a product.
-func (api *API) FetchPlans(productID string) ([]*cModels.Plan, error) {
+func (api *API) FetchPlans(productID string) ([]*models.Plan, error) {
 	params := plan.NewGetPlansParamsWithContext(api.ctx)
 	params.SetProductID([]string{productID})
 
@@ -113,11 +114,61 @@ func (api *API) FetchPlans(productID string) ([]*cModels.Plan, error) {
 		b := plans[j]
 
 		if *a.Body.Cost == *b.Body.Cost {
-			return strings.ToLower(string(a.Body.Name)) <
-				strings.ToLower(string(b.Body.Name))
+			return strings.ToLower(string(a.Body.Label)) <
+				strings.ToLower(string(b.Body.Label))
 		}
 		return *a.Body.Cost < *b.Body.Cost
 	})
 
 	return plans, nil
+}
+
+// FetchPlan returns a plan from a product.
+// FIXME: when the marketplace implements a label filter, use that instead.
+func (api *API) FetchPlan(label string, productID string) (*models.Plan, error) {
+	if label == "" {
+		return nil, fmt.Errorf("Plan label is missing")
+	}
+
+	if productID == "" {
+		return nil, fmt.Errorf("Product id is missing")
+	}
+
+	params := plan.NewGetPlansParamsWithContext(api.ctx)
+	params.SetProductID([]string{productID})
+
+	res, err := api.Catalog.Plan.GetPlans(params, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	plans := res.Payload
+
+	for _, p := range plans {
+		if string(p.Body.Label) == label {
+			return p, nil
+		}
+	}
+
+	return nil, fmt.Errorf("Plan with label %q not found", label)
+}
+
+// FetchRegions returns a list of all available regions.
+func (api *API) FetchRegions() ([]*models.Region, error) {
+	params := region.NewGetRegionsParamsWithContext(api.ctx)
+
+	res, err := api.Catalog.Region.GetRegions(params)
+	if err != nil {
+		return nil, err
+	}
+
+	regions := res.Payload
+
+	sort.Slice(regions, func(i, j int) bool {
+		a := regions[i]
+		b := regions[j]
+		return strings.ToLower(string(a.Body.Name)) < strings.ToLower(string(b.Body.Name))
+	})
+
+	return regions, nil
 }

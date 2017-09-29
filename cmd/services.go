@@ -28,17 +28,20 @@ func init() {
 				Action: listProvidersCmd,
 			},
 			{
-				Name:      "products",
-				Usage:     "List all products for a provider",
-				ArgsUsage: "[product label]",
+				Name: "products",
+				Usage: `List all products for a provider.
+Pass a label to see a single product details`,
+				ArgsUsage: "[label]",
 				Flags:     []cli.Flag{providerFlag()},
 				Action:    listProductsCmd,
 			},
 			{
-				Name:   "plans",
-				Usage:  "List all plans for a product",
-				Flags:  []cli.Flag{providerFlag(), productFlag()},
-				Action: listPlansCmd,
+				Name: "plans",
+				Usage: `List all plans for a product.
+Pass a label to see a single plan details`,
+				ArgsUsage: "[label]",
+				Flags:     []cli.Flag{providerFlag(), productFlag()},
+				Action:    listPlansCmd,
 			},
 		},
 	}
@@ -215,45 +218,50 @@ func viewProduct(cliCtx *cli.Context, productLabel string) error {
 		return cli.NewExitError(err, -1)
 	}
 
-	faint := func(i interface{}) string {
-		return color.Color(ansiterm.Gray, i)
-	}
-
 	w := ansiterm.NewTabWriter(os.Stdout, 0, 0, 8, ' ', 0)
 
-	fmt.Fprintf(w, "Use `manifold services plans --product [label] --provider [label]` to view plan details\n\n")
-	fmt.Fprintf(w, "%s (%s)\n", product.Body.Name, faint(product.Body.Label))
+	fmt.Fprintf(w, "Use `manifold services plans --product [label] --provider [label]` to view product plans\n\n")
+	fmt.Fprintf(w, "%s (%s)\n", product.Body.Name, color.Faint(product.Body.Label))
 	fmt.Fprintf(w, "%s\n\n", product.Body.Tagline)
-	fmt.Fprintf(w, "%s\t%s\n", faint("Support"), product.Body.SupportEmail)
+	fmt.Fprintf(w, "%s\t%s\n", color.Faint("Support"), product.Body.SupportEmail)
 	if product.Body.DocumentationURL != nil {
-		fmt.Fprintf(w, "%s\t%s\n", faint("Documentation"), *product.Body.DocumentationURL)
+		fmt.Fprintf(w, "%s\t%s\n", color.Faint("Documentation"), *product.Body.DocumentationURL)
 	}
 
 	if product.Body.Terms.Provided {
-		fmt.Fprintf(w, "%s\t%s\n", faint("Terms"), *product.Body.Terms.URL)
+		fmt.Fprintf(w, "%s\t%s\n", color.Faint("Terms"), *product.Body.Terms.URL)
 	}
 
 	if product.Body.Integration.Features.Sso {
-		fmt.Fprintf(w, "%s\t%s\n\n", faint("SSO"), "Available")
+		fmt.Fprintf(w, "%s\t%s\n\n", color.Faint("SSO"), "Available")
 	} else {
-		fmt.Fprintf(w, "%s\t%s\n\n", faint("SSO"), "Unavailable")
+		fmt.Fprintf(w, "%s\t%s\n\n", color.Faint("SSO"), "Unavailable")
 	}
 
 	for _, prop := range product.Body.ValueProps {
-		fmt.Fprintf(w, "%s\n", prop.Header)
-		fmt.Fprintf(w, "\t%s\n\n", prop.Body)
+		fmt.Fprintf(w, "%s\n", color.Bold(prop.Header))
+		fmt.Fprintf(w, "%s\n\n", prop.Body)
 	}
 
 	return w.Flush()
 }
 
 func listPlansCmd(cliCtx *cli.Context) error {
-	client, err := api.New(api.Catalog)
+	if err := maxOptionalArgsLength(cliCtx, 1); err != nil {
+		return err
+	}
+
+	planLabel, err := optionalArgName(cliCtx, 0, "plan")
 	if err != nil {
 		return err
 	}
 
-	if err := maxOptionalArgsLength(cliCtx, 0); err != nil {
+	if planLabel != "" {
+		return viewPlan(cliCtx, planLabel)
+	}
+
+	client, err := api.New(api.Catalog)
+	if err != nil {
 		return err
 	}
 
@@ -330,6 +338,7 @@ func listPlansCmd(cliCtx *cli.Context) error {
 	}
 
 	w := ansiterm.NewTabWriter(os.Stdout, 0, 0, 8, ' ', 0)
+	fmt.Fprintf(w, "Use `manifold services plans plans --product [label] --provider [label]` to view plan details\n\n")
 
 	w.SetForeground(ansiterm.Gray)
 	fmt.Fprintln(w, "Label\tName\tCost\tTrial Days")
@@ -344,6 +353,73 @@ func listPlansCmd(cliCtx *cli.Context) error {
 
 		fmt.Fprintf(w, "%s\t%s\t%s\t%d\n", p.Body.Label, p.Body.Name, cost,
 			*p.Body.TrialDays)
+	}
+
+	return w.Flush()
+}
+
+func viewPlan(cliCtx *cli.Context, planLabel string) error {
+	client, err := api.New(api.Catalog)
+	if err != nil {
+		return err
+	}
+
+	providerLabel, err := validateLabel(cliCtx, "provider")
+	if err != nil {
+		return err
+	}
+
+	productLabel, err := validateLabel(cliCtx, "product")
+	if err != nil {
+		return err
+	}
+
+	provider, err := client.FetchProvider(providerLabel)
+	if err != nil {
+		return cli.NewExitError(err, -1)
+	}
+
+	product, err := client.FetchProduct(productLabel, provider.ID.String())
+	if err != nil {
+		return cli.NewExitError(err, -1)
+	}
+
+	plan, err := client.FetchPlan(planLabel, product.ID.String())
+	if err != nil {
+		return cli.NewExitError(err, -1)
+	}
+
+	regions, err := client.FetchRegions()
+	if err != nil {
+		return cli.NewExitError(err, -1)
+	}
+
+	w := ansiterm.NewTabWriter(os.Stdout, 0, 0, 8, ' ', 0)
+
+	fmt.Fprintf(w, "%s (%s)\n\n", plan.Body.Name, color.Faint(plan.Body.Label))
+
+	price := *plan.Body.Cost
+	cost := "Free"
+	if price != 0 {
+		cost = money.New(price, "USD").Display()
+	}
+
+	fmt.Fprintf(w, "%s\t%s\n", color.Faint("Cost"), cost)
+	fmt.Fprintf(w, "%s\t%d\n", color.Faint("Trial Days"), *plan.Body.TrialDays)
+
+	fmt.Fprintf(w, "\n%s\n", color.Bold("Features"))
+	for _, f := range plan.Body.Features {
+		fmt.Fprintf(w, "%s\t%s\n", color.Faint(f.Feature), *f.Value)
+	}
+
+	fmt.Fprintf(w, "\n%s\n", color.Bold("Regions"))
+	for _, r := range regions {
+		for _, pr := range plan.Body.Regions {
+			if r.ID == pr {
+				fmt.Fprintf(w, "%s\t%s\t%s\n", color.Faint(r.Body.Name),
+					*r.Body.Location, *r.Body.Platform)
+			}
+		}
 	}
 
 	return w.Flush()
