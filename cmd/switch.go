@@ -34,7 +34,7 @@ func init() {
 func switchTeamCmd(cliCtx *cli.Context) error {
 	ctx := context.Background()
 
-	cfg, err := config.Load()
+	cfg, err := config.LoadIgnoreLegacy()
 	if err != nil {
 		return cli.NewExitError(fmt.Sprintf("Could not load configuration: %s", err), -1)
 	}
@@ -107,9 +107,13 @@ func switchTeam(ctx context.Context, cfg *config.Config, team *models.Team) erro
 		return err
 	}
 
-	cfg.Team = ""
+	cfg.TeamID = ""
+	cfg.TeamTitle = ""
+	cfg.TeamName = ""
 	if team != nil {
-		cfg.Team = team.ID.String()
+		cfg.TeamID = team.ID.String()
+		cfg.TeamTitle = string(team.Body.Name)
+		cfg.TeamName = string(team.Body.Label)
 	}
 
 	if err := cfg.Write(); err != nil {
@@ -118,11 +122,11 @@ func switchTeam(ctx context.Context, cfg *config.Config, team *models.Team) erro
 
 	params := map[string]string{}
 	if team != nil {
-		params["team-label"] = string(team.Body.Label)
-		params["team-name"] = string(team.Body.Name)
+		params["team-name"] = cfg.TeamName
+		params["team-title"] = cfg.TeamTitle
 	} else {
-		params["team-label"] = ""
 		params["team-name"] = ""
+		params["team-title"] = ""
 	}
 	a.Track(ctx, "Switched Context", &params)
 
