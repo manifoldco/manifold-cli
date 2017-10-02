@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/manifoldco/manifold-cli/analytics"
 	"github.com/manifoldco/manifold-cli/clients"
 	"github.com/manifoldco/manifold-cli/config"
 	bClient "github.com/manifoldco/manifold-cli/generated/billing/client"
@@ -19,6 +20,7 @@ import (
 // function to load the necessary clients for the operation.
 type API struct {
 	ctx          context.Context
+	Analytics    *analytics.Analytics
 	Billing      *bClient.Billing
 	Catalog      *cClient.Catalog
 	Identity     *iClient.Identity
@@ -31,8 +33,11 @@ type API struct {
 type Client int
 
 const (
+	// Analytics represents the analytics client
+	Analytics Client = iota
+
 	// Billing represents the billing client
-	Billing Client = iota
+	Billing
 
 	// Catalog represents the catalog client
 	Catalog
@@ -65,6 +70,8 @@ func New(list ...Client) (*API, error) {
 	for _, e := range list {
 		var err error
 		switch e {
+		case Analytics:
+			api.Analytics, err = api.loadAnalytics(cfg)
 		case Billing:
 			api.Billing, err = clients.NewBilling(cfg)
 		case Catalog:
