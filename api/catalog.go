@@ -86,7 +86,13 @@ func (api *API) FetchProducts(providerID string) ([]*models.Product, error) {
 		return nil, err
 	}
 
-	products := res.Payload
+	var products []*models.Product
+
+	for _, p := range res.Payload {
+		if *p.Body.State == "available" {
+			products = append(products, p)
+		}
+	}
 
 	sort.Slice(products, func(i, j int) bool {
 		a := string(products[i].Body.Label)

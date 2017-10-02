@@ -28,17 +28,15 @@ func init() {
 				Action: listProvidersCmd,
 			},
 			{
-				Name: "products",
-				Usage: `List all products for a provider.
-Pass a label to see a single product details`,
+				Name:      "products",
+				Usage:     "List all products. Specify a product to see its details",
 				ArgsUsage: "[label]",
 				Flags:     []cli.Flag{providerFlag()},
 				Action:    listProductsCmd,
 			},
 			{
-				Name: "plans",
-				Usage: `List all plans for a product.
-Pass a label to see a single plan details`,
+				Name:      "plans",
+				Usage:     "List all plans for a product. Specify a plan to see its details",
 				ArgsUsage: "[label]",
 				Flags:     []cli.Flag{providerFlag(), productFlag()},
 				Action:    listPlansCmd,
@@ -88,11 +86,11 @@ func listProvidersCmd(cliCtx *cli.Context) error {
 	fmt.Fprintf(w, "\nUse `manifold services products --provider [label]` to view list of products\n\n")
 
 	w.SetForeground(ansiterm.Gray)
-	fmt.Fprintln(w, "Label\tName\tDocumentation URL")
+	fmt.Fprintln(w, "Label\tName")
 	w.Reset()
 
 	for _, p := range providers {
-		fmt.Fprintf(w, "%s\t%s\t%s\n", p.Body.Label, p.Body.Name, p.Body.DocumentationURL)
+		fmt.Fprintf(w, "%s\t%s\n", p.Body.Label, p.Body.Name)
 	}
 
 	return w.Flush()
@@ -338,7 +336,7 @@ func listPlansCmd(cliCtx *cli.Context) error {
 	}
 
 	w := ansiterm.NewTabWriter(os.Stdout, 0, 0, 8, ' ', 0)
-	fmt.Fprintf(w, "Use `manifold services plans plans --product [label] --provider [label]` to view plan details\n\n")
+	fmt.Fprintf(w, "Use `manifold services plans label --product [label] --provider [label]` to view plan details\n\n")
 
 	w.SetForeground(ansiterm.Gray)
 	fmt.Fprintln(w, "Label\tName\tCost\tTrial Days")
@@ -416,8 +414,7 @@ func viewPlan(cliCtx *cli.Context, planLabel string) error {
 	for _, r := range regions {
 		for _, pr := range plan.Body.Regions {
 			if r.ID == pr {
-				fmt.Fprintf(w, "%s\t%s\t%s\n", color.Faint(r.Body.Name),
-					*r.Body.Location, *r.Body.Platform)
+				fmt.Fprintf(w, "%s\t%s\n", color.Faint(r.Body.Name), *r.Body.Location)
 			}
 		}
 	}
