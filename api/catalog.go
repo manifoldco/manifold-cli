@@ -130,7 +130,6 @@ func (api *API) FetchPlans(productID string) ([]*models.Plan, error) {
 }
 
 // FetchPlan returns a plan from a product.
-// FIXME: when the marketplace implements a label filter, use that instead.
 func (api *API) FetchPlan(label string, productID string) (*models.Plan, error) {
 	if label == "" {
 		return nil, fmt.Errorf("Plan label is missing")
@@ -142,21 +141,18 @@ func (api *API) FetchPlan(label string, productID string) (*models.Plan, error) 
 
 	params := plan.NewGetPlansParamsWithContext(api.ctx)
 	params.SetProductID([]string{productID})
+	params.SetLabel(&label)
 
 	res, err := api.Catalog.Plan.GetPlans(params, nil)
 	if err != nil {
 		return nil, err
 	}
 
-	plans := res.Payload
-
-	for _, p := range plans {
-		if string(p.Body.Label) == label {
-			return p, nil
-		}
+	if len(res.Payload) == 0 {
+		return nil, fmt.Errorf("Plan with label %q not found", label)
 	}
 
-	return nil, fmt.Errorf("Plan with label %q not found", label)
+	return res.Payload[0], nil
 }
 
 // FetchRegions returns a list of all available regions.
