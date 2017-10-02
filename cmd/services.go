@@ -83,7 +83,7 @@ func listProvidersCmd(cliCtx *cli.Context) error {
 
 	w := ansiterm.NewTabWriter(os.Stdout, 0, 0, 8, ' ', 0)
 
-	fmt.Fprintf(w, "\nUse `manifold services products --provider [label]` to view list of products\n\n")
+	fmt.Fprintf(w, "Use `manifold services products --provider [label]` to view list of products\n\n")
 
 	w.SetForeground(ansiterm.Gray)
 	fmt.Fprintln(w, "Label\tName")
@@ -219,7 +219,9 @@ func viewProduct(cliCtx *cli.Context, productLabel string) error {
 	w := ansiterm.NewTabWriter(os.Stdout, 0, 0, 8, ' ', 0)
 
 	fmt.Fprintf(w, "Use `manifold services plans --product [label] --provider [label]` to view product plans\n\n")
-	fmt.Fprintf(w, "%s (%s)\n", product.Body.Name, color.Faint(product.Body.Label))
+	fmt.Fprintln(w, "Product\tProvider")
+	fmt.Fprintf(w, "%s (%s)\t%s (%s)\n\n", product.Body.Name, product.Body.Label,
+		provider.Body.Name, provider.Body.Label)
 	fmt.Fprintf(w, "%s\n\n", product.Body.Tagline)
 	fmt.Fprintf(w, "%s\t%s\n", color.Faint("Support"), product.Body.SupportEmail)
 	if product.Body.DocumentationURL != nil {
@@ -339,7 +341,7 @@ func listPlansCmd(cliCtx *cli.Context) error {
 	fmt.Fprintf(w, "Use `manifold services plans label --product [label] --provider [label]` to view plan details\n\n")
 
 	w.SetForeground(ansiterm.Gray)
-	fmt.Fprintln(w, "Label\tName\tCost\tTrial Days")
+	fmt.Fprintln(w, "Label\tName\tCost")
 	w.Reset()
 
 	for _, p := range plans {
@@ -349,8 +351,7 @@ func listPlansCmd(cliCtx *cli.Context) error {
 			cost = money.New(price, "USD").Display()
 		}
 
-		fmt.Fprintf(w, "%s\t%s\t%s\t%d\n", p.Body.Label, p.Body.Name, cost,
-			*p.Body.TrialDays)
+		fmt.Fprintf(w, "%s\t%s\t%s\n", p.Body.Label, p.Body.Name, cost)
 	}
 
 	return w.Flush()
@@ -394,7 +395,10 @@ func viewPlan(cliCtx *cli.Context, planLabel string) error {
 
 	w := ansiterm.NewTabWriter(os.Stdout, 0, 0, 8, ' ', 0)
 
-	fmt.Fprintf(w, "%s (%s)\n\n", plan.Body.Name, color.Faint(plan.Body.Label))
+	fmt.Fprintln(w, "Plan\tProduct\tProvider")
+	fmt.Fprintf(w, "%s (%s)\t%s (%s)\t%s (%s)\n\n", plan.Body.Name,
+		color.Faint(plan.Body.Label), product.Body.Name, product.Body.Label,
+		provider.Body.Name, provider.Body.Label)
 
 	price := *plan.Body.Cost
 	cost := "Free"
@@ -403,8 +407,6 @@ func viewPlan(cliCtx *cli.Context, planLabel string) error {
 	}
 
 	fmt.Fprintf(w, "%s\t%s\n", color.Faint("Cost"), cost)
-	fmt.Fprintf(w, "%s\t%d\n", color.Faint("Trial Days"), *plan.Body.TrialDays)
-
 	fmt.Fprintf(w, "\n%s\n", color.Bold("Features"))
 	for _, f := range plan.Body.Features {
 		fmt.Fprintf(w, "%s\t%s\n", color.Faint(f.Feature), *f.Value)
