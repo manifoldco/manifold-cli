@@ -16,7 +16,6 @@ import (
 	"github.com/manifoldco/manifold-cli/errs"
 	cModels "github.com/manifoldco/manifold-cli/generated/catalog/models"
 	mModels "github.com/manifoldco/manifold-cli/generated/marketplace/models"
-	"github.com/manifoldco/manifold-cli/generated/provisioning/client"
 	"github.com/manifoldco/manifold-cli/generated/provisioning/client/operation"
 	"github.com/manifoldco/manifold-cli/generated/provisioning/models"
 	"github.com/manifoldco/manifold-cli/middleware"
@@ -109,7 +108,7 @@ func resizeResourceCmd(cliCtx *cli.Context) error {
 	spin.Start()
 	defer spin.Stop()
 
-	if err := resizeResource(ctx, r, p, client.Provisioning, teamID, userID, dontWait); err != nil {
+	if err := resizeResource(ctx, r, p, client, teamID, userID, dontWait); err != nil {
 		return cli.NewExitError(fmt.Sprintf("Could not update resource \"%s\": %s", string(r.Body.Label), err), -1)
 	}
 
@@ -119,13 +118,8 @@ func resizeResourceCmd(cliCtx *cli.Context) error {
 }
 
 func resizeResource(ctx context.Context, r *mModels.Resource, p *cModels.Plan,
-	pc *client.Provisioning, tid, uid *manifold.ID, dontWait bool,
+	client *api.API, tid, uid *manifold.ID, dontWait bool,
 ) error {
-	a, err := loadAnalytics()
-	if err != nil {
-		return err
-	}
-
 	ID, err := manifold.NewID(idtype.Operation)
 	if err != nil {
 		return err
@@ -159,7 +153,7 @@ func resizeResource(ctx context.Context, r *mModels.Resource, p *cModels.Plan,
 	resize.SetBody(op)
 	resize.SetID(ID.String())
 
-	res, err := pc.Operation.PutOperationsID(resize, nil)
+	res, err := client.Provisioning.Operation.PutOperationsID(resize, nil)
 	if err != nil {
 		switch e := err.(type) {
 		case *operation.PutOperationsIDBadRequest:
@@ -182,12 +176,12 @@ func resizeResource(ctx context.Context, r *mModels.Resource, p *cModels.Plan,
 		"price": toPrice(*p.Body.Cost),
 	}
 
-	a.Track(ctx, "Resize Operation", &aParams)
+	client.Analytics.Track(ctx, "Resize Operation", &aParams)
 
 	if dontWait {
 		return nil
 	}
 
-	_, err = waitForOp(ctx, pc, res.Payload)
+	_, err = waitForOp(ctx, client.Provisioning, res.Payload)
 	return err
 }

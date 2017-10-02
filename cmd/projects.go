@@ -385,7 +385,7 @@ func addProjectCmd(cliCtx *cli.Context) error {
 		return err
 	}
 
-	client, err := api.New(api.Marketplace, api.Provisioning)
+	client, err := api.New(api.Analytics, api.Marketplace, api.Provisioning)
 	if err != nil {
 		return err
 	}
@@ -423,11 +423,6 @@ func addProjectCmd(cliCtx *cli.Context) error {
 		fmt.Printf("Moving %s to %s\n", r.Body.Label, p.Body.Label)
 	}
 
-	analytics, err := loadAnalytics()
-	if err != nil {
-		return err
-	}
-
 	params := map[string]string{
 		"resource_id":    r.ID.String(),
 		"resource_name":  string(r.Body.Name),
@@ -436,7 +431,7 @@ func addProjectCmd(cliCtx *cli.Context) error {
 		"project_name":   string(p.Body.Name),
 		"project_label":  string(p.Body.Label),
 	}
-	analytics.Track(ctx, "Added a Resource to a Project", &params)
+	client.Analytics.Track(ctx, "Added a Resource to a Project", &params)
 
 	return nil
 }
@@ -465,7 +460,7 @@ func removeProjectCmd(cliCtx *cli.Context) error {
 		return err
 	}
 
-	client, err := api.New(api.Marketplace, api.Provisioning)
+	client, err := api.New(api.Analytics, api.Marketplace, api.Provisioning)
 	if err != nil {
 		return err
 	}
@@ -505,17 +500,12 @@ func removeProjectCmd(cliCtx *cli.Context) error {
 
 	fmt.Printf("Removed %s from project\n", r.Body.Label)
 
-	analytics, err := loadAnalytics()
-	if err != nil {
-		return err
-	}
-
 	params := map[string]string{
 		"resource_id":    r.ID.String(),
 		"resource_name":  string(r.Body.Name),
 		"resource_label": string(r.Body.Label),
 	}
-	analytics.Track(ctx, "Removed a Resource from a Project", &params)
+	client.Analytics.Track(ctx, "Removed a Resource from a Project", &params)
 
 	return nil
 }
