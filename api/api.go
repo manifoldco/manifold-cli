@@ -112,3 +112,8 @@ func (c Client) String() string {
 		return "Unknown"
 	}
 }
+
+// Context returns API underlining context.
+func (api *API) Context() context.Context {
+	return api.ctx
+}

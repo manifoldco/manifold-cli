@@ -48,7 +48,7 @@ func init() {
 }
 
 func listProvidersCmd(cliCtx *cli.Context) error {
-	client, err := api.New(api.Catalog)
+	client, err := api.New(api.Analytics, api.Catalog)
 	if err != nil {
 		return err
 	}
@@ -81,6 +81,14 @@ func listProvidersCmd(cliCtx *cli.Context) error {
 		return errs.ErrNoProviders
 	}
 
+	params := map[string]string{
+		"subcommand": "providers",
+	}
+	if providerLabel != "" {
+		params["provider_label"] = providerLabel
+	}
+
+	client.Analytics.Track(client.Context(), "Viewed Services", &params)
 	w := ansiterm.NewTabWriter(os.Stdout, 0, 0, 8, ' ', 0)
 
 	fmt.Fprintf(w, "Use `manifold services products --provider [label]` to view list of products\n\n")
@@ -114,7 +122,7 @@ func listProductsCmd(cliCtx *cli.Context) error {
 	var providers []*models.Provider
 	var provider *models.Provider
 
-	client, err := api.New(api.Catalog)
+	client, err := api.New(api.Analytics, api.Catalog)
 	if err != nil {
 		return err
 	}
@@ -170,6 +178,20 @@ func listProductsCmd(cliCtx *cli.Context) error {
 		return errs.ErrNoProducts
 	}
 
+	params := map[string]string{
+		"subcommand": "products",
+	}
+
+	if providerLabel != "" {
+		params["provider_label"] = providerLabel
+	}
+
+	if productLabel != "" {
+		params["product_label"] = productLabel
+	}
+
+	client.Analytics.Track(client.Context(), "Viewed Services", &params)
+
 	w := ansiterm.NewTabWriter(os.Stdout, 0, 0, 8, ' ', 0)
 
 	fmt.Fprintf(w, "%d products from %d providers\n", len(products), len(providers))
@@ -195,7 +217,7 @@ func listProductsCmd(cliCtx *cli.Context) error {
 }
 
 func viewProduct(cliCtx *cli.Context, productLabel string) error {
-	client, err := api.New(api.Catalog)
+	client, err := api.New(api.Analytics, api.Catalog)
 	if err != nil {
 		return err
 	}
@@ -215,6 +237,14 @@ func viewProduct(cliCtx *cli.Context, productLabel string) error {
 	if err != nil {
 		return cli.NewExitError(err, -1)
 	}
+
+	params := map[string]string{
+		"subcommand":     "products",
+		"provider_label": string(provider.Body.Label),
+		"product_label":  string(product.Body.Label),
+	}
+
+	client.Analytics.Track(client.Context(), "Viewed Services", &params)
 
 	w := ansiterm.NewTabWriter(os.Stdout, 0, 0, 8, ' ', 0)
 
@@ -260,7 +290,7 @@ func listPlansCmd(cliCtx *cli.Context) error {
 		return viewPlan(cliCtx, planLabel)
 	}
 
-	client, err := api.New(api.Catalog)
+	client, err := api.New(api.Analytics, api.Catalog)
 	if err != nil {
 		return err
 	}
@@ -337,6 +367,14 @@ func listPlansCmd(cliCtx *cli.Context) error {
 		return errs.ErrNoPlans
 	}
 
+	params := map[string]string{
+		"subcommand":     "plans",
+		"provider_label": string(provider.Body.Label),
+		"product_label":  string(product.Body.Label),
+	}
+
+	client.Analytics.Track(client.Context(), "Viewed Services", &params)
+
 	w := ansiterm.NewTabWriter(os.Stdout, 0, 0, 8, ' ', 0)
 	fmt.Fprintf(w, "Use `manifold services plans label --product [label] --provider [label]` to view plan details\n\n")
 
@@ -358,7 +396,7 @@ func listPlansCmd(cliCtx *cli.Context) error {
 }
 
 func viewPlan(cliCtx *cli.Context, planLabel string) error {
-	client, err := api.New(api.Catalog)
+	client, err := api.New(api.Analytics, api.Catalog)
 	if err != nil {
 		return err
 	}
@@ -392,6 +430,14 @@ func viewPlan(cliCtx *cli.Context, planLabel string) error {
 	if err != nil {
 		return cli.NewExitError(err, -1)
 	}
+
+	params := map[string]string{
+		"subcommand":     "plans",
+		"provider_label": string(provider.Body.Label),
+		"product_label":  string(product.Body.Label),
+		"plan_label":     string(plan.Body.Label),
+	}
+	client.Analytics.Track(client.Context(), "Viewed Services", &params)
 
 	w := ansiterm.NewTabWriter(os.Stdout, 0, 0, 8, ' ', 0)
 
