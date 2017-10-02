@@ -22,10 +22,10 @@ func init() {
 		Category: "RESOURCES",
 		Subcommands: []cli.Command{
 			{
-				Name:   "providers",
-				Usage:  "List all providers",
-				Flags:  []cli.Flag{providerFlag()},
-				Action: listProvidersCmd,
+				Name:      "providers",
+				Usage:     "List all providers",
+				ArgsUsage: "[label]",
+				Action:    listProvidersCmd,
 			},
 			{
 				Name:      "products",
@@ -53,11 +53,11 @@ func listProvidersCmd(cliCtx *cli.Context) error {
 		return err
 	}
 
-	if err := maxOptionalArgsLength(cliCtx, 0); err != nil {
+	if err := maxOptionalArgsLength(cliCtx, 1); err != nil {
 		return err
 	}
 
-	providerLabel, err := validateLabel(cliCtx, "provider")
+	providerLabel, err := optionalArgLabel(cliCtx, 0, "provider")
 	if err != nil {
 		return err
 	}
@@ -109,7 +109,7 @@ func listProductsCmd(cliCtx *cli.Context) error {
 		return err
 	}
 
-	productLabel, err := optionalArgName(cliCtx, 0, "product")
+	productLabel, err := optionalArgLabel(cliCtx, 0, "product")
 	if err != nil {
 		return err
 	}
@@ -281,7 +281,7 @@ func listPlansCmd(cliCtx *cli.Context) error {
 		return err
 	}
 
-	planLabel, err := optionalArgName(cliCtx, 0, "plan")
+	planLabel, err := optionalArgLabel(cliCtx, 0, "plan")
 	if err != nil {
 		return err
 	}
