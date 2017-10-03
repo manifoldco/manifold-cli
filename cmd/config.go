@@ -104,12 +104,17 @@ func patchConfig(cliCtx *cli.Context, req map[string]*string) error {
 		Body:    req,
 		Context: ctx,
 	}, nil)
+
 	if err != nil {
-		return cli.NewExitError("Error updating config: "+err.Error(), -1)
+		switch e := err.(type) {
+		case *credential.PatchResourcesIDConfigBadRequest:
+			return cli.NewExitError("Could not change config: invalid key.", -1)
+		default:
+			return cli.NewExitError(e, -1)
+		}
 	}
 
 	return nil
-
 }
 
 func configSetCmd(cliCtx *cli.Context) error {
