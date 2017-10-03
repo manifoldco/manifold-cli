@@ -39,9 +39,9 @@ func init() {
 				Name:      "unset",
 				ArgsUsage: "<key...>",
 				Usage:     "Unset one or more config values on a custom resource",
-				Flags: []cli.Flag{
+				Flags: append(teamFlags, []cli.Flag{
 					resourceFlag(),
-				},
+				}...),
 				Action: middleware.Chain(middleware.EnsureSession, middleware.LoadTeamPrefs,
 					configUnsetCmd),
 			},
