@@ -60,7 +60,7 @@ func export(cliCtx *cli.Context) error {
 		return err
 	}
 
-	client, err := api.New(api.Marketplace)
+	client, err := api.New(api.Analytics, api.Marketplace)
 	if err != nil {
 		return err
 	}
@@ -85,11 +85,6 @@ func export(cliCtx *cli.Context) error {
 		return cli.NewExitError("Could not retrieve credentials: "+err.Error(), -1)
 	}
 
-	a, err := loadAnalytics()
-	if err != nil {
-		return cli.NewExitError("Something went horribly wrong: "+err.Error(), -1)
-	}
-
 	params := map[string]string{
 		format: format,
 	}
@@ -97,7 +92,7 @@ func export(cliCtx *cli.Context) error {
 		params["project"] = projectLabel
 	}
 
-	a.Track(ctx, "Exported Credentials", &params)
+	client.Analytics.Track(ctx, "Exported Credentials", &params)
 
 	rMap := indexResources(resources)
 	w := os.Stdout

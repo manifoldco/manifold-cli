@@ -1,7 +1,6 @@
-package main
+package api
 
 import (
-	"context"
 	"fmt"
 
 	"github.com/manifoldco/manifold-cli/analytics"
@@ -10,15 +9,8 @@ import (
 	"github.com/urfave/cli"
 )
 
-func loadAnalytics() (*analytics.Analytics, error) {
-	ctx := context.Background()
-
-	cfg, err := config.Load()
-	if err != nil {
-		return nil, cli.NewExitError(fmt.Sprintf("Failed to load configuration: %s", err), -1)
-	}
-
-	s, err := session.Retrieve(ctx, cfg)
+func (api *API) loadAnalytics(cfg *config.Config) (*analytics.Analytics, error) {
+	s, err := session.Retrieve(api.ctx, cfg)
 	if err != nil {
 		return nil, cli.NewExitError(fmt.Sprintf("Failed to load authenticated session: %s", err), -1)
 	}

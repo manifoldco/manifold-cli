@@ -53,7 +53,7 @@ func run(cliCtx *cli.Context) error {
 		return err
 	}
 
-	client, err := api.New(api.Marketplace)
+	client, err := api.New(api.Analytics, api.Marketplace)
 	if err != nil {
 		return err
 	}
@@ -73,17 +73,12 @@ func run(cliCtx *cli.Context) error {
 		return cli.NewExitError("Could not flatten credential map: "+err.Error(), -1)
 	}
 
-	a, err := loadAnalytics()
-	if err != nil {
-		return err
-	}
-
 	params := map[string]string{}
 	if projectLabel != "" {
 		params["project"] = projectLabel
 	}
 
-	a.Track(ctx, "Project Run", &params)
+	client.Analytics.Track(ctx, "Project Run", &params)
 
 	cmd := exec.Command(args[0], args[1:]...)
 	cmd.Stdin = os.Stdin
