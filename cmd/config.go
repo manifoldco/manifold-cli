@@ -125,8 +125,14 @@ func configSetCmd(cliCtx *cli.Context) error {
 }
 
 func configUnsetCmd(cliCtx *cli.Context) error {
+	args := cliCtx.Args()
+
+	if len(args) == 0 {
+		return cli.NewExitError("At least one key must be present", -1)
+	}
+
 	req := make(map[string]*string)
-	for _, arg := range cliCtx.Args() {
+	for _, arg := range args {
 		req[arg] = nil
 	}
 	return patchConfig(cliCtx, req)
