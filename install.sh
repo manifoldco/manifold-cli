@@ -6,12 +6,30 @@
 
 { # this ensures the entire script is downloaded #
 
-  display_error() {
+  error_exit() {
     tput sgr0
     tput setaf 1
     echo "ERROR: $1"
     tput sgr0
     exit 1
+  }
+
+  success_msg() {
+    command printf "["
+    tput sgr0
+    tput setaf 2
+    command printf "OK"
+    tput sgr0
+    command printf "] ${1}\\n"
+  }
+
+  warning_msg() {
+    command printf "["
+    tput sgr0
+    tput setaf 3
+    command printf "!!"
+    tput sgr0
+    command printf "] ${1}\\n"
   }
 
   try_profile() {
@@ -64,7 +82,7 @@
 
   MACHINE_TYPE=`uname -m`
   if [ ${MACHINE_TYPE} != 'x86_64' ]; then
-    display_error "32 bits architecture is not supported"
+    error_exit "32 bits architecture is not supported"
   fi
 
   OS=`uname | tr '[:upper:]' '[:lower:]'`
@@ -83,19 +101,17 @@
 
   DESTINATION_DIR="${HOME}/.manifold/bin"
 
-  echo "Creating directory at $DESTINATION_DIR"
   mkdir -p $DESTINATION_DIR
 
   pushd $DESTINATION_DIR > /dev/null
 
-  echo "Downloading latest release (${LATEST_VERSION}) for manifold-cli"
+  #curl --compressed -L -q $ARTIFACT_URL --output $FILENAME
+  success_msg "Latest version ($LATEST_VERSION) downloaded"
 
-  curl --compressed -L -q $ARTIFACT_URL --output $FILENAME
+  #unzip -o $FILENAME
+  success_msg "Binary installed at $DESTINATION_DIR"
 
-  echo "Extracting file"
-  unzip -o $FILENAME
-
-  rm $FILENAME
+  #rm $FILENAME
 
   popd > /dev/null
 
@@ -103,20 +119,19 @@
 
   PATH_CHANGE="export PATH=\"\$PATH:$DESTINATION_DIR\""
 
-  if [ "$PROFILE" == "" ]; then
-    echo "Unable to locate profile settings file(Something like $HOME/.bashrc or $HOME/.bash_profile)"
+  if [[ ":$PATH:" == *":$DESTINATION_DIR:"* ]]; then
+    success_msg "\$PATH already contained $DESTINATION_DIR. Skipping..."
+  elif [ "$PROFILE" == "" ]; then
+    warning_msg "Unable to locate profile settings file (something like $HOME/.bashrc or $HOME/.bash_profile)"
+    warning_msg "You will have to manually add the following line:"
     echo
-    echo "You will have to manually add the following line:"
-    echo
-    echo "  $PATH_CHANGE"
-    echo
+    command printf "\\t$PATH_CHANGE\\n"
   else
     echo $PATH_CHANGE >> $PROFILE
-    echo "Your $PROFILE has changed to include $DESTINATION_DIR into your PATH"
+    success_msg "Your $PROFILE has changed to include $DESTINATION_DIR into your PATH"
+    warning_msg "Please restart or re-source your terminal session."
   fi
 
   echo
-  echo "All done!"
-  echo "Please restart or resource your terminal session."
-  echo "Happy manifold use! :)"
+  success_msg "All done. Happy manifold use! :)"
 }
