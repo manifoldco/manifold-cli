@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/bin/sh
 # Inspired by:
 # - https://github.com/creationix/nvm
 # - https://github.com/moovweb/gvm

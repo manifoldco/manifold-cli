@@ -14,6 +14,14 @@ Manage your cloud services like a developer.
 
 ## Installation
 
+#### Install script
+
+To install or update manifold, you can use the install script using cURL:
+
+```
+curl -o- https://raw.githubusercontent.com/manifoldco/manifold-co/master/install.sh | sh
+```
+
 #### Homebrew (OS X)
 
 Homebrew can be installed via [brew.sh](http://brew.sh)
