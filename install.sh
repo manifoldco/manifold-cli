@@ -93,7 +93,7 @@
   curl --compressed -L -q $ARTIFACT_URL --output $FILENAME
 
   echo "Extracting file"
-  unzip $FILENAME
+  unzip -o $FILENAME
 
   rm $FILENAME
 
