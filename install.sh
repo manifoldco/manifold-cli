@@ -6,6 +6,10 @@
 
 { # this ensures the entire script is downloaded #
 
+  is_installed() {
+    type "$1" > /dev/null 2>&1
+  }
+
   error_exit() {
     tput sgr0
     tput setaf 1
@@ -85,6 +89,10 @@
     error_exit "32 bits architecture is not supported"
   fi
 
+  if is_installed manifold; then
+    warning_msg "Previous installation detected: v`manifold -v`"
+  fi
+
   OS=`uname | tr '[:upper:]' '[:lower:]'`
 
   REPO="https://github.com/manifoldco/manifold-cli"
@@ -109,11 +117,23 @@
   success_msg "Latest version ($LATEST_VERSION) downloaded"
 
   #unzip -o $FILENAME
-  success_msg "Binary installed at $DESTINATION_DIR"
-
-  #rm $FILENAME
 
   popd > /dev/null
+
+  if is_installed manifold; then
+    PREVIOUS_INSTALLATION=`which manifold`
+    if [ "$PREVIOUS_INSTALLATION" != "$DESTINATION_DIR/manifold" ]; then
+      warning_msg "Another executable detected: `type manifold`"
+      success_msg "Binary installed at $DESTINATION_DIR"
+      warning_msg "To manually run this current installation: .$DESTINATION_DIR/manifold"
+    else
+      success_msg "Binary updated at $DESTINATION_DIR"
+    fi
+  else
+    success_msg "Binary installed at $DESTINATION_DIR"
+  fi
+
+  #rm $FILENAME
 
   PROFILE=`detect_profile`
 
