@@ -89,58 +89,67 @@
     error_exit "32 bits architecture is not supported"
   fi
 
-  if is_installed manifold; then
-    warning_msg "Previous installation detected: v`manifold -v`"
+  if ! is_installed unzip; then
+    error_exit "You must have 'unzip' installed before proceeding."
   fi
 
   OS=`uname | tr '[:upper:]' '[:lower:]'`
 
+  if [ "$OS" != "linux" ] && [ "$OS" != "darwin" ]; then
+    error_exit "Operational System $OS not supported."
+  fi
+
+  if is_installed manifold; then
+    warning_msg "Previous installation detected: v`manifold -v`"
+  fi
+
   REPO="https://github.com/manifoldco/manifold-cli"
 
-  LATEST_RELEASE=$(curl -L -s -H 'Accept: application/json' ${REPO}/releases/latest)
+  if [ -z "$MANIFOLD_VERSION" ]; then
+    MANIFOLD_VERSION="0.6.0"
+  fi
 
-  # The releases are returned in the format {"id":3622206,"tag_name":"hello-1.0.0.11",...}, we have to extract the tag_name.
-  LATEST_VERSION=$(echo $LATEST_RELEASE | sed -e 's/.*"tag_name":"\([^"]*\)".*/\1/')
+  if [ -z "$MANIFOLD_DIR" ]; then
+    MANIFOLD_DIR="${HOME}/.manifold/bin"
+  fi
+
+  mkdir -p $MANIFOLD_DIR
+
+  pushd $MANIFOLD_DIR > /dev/null
 
   # Create filename accordingly to manifoldco/promulgate structure
-  FILENAME="manifold-cli_${LATEST_VERSION:1}_${OS}_amd64.zip"
+  FILENAME="manifold-cli_${MANIFOLD_VERSION}_${OS}_amd64.zip"
 
-  ARTIFACT_URL="${REPO}/releases/download/${LATEST_VERSION}/${FILENAME}"
+  ARTIFACT_URL="${REPO}/releases/download/v${MANIFOLD_VERSION}/${FILENAME}"
 
-  DESTINATION_DIR="${HOME}/.manifold/bin"
+  curl -sS --compressed -L -q $ARTIFACT_URL --output $FILENAME
+  success_msg "Version ($MANIFOLD_VERSION) downloaded"
 
-  mkdir -p $DESTINATION_DIR
+  unzip -o $FILENAME 1> /dev/null
 
-  pushd $DESTINATION_DIR > /dev/null
-
-  #curl --compressed -L -q $ARTIFACT_URL --output $FILENAME
-  success_msg "Latest version ($LATEST_VERSION) downloaded"
-
-  #unzip -o $FILENAME
+  rm $FILENAME
 
   popd > /dev/null
 
   if is_installed manifold; then
     PREVIOUS_INSTALLATION=`which manifold`
-    if [ "$PREVIOUS_INSTALLATION" != "$DESTINATION_DIR/manifold" ]; then
+    if [ "$PREVIOUS_INSTALLATION" != "$MANIFOLD_DIR/manifold" ]; then
       warning_msg "Another executable detected: `type manifold`"
-      success_msg "Binary installed at $DESTINATION_DIR"
-      warning_msg "To manually run this current installation: .$DESTINATION_DIR/manifold"
+      success_msg "Binary installed at $MANIFOLD_DIR"
+      warning_msg "To manually run this current installation: .$MANIFOLD_DIR/manifold"
     else
-      success_msg "Binary updated at $DESTINATION_DIR"
+      success_msg "Binary updated at $MANIFOLD_DIR"
     fi
   else
-    success_msg "Binary installed at $DESTINATION_DIR"
+    success_msg "Binary installed at $MANIFOLD_DIR"
   fi
-
-  #rm $FILENAME
 
   PROFILE=`detect_profile`
 
-  PATH_CHANGE="export PATH=\"\$PATH:$DESTINATION_DIR\""
+  PATH_CHANGE="export PATH=\"\$PATH:$MANIFOLD_DIR\""
 
-  if [[ ":$PATH:" == *":$DESTINATION_DIR:"* ]]; then
-    success_msg "\$PATH already contained $DESTINATION_DIR. Skipping..."
+  if [[ ":$PATH:" == *":$MANIFOLD_DIR:"* ]]; then
+    success_msg "\$PATH already contained $MANIFOLD_DIR. Skipping..."
   elif [ "$PROFILE" == "" ]; then
     warning_msg "Unable to locate profile settings file (something like $HOME/.bashrc or $HOME/.bash_profile)"
     warning_msg "You will have to manually add the following line:"
@@ -148,7 +157,7 @@
     command printf "\\t$PATH_CHANGE\\n"
   else
     echo $PATH_CHANGE >> $PROFILE
-    success_msg "Your $PROFILE has changed to include $DESTINATION_DIR into your PATH"
+    success_msg "Your $PROFILE has changed to include $MANIFOLD_DIR into your PATH"
     warning_msg "Please restart or re-source your terminal session."
   fi
 
