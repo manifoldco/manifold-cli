@@ -145,8 +145,8 @@ $(NO_WINDOWS:%=build/manifold-cli_$(VERSION)_%.tar.gz): build/manifold-cli_$(VER
 zips: $(NO_WINDOWS:%=build/manifold-cli_$(VERSION)_%.tar.gz) build/manifold-cli_$(VERSION)_windows_amd64.zip
 
 release: zips
-	curl -LO https://releases.manifold.co/promulgate/$(PROMULGATE_VERSION)/promulgate_$(PROMULGATE_VERSION)_linux_amd64.zip
-	unzip promulgate_*
+	curl -LO https://releases.manifold.co/promulgate/$(PROMULGATE_VERSION)/promulgate_$(PROMULGATE_VERSION)_linux_amd64.tar.gz
+	tar xvf promulgate_*
 	./promulgate release v$(VERSION)
 
 .PHONY: release zips $(OS_ARCH:%=os-build/%/bin/manifold)
