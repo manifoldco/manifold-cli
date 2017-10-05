@@ -89,8 +89,8 @@
     error_exit "32 bits architecture is not supported"
   fi
 
-  if ! is_installed unzip; then
-    error_exit "You must have 'unzip' installed before proceeding."
+  if ! is_installed tar; then
+    error_exit "You must have 'tar' installed before proceeding."
   fi
 
   OS=`uname | tr '[:upper:]' '[:lower:]'`
@@ -125,7 +125,7 @@
   curl -sS --compressed -L -q $ARTIFACT_URL --output $FILENAME
   success_msg "Version ($MANIFOLD_VERSION) downloaded"
 
-  unzip -o $FILENAME 1> /dev/null
+  tar xvf $FILENAME 1> /dev/null
 
   rm $FILENAME
 
