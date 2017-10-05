@@ -139,10 +139,10 @@ $(NO_WINDOWS:%=os-build/%/bin/manifold): os-build/%/bin/manifold:
 
 build/manifold-cli_$(VERSION)_windows_amd64.zip: build/manifold-cli_$(VERSION)_%.zip: os-build/%/bin/manifold
 	cd build/$*/bin; zip -r ../../manifold-cli_$(VERSION)_$*.zip manifold.exe
-$(NO_WINDOWS:%=build/manifold-cli_$(VERSION)_%.zip): build/manifold-cli_$(VERSION)_%.zip: os-build/%/bin/manifold
-	cd build/$*/bin; zip -r ../../manifold-cli_$(VERSION)_$*.zip manifold
+$(NO_WINDOWS:%=build/manifold-cli_$(VERSION)_%.tar.gz): build/manifold-cli_$(VERSION)_%.tar.gz: os-build/%/bin/manifold
+	cd build/$*/bin; tar -czf ../../manifold-cli_$(VERSION)_$*.tar.gz manifold
 
-zips: $(OS_ARCH:%=build/manifold-cli_$(VERSION)_%.zip)
+zips: $(NO_WINDOWS:%=build/manifold-cli_$(VERSION)_%.tar.gz) build/manifold-cli_$(VERSION)_windows_amd64.zip
 
 release: zips
 	curl -LO https://releases.manifold.co/promulgate/$(PROMULGATE_VERSION)/promulgate_$(PROMULGATE_VERSION)_linux_amd64.zip
