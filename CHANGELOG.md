@@ -31,6 +31,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - `services providers` to list providers
 - `services products` to list products
 - `services plans` to list plans
+- install.sh script to download latest release
 
 ### Fixed
 
