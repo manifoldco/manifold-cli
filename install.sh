@@ -89,14 +89,14 @@
     error_exit "32 bits architecture is not supported"
   fi
 
-  if ! is_installed tar; then
-    error_exit "You must have 'tar' installed before proceeding."
-  fi
-
   OS=`uname | tr '[:upper:]' '[:lower:]'`
 
   if [ "$OS" != "linux" ] && [ "$OS" != "darwin" ]; then
     error_exit "Operational System $OS not supported."
+  fi
+
+  if ! is_installed tar; then
+    error_exit "You must have 'tar' installed before proceeding."
   fi
 
   if is_installed manifold; then
@@ -133,12 +133,12 @@
 
   if is_installed manifold; then
     PREVIOUS_INSTALLATION=`which manifold`
-    if [ "$PREVIOUS_INSTALLATION" != "$MANIFOLD_DIR/manifold" ]; then
-      warning_msg "Another executable detected: `type manifold`"
-      success_msg "Binary installed at $MANIFOLD_DIR"
-      warning_msg "To manually run this current installation: .$MANIFOLD_DIR/manifold"
-    else
+    if [ "$PREVIOUS_INSTALLATION" == "$MANIFOLD_DIR/manifold" ]; then
       success_msg "Binary updated at $MANIFOLD_DIR"
+    else
+      success_msg "Binary installed at $MANIFOLD_DIR"
+      warning_msg "Another executable detected: `type manifold`"
+      warning_msg "To manually run this current installation: .$MANIFOLD_DIR/manifold"
     fi
   else
     success_msg "Binary installed at $MANIFOLD_DIR"
