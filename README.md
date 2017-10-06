@@ -19,7 +19,7 @@ Manage your cloud services like a developer.
 To install or update manifold, you can use the install script using cURL:
 
 ```
-curl -o- https://raw.githubusercontent.com/manifoldco/manifold-co/master/install.sh | sh
+curl -o- https://raw.githubusercontent.com/manifoldco/manifold-cli/master/install.sh | sh
 ```
 
 You can customize the install directory, profile, and version using the
