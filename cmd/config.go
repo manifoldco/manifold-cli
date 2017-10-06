@@ -39,9 +39,9 @@ func init() {
 				Name:      "unset",
 				ArgsUsage: "<key...>",
 				Usage:     "Unset one or more config values on a custom resource",
-				Flags: []cli.Flag{
+				Flags: append(teamFlags, []cli.Flag{
 					resourceFlag(),
-				},
+				}...),
 				Action: middleware.Chain(middleware.EnsureSession, middleware.LoadTeamPrefs,
 					configUnsetCmd),
 			},
@@ -104,12 +104,17 @@ func patchConfig(cliCtx *cli.Context, req map[string]*string) error {
 		Body:    req,
 		Context: ctx,
 	}, nil)
+
 	if err != nil {
-		return cli.NewExitError("Error updating config: "+err.Error(), -1)
+		switch e := err.(type) {
+		case *credential.PatchResourcesIDConfigBadRequest:
+			return cli.NewExitError("Could not change config: invalid key.", -1)
+		default:
+			return cli.NewExitError(e, -1)
+		}
 	}
 
 	return nil
-
 }
 
 func configSetCmd(cliCtx *cli.Context) error {
@@ -125,8 +130,14 @@ func configSetCmd(cliCtx *cli.Context) error {
 }
 
 func configUnsetCmd(cliCtx *cli.Context) error {
+	args := cliCtx.Args()
+
+	if len(args) == 0 {
+		return cli.NewExitError("At least one key must be present", -1)
+	}
+
 	req := make(map[string]*string)
-	for _, arg := range cliCtx.Args() {
+	for _, arg := range args {
 		req[arg] = nil
 	}
 	return patchConfig(cliCtx, req)
