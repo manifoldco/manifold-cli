@@ -106,7 +106,7 @@
   REPO="https://github.com/manifoldco/manifold-cli"
 
   if [ -z "$MANIFOLD_VERSION" ]; then
-    MANIFOLD_VERSION="0.6.0"
+    MANIFOLD_VERSION="0.7.0"
   fi
 
   if [ -z "$MANIFOLD_DIR" ]; then
@@ -118,7 +118,7 @@
   pushd $MANIFOLD_DIR > /dev/null
 
   # Create filename accordingly to manifoldco/promulgate structure
-  FILENAME="manifold-cli_${MANIFOLD_VERSION}_${OS}_amd64.zip"
+  FILENAME="manifold-cli_${MANIFOLD_VERSION}_${OS}_amd64.tar.gz"
 
   ARTIFACT_URL="${REPO}/releases/download/v${MANIFOLD_VERSION}/${FILENAME}"
 
