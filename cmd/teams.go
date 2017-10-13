@@ -246,7 +246,11 @@ func membersTeamCmd(cliCtx *cli.Context) error {
 	}
 	w.SetStyle(ansiterm.Faint)
 	for _, i := range invites {
-		fmt.Fprintf(w, "%s\t%s\t%s\t%s\n", i.Body.Name, i.Body.Email, i.Body.Role, "pending")
+		role := i.Body.Role
+		if role == "" {
+			role = "admin"
+		}
+		fmt.Fprintf(w, "%s\t%s\t%s\t%s\n", i.Body.Name, i.Body.Email, role, "pending")
 	}
 	w.ClearStyle(ansiterm.Faint)
 	return w.Flush()
