@@ -199,6 +199,16 @@ func SelectResource(resources []*mModels.Resource, projects []*mModels.Project,
 	return prompt.Run()
 }
 
+// SelectRole prompts the user to select a role from the given list.
+func SelectRole() (string, error) {
+	prompt := promptui.Select{
+		Label: "Select Role",
+		Items: []string{"read", "read-credentials", "write", "admin"},
+	}
+	_, role, err := prompt.Run()
+	return role, err
+}
+
 // SelectRegion prompts the user to select a region from the given list.
 func SelectRegion(regions []*cModels.Region) (int, string, error) {
 	line := func(r *cModels.Region) string {

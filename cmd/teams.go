@@ -50,10 +50,9 @@ func init() {
 				Name:      "invite",
 				ArgsUsage: "[email] [name]",
 				Usage:     "Invite a user to join a team",
-				Flags: []cli.Flag{
-					teamFlag(),
-				},
-				Action: middleware.Chain(middleware.EnsureSession, inviteToTeamCmd),
+				Flags:     teamFlags,
+				Action: middleware.Chain(middleware.LoadDirPrefs, middleware.EnsureSession,
+					middleware.LoadTeamPrefs, inviteToTeamCmd),
 			},
 			{
 				Name:  "members",
@@ -192,7 +191,12 @@ func inviteToTeamCmd(cliCtx *cli.Context) error {
 		}
 	}
 
-	if err := inviteToTeam(ctx, team, email, name, client.Identity); err != nil {
+	role, err := prompts.SelectRole()
+	if err != nil {
+		return prompts.HandleSelectError(err, "Could not select role")
+	}
+
+	if err := inviteToTeam(ctx, team, email, name, role, client.Identity); err != nil {
 		return cli.NewExitError(fmt.Sprintf("Could not invite to team: %s", err), -1)
 	}
 
@@ -246,7 +250,11 @@ func membersTeamCmd(cliCtx *cli.Context) error {
 	}
 	w.SetStyle(ansiterm.Faint)
 	for _, i := range invites {
-		fmt.Fprintf(w, "%s\t%s\t%s\t%s\n", i.Body.Name, i.Body.Email, i.Body.Role, "pending")
+		role := i.Body.Role
+		if role == "" {
+			role = "admin"
+		}
+		fmt.Fprintf(w, "%s\t%s\t%s\t%s\n", i.Body.Name, i.Body.Email, role, "pending")
 	}
 	w.ClearStyle(ansiterm.Faint)
 	return w.Flush()
@@ -388,8 +396,8 @@ func updateTeam(ctx context.Context, team *models.Team, teamName string, identit
 	return nil
 }
 
-func inviteToTeam(ctx context.Context, team *models.Team, email string,
-	name string, identityClient *client.Identity) error {
+func inviteToTeam(ctx context.Context, team *models.Team, email,
+	name, role string, identityClient *client.Identity) error {
 	c := inviteClient.NewPostInvitesParamsWithContext(ctx)
 
 	params := &iModels.CreateInvite{
@@ -397,13 +405,13 @@ func inviteToTeam(ctx context.Context, team *models.Team, email string,
 			Email:  manifold.Email(email),
 			Name:   iModels.UserDisplayName(name),
 			TeamID: team.ID,
+			Role:   models.RoleLabel(role),
 		},
 	}
 
 	c.SetBody(params)
 
 	_, _, err := identityClient.Invite.PostInvites(c, nil)
-
 	if err == nil {
 		return nil
 	}
