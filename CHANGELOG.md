@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## Unreleased
+
+### Added
+- `manifold teams members` can list members of a team
+
+### Fixed
+
 ## [0.7.1] - 2017-10-12
 
 ### Fixed
