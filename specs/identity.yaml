@@ -746,6 +746,10 @@ definitions:
       import:
         package: github.com/manifoldco/go-manifold
         alias: manifold
+  RoleLabel:
+    type: string
+    description: A machine readable unique label, which is url safe.
+    pattern: '^[a-z0-9][a-z0-9\-\_]{1,128}$'
   Label:
     type: string
     description: A machine readable unique label, which is url safe.
@@ -887,6 +891,8 @@ definitions:
         properties:
           name:
             $ref: '#/definitions/UserDisplayName'
+          role:
+            $ref: '#/definitions/RoleLabel'
           email:
             $ref: '#/definitions/Email'
           team_id:
@@ -919,6 +925,8 @@ definitions:
             $ref: '#/definitions/UserDisplayName'
           email:
             $ref: '#/definitions/Email'
+          role:
+            $ref: '#/definitions/RoleLabel'
           team_id:
             $ref: '#/definitions/ID'
           invited_by:
@@ -928,6 +936,7 @@ definitions:
         additionalProperties: false
         required:
         - token
+        - role
         - team_id
         - name
         - email
@@ -942,6 +951,8 @@ definitions:
     properties:
       team:
         $ref: '#/definitions/Team'
+      role:
+        $ref: '#/definitions/RoleLabel'
       invited:
         type: object
         properties:
@@ -959,6 +970,7 @@ definitions:
     additionalProperties: false
     required:
     - team
+    - role
     - invited
     - invited_by
   CreateTeam:
@@ -998,10 +1010,13 @@ definitions:
             $ref: '#/definitions/ID'
           team_id:
             $ref: '#/definitions/ID'
+          role:
+            $ref: '#/definitions/RoleLabel'
         additionalProperties: false
         required:
-        - user_id
-        - team_id
+          - user_id
+          - team_id
+          - role
     additionalProperties: false
     required:
     - id
@@ -1015,6 +1030,8 @@ definitions:
         $ref: '#/definitions/ID'
       membership_id:
         $ref: '#/definitions/ID'
+      role:
+        $ref: '#/definitions/RoleLabel'
       email:
         $ref: '#/definitions/Email'
       name:
@@ -1025,6 +1042,7 @@ definitions:
     - membership_id
     - email
     - name
+    - role
   Team:
     type: object
     properties:

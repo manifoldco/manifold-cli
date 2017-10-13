@@ -4,6 +4,7 @@ import (
 	"context"
 
 	iClient "github.com/manifoldco/manifold-cli/generated/identity/client"
+	"github.com/manifoldco/manifold-cli/generated/identity/client/invite"
 	"github.com/manifoldco/manifold-cli/generated/identity/client/team"
 	iModels "github.com/manifoldco/manifold-cli/generated/identity/models"
 )
@@ -29,6 +30,17 @@ func FetchTeamMembers(ctx context.Context, id string, c *iClient.Identity) ([]*i
 	params := team.NewGetTeamsIDMembersParamsWithContext(ctx)
 	params.SetID(id)
 	res, err := c.Team.GetTeamsIDMembers(params, nil)
+	if err != nil {
+		return nil, err
+	}
+	return res.Payload, nil
+}
+
+// FetchInvites returns a list of invites for a given team
+func FetchInvites(ctx context.Context, id string, c *iClient.Identity) ([]*iModels.Invite, error) {
+	params := invite.NewGetInvitesParams()
+	params.SetTeamID(id)
+	res, err := c.Invite.GetInvites(params, nil)
 	if err != nil {
 		return nil, err
 	}

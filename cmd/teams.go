@@ -56,6 +56,13 @@ func init() {
 				Action: middleware.Chain(middleware.EnsureSession, inviteToTeamCmd),
 			},
 			{
+				Name:  "members",
+				Usage: "List members of a team",
+				Flags: teamFlags,
+				Action: middleware.Chain(middleware.LoadDirPrefs, middleware.EnsureSession,
+					middleware.LoadTeamPrefs, membersTeamCmd),
+			},
+			{
 				Name:   "list",
 				Usage:  "List all your teams",
 				Action: middleware.Chain(middleware.EnsureSession, listTeamCmd),
@@ -191,6 +198,58 @@ func inviteToTeamCmd(cliCtx *cli.Context) error {
 
 	fmt.Printf("An invite has been sent to %s <%s>\n", name, email)
 	return nil
+}
+
+func membersTeamCmd(cliCtx *cli.Context) error {
+	ctx := context.Background()
+
+	teamID, err := validateTeamID(cliCtx)
+	if err != nil {
+		return err
+	}
+	if teamID == nil {
+		return cli.NewExitError("Can't view members for a non-team. Use `manifold switch` to select a team.", -1)
+	}
+
+	client, err := api.New(api.Identity)
+	if err != nil {
+		return err
+	}
+
+	prompts.SpinStart("Fetching Team Members")
+	members, err := clients.FetchTeamMembers(ctx, teamID.String(), client.Identity)
+	prompts.SpinStop()
+	if err != nil {
+		return cli.NewExitError(fmt.Sprintf("Failed to fetch list of teams: %s", err), -1)
+	}
+
+	prompts.SpinStart("Fetching Invites")
+	invites, err := clients.FetchInvites(ctx, teamID.String(), client.Identity)
+	prompts.SpinStop()
+	if err != nil {
+		return cli.NewExitError(fmt.Sprintf("Failed to fetch list of invites: %s", err), -1)
+	}
+
+	fmt.Printf("%d members and %d invites\n", len(members), len(invites))
+	fmt.Println("Use `manifold switch` to change to a different team")
+	fmt.Println()
+
+	w := ansiterm.NewTabWriter(os.Stdout, 0, 0, 8, ' ', 0)
+
+	w.SetStyle(ansiterm.Bold)
+	w.SetForeground(ansiterm.Gray)
+	fmt.Fprintln(w, "Name\tEmail\tRole\tStatus")
+	w.ClearStyle(ansiterm.Bold)
+	w.Reset()
+	for _, m := range members {
+		fmt.Fprintf(w, "%s\t%s\t%s\t%s\n", m.Name, m.Email, m.Role, "active")
+	}
+	w.SetStyle(ansiterm.Faint)
+	for _, i := range invites {
+		fmt.Fprintf(w, "%s\t%s\t%s\t%s\n", i.Body.Name, i.Body.Email, i.Body.Role, "pending")
+	}
+	w.ClearStyle(ansiterm.Faint)
+	return w.Flush()
 }
 
 func listTeamCmd(cliCtx *cli.Context) error {
