@@ -553,13 +553,17 @@ func setRoleCmd(cliCtx *cli.Context) error {
 	prompts.SpinStart(fmt.Sprintf("Updating role for %s <%s>", name, email))
 	params := teamClient.NewPatchMembershipsIDParamsWithContext(ctx)
 	params.SetID(membershipID.String())
+	params.SetBody(&iModels.UpdateTeamMembership{
+		Body: &iModels.UpdateTeamMembershipBody{
+			Role: iModels.RoleLabel(roleLabel),
+		},
+	})
 	_, err = client.Identity.Team.PatchMembershipsID(params, nil)
 	prompts.SpinStop()
 	if err != nil {
 		return cli.NewExitError(fmt.Sprintf("Could not update role: %s", err), -1)
 	}
 
-	fmt.Println("")
-	fmt.Printf("%s <%s> now has the role of `%s`", name, email, roleLabel)
+	fmt.Printf("%s <%s> now has the role of `%s`\n", name, email, roleLabel)
 	return nil
 }
