@@ -72,6 +72,14 @@ func init() {
 				Usage:     "Remove yourself from a team",
 				Action:    middleware.Chain(middleware.EnsureSession, leaveTeamCmd),
 			},
+			{
+				Name:      "set-role",
+				ArgsUsage: "[email] [role]",
+				Usage:     "Change the role of an existing member",
+				Flags:     teamFlags,
+				Action: middleware.Chain(middleware.LoadDirPrefs, middleware.EnsureSession,
+					middleware.LoadTeamPrefs, setRoleCmd),
+			},
 		},
 	}
 
@@ -467,4 +475,91 @@ func selectTeam(ctx context.Context, teamName string, identityClient *client.Ide
 	team := teams[idx]
 
 	return team, nil
+}
+
+func setRoleCmd(cliCtx *cli.Context) error {
+	ctx := context.Background()
+	args := cliCtx.Args()
+
+	// Only allow args if exactly two are supplied
+	// otherwise prompt for both values
+	var roleLabel, email string
+	var err error
+	if len(args) > 0 {
+		email, err = optionalArgEmail(cliCtx, 0, "email")
+		if err != nil {
+			return err
+		}
+		roleLabel, err = optionalArgLabel(cliCtx, 1, "role")
+		if err != nil {
+			return err
+		}
+	} else {
+		email, err = prompts.Email("")
+		if err != nil {
+			return err
+		}
+
+		roleLabel, err = prompts.SelectRole()
+		if err != nil {
+			return prompts.HandleSelectError(err, "Could not select role")
+		}
+	}
+
+	// Use the current context to determine the team to use
+	teamID, err := validateTeamID(cliCtx)
+	if err != nil {
+		return err
+	}
+	if teamID == nil {
+		return cli.NewExitError("Can't view members for a non-team. Use `manifold switch` to select a team.", -1)
+	}
+
+	client, err := api.New(api.Identity)
+	if err != nil {
+		return err
+	}
+
+	// Ensure the supplied email is a member
+	prompts.SpinStart("Verifying team member")
+	members, err := clients.FetchTeamMembers(ctx, teamID.String(), client.Identity)
+	prompts.SpinStop()
+	if err != nil {
+		return err
+	}
+	var membershipID *manifold.ID
+	var name string
+	for _, m := range members {
+		if string(m.Email) == email {
+			name = string(m.Name)
+			membershipID = &m.MembershipID
+		}
+	}
+	if membershipID == nil {
+		prompts.SpinStart("Checking invites")
+		invites, err := clients.FetchInvites(ctx, teamID.String(), client.Identity)
+		prompts.SpinStop()
+		if err == nil {
+			for _, i := range invites {
+				if string(i.Body.Email) == email {
+					return cli.NewExitError("Cannot modify role for pending invite.", -1)
+				}
+			}
+		}
+		return cli.NewExitError("Could not find team member for the email supplied.", -1)
+	}
+
+	// Update the membership row
+	prompts.SpinStart(fmt.Sprintf("Updating role for %s <%s>", name, email))
+	params := teamClient.NewPatchMembershipsIDParamsWithContext(ctx)
+	params.SetID(membershipID.String())
+	_, err = client.Identity.Team.PatchMembershipsID(params, nil)
+	prompts.SpinStop()
+	if err != nil {
+		return cli.NewExitError(fmt.Sprintf("Could not update role: %s", err), -1)
+	}
+
+	fmt.Println("")
+	fmt.Printf("%s <%s> now has the role of `%s`", name, email, roleLabel)
+	return nil
 }
