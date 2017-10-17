@@ -8,7 +8,7 @@ import (
 	"github.com/asaskevich/govalidator"
 	"github.com/manifoldco/go-manifold"
 	"github.com/manifoldco/manifold-cli/color"
-	"github.com/manifoldco/torus-cli/promptui"
+	"github.com/manifoldco/promptui"
 	"github.com/rhymond/go-money"
 	"github.com/stripe/stripe-go"
 	"github.com/stripe/stripe-go/token"

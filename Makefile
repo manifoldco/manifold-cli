@@ -31,6 +31,16 @@ BOOTSTRAP=\
 	github.com/alecthomas/gometalinter \
 	github.com/go-swagger/go-swagger/cmd/swagger
 
+define VENDOR_BIN_TMPL
+vendor/bin/$(notdir $(1)): vendor
+	go build -o $$@ ./vendor/$(1)
+VENDOR_BINS += vendor/bin/$(notdir $(1))
+endef
+
+$(foreach cmd_pkg,$(BOOTSTRAP),$(eval $(call VENDOR_BIN_TMPL,$(cmd_pkg))))
+$(patsubst %,%-bin,$(filter-out gofmt vet,$(LINTERS))): %-bin: vendor/bin/%
+gofmt-bin vet-bin:
+
 $(BOOTSTRAP):
 	go get -u $@
 bootstrap: $(BOOTSTRAP)

@@ -1,3 +1,5 @@
+required=["github.com/go-swagger/go-swagger/cmd/swagger"]
+
 [[constraint]]
   name = "github.com/asaskevich/govalidator"
 
@@ -19,6 +21,7 @@
 
 [[constraint]]
   name = "github.com/go-openapi/swag"
+  branch = "master"
 
 [[constraint]]
   name = "github.com/go-openapi/validate"
@@ -34,8 +37,8 @@
   version = "0.7.2"
 
 [[constraint]]
-  name = "github.com/manifoldco/torus-cli"
-  version = "0.24.1"
+  name = "github.com/manifoldco/promptup"
+  branch = "master"
 
 [[constraint]]
   name = "github.com/reconquest/hierr-go"
@@ -66,3 +69,7 @@
 
 [[constraint]]
   name = "gopkg.in/yaml.v2"
+
+[[constraint]]
+  name = "github.com/go-swagger/go-swagger"
+  version = "0.10.0"
