@@ -5,15 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
-## Unreleased
+## [0.8.0] - 2017-10-17
 
 ### Added
 - `manifold teams members` can list members of a team
 - `manifold teams invite` now supports Role selection
 - `manifold teams set-role` can update the role of an existing team member
 - `manifold teams remove` will remove a team member or revoke an invite
-
-### Fixed
 
 ## [0.7.1] - 2017-10-12
 
