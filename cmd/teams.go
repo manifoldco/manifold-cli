@@ -47,6 +47,14 @@ func init() {
 				Action: middleware.Chain(middleware.EnsureSession, updateTeamCmd),
 			},
 			{
+				Name:      "remove",
+				ArgsUsage: "[email]",
+				Usage:     "Remove a user from a team, or revoke their invite",
+				Flags:     teamFlags,
+				Action: middleware.Chain(middleware.LoadDirPrefs, middleware.EnsureSession,
+					middleware.LoadTeamPrefs, removeFromTeamCmd),
+			},
+			{
 				Name:      "invite",
 				ArgsUsage: "[email] [name]",
 				Usage:     "Invite a user to join a team",
@@ -475,6 +483,99 @@ func selectTeam(ctx context.Context, teamName string, identityClient *client.Ide
 	team := teams[idx]
 
 	return team, nil
+}
+
+func removeFromTeamCmd(cliCtx *cli.Context) error {
+	ctx := context.Background()
+	args := cliCtx.Args()
+
+	var err error
+	var email string
+	if len(args) > 0 {
+		email, err = optionalArgEmail(cliCtx, 0, "email")
+		if err != nil {
+			return err
+		}
+	} else {
+		email, err = prompts.Email("")
+		if err != nil {
+			return err
+		}
+	}
+
+	// Use the current context to determine the team to use
+	teamID, err := validateTeamID(cliCtx)
+	if err != nil {
+		return err
+	}
+	if teamID == nil {
+		return cli.NewExitError("Can't remove members for a non-team. Use `manifold switch` to select a team.", -1)
+	}
+
+	client, err := api.New(api.Identity)
+	if err != nil {
+		return err
+	}
+
+	// Ensure the supplied email is a member
+	prompts.SpinStart("Identifying team member")
+	members, err := clients.FetchTeamMembers(ctx, teamID.String(), client.Identity)
+	prompts.SpinStop()
+	if err != nil {
+		return err
+	}
+	var membershipID, inviteID *manifold.ID
+	var name string
+	for _, m := range members {
+		if string(m.Email) == email {
+			name = string(m.Name)
+			membershipID = &m.MembershipID
+		}
+	}
+	if membershipID == nil {
+		prompts.SpinStart("Checking invites")
+		invites, err := clients.FetchInvites(ctx, teamID.String(), client.Identity)
+		prompts.SpinStop()
+		if err == nil {
+			for _, i := range invites {
+				if string(i.Body.Email) == email {
+					name = string(i.Body.Name)
+					inviteID = &i.ID
+				}
+			}
+		}
+		// If member is not found, and is not an invite, fail
+		if inviteID == nil {
+			return cli.NewExitError("Could not find team member for the email supplied.", -1)
+		}
+	}
+
+	// If it's an invite, let's revoke it
+	if inviteID != nil {
+		prompts.SpinStart("Revoking invite")
+		params := inviteClient.NewDeleteInvitesIDParamsWithContext(ctx)
+		params.SetID(inviteID.String())
+		_, err := client.Identity.Invite.DeleteInvitesID(params, nil)
+		prompts.SpinStop()
+		if err != nil {
+			return cli.NewExitError(fmt.Sprintf("Failed to revoke invite: %s", err), -1)
+		}
+
+		fmt.Printf("Invite to %s <%s> has been revoked\n", name, email)
+		return nil
+	}
+
+	prompts.SpinStart("Removing team member")
+	params := teamClient.NewDeleteMembershipsIDParamsWithContext(ctx)
+	params.SetID(membershipID.String())
+	_, err = client.Identity.Team.DeleteMembershipsID(params, nil)
+	prompts.SpinStop()
+	if err != nil {
+		return cli.NewExitError(fmt.Sprintf("Failed to remove team member: %s", err), -1)
+	}
+
+	fmt.Printf("Member %s <%s> has been removed\n", name, email)
+	return nil
 }
 
 func setRoleCmd(cliCtx *cli.Context) error {

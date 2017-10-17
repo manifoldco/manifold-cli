@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - `manifold teams members` can list members of a team
 - `manifold teams invite` now supports Role selection
 - `manifold teams set-role` can update the role of an existing team member
+- `manifold teams remove` will remove a team member or revoke an invite
 
 ### Fixed
 
