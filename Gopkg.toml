@@ -1,0 +1,68 @@
+[[constraint]]
+  name = "github.com/asaskevich/govalidator"
+
+[[constraint]]
+  name = "github.com/briandowns/spinner"
+
+[[constraint]]
+  name = "github.com/go-ini/ini"
+  version = "1.28.0"
+
+[[constraint]]
+  name = "github.com/go-openapi/errors"
+
+[[constraint]]
+  name = "github.com/go-openapi/runtime"
+
+[[constraint]]
+  name = "github.com/go-openapi/strfmt"
+
+[[constraint]]
+  name = "github.com/go-openapi/swag"
+
+[[constraint]]
+  name = "github.com/go-openapi/validate"
+
+[[constraint]]
+  name = "github.com/juju/ansiterm"
+
+[[constraint]]
+  name = "github.com/manifoldco/go-base64"
+
+[[constraint]]
+  name = "github.com/manifoldco/go-manifold"
+  version = "0.7.2"
+
+[[constraint]]
+  name = "github.com/manifoldco/torus-cli"
+  version = "0.24.1"
+
+[[constraint]]
+  name = "github.com/reconquest/hierr-go"
+
+[[constraint]]
+  name = "github.com/rhymond/go-money"
+
+[[constraint]]
+  name = "github.com/skratchdot/open-golang"
+
+[[constraint]]
+  name = "github.com/stripe/stripe-go"
+  version = "24.2.0"
+
+[[constraint]]
+  name = "github.com/urfave/cli"
+  version = "1.19.1"
+
+[[constraint]]
+  name = "golang.org/x/crypto"
+
+[[constraint]]
+  name = "golang.org/x/net"
+
+[[constraint]]
+  name = "gopkg.in/oleiade/reflections.v1"
+  version = "1.0.0"
+
+[[constraint]]
+  name = "gopkg.in/yaml.v2"
