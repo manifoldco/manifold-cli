@@ -707,43 +707,6 @@ paths:
           schema:
             $ref: '#/definitions/Error'
   /memberships/{id}:
-    patch:
-      summary: Change a user's role on a team
-      parameters:
-        - name: id
-          in: path
-          description: The base32 encoded 18 byte ID of the membership
-          required: true
-          type: string
-          pattern: '^[0-9abcdefghjkmnpqrtuvwxyz]{29}$'
-          format: base32ID
-        - name: body
-          in: body
-          description: Role change request
-          required: true
-          schema:
-          schema: { $ref: '#/definitions/UpdateTeamMembership' }
-      tags:
-        - Team
-      responses:
-        200:
-          description: Complete Membership object
-          schema: { $ref: '#/definitions/TeamMembership' }
-        400:
-          description: Validation failed for request
-          schema: { $ref: '#/definitions/Error' }
-        401:
-          description: Authentication failed for the request.
-          schema: { $ref: '#/definitions/Error' }
-        403:
-          description: The user does not have sufficient permissions to change a role.
-          schema: { $ref: '#/definitions/Error' }
-        500:
-          description: Request failed due to an internal server error.
-          schema: { $ref: '#/definitions/Error' }
-        default:
-          description: Unexpected error
-          schema: { $ref: '#/definitions/Error' }
     delete:
       summary: Remove a member from a team
       parameters:
@@ -1060,17 +1023,6 @@ definitions:
     - type
     - version
     - body
-  UpdateTeamMembership:
-    type: object
-    properties:
-      body:
-        type: object
-        properties:
-          role: { $ref: '#/definitions/RoleLabel' }
-        required: [ role ]
-        additionalProperties: false
-    required: [ body ]
-    additionalProperties: false
   MemberProfile:
     type: object
     properties:
