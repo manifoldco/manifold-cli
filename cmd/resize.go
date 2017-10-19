@@ -93,6 +93,10 @@ func resizeResourceCmd(cliCtx *cli.Context) error {
 	}
 	r := res[rIdx]
 
+	if r.Body.Source != nil && *r.Body.Source == "custom" {
+		return cli.NewExitError("Cannot resize a custom resource", -1)
+	}
+
 	plans := filterPlansByProductID(catalog.Plans(), *r.Body.ProductID)
 	if len(plans) == 0 {
 		return errs.ErrNoPlans

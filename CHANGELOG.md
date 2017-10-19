@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - `manifold teams remove` will remove a team member or revoke an invite
 
 ### Fixed
+- Prevent error during resize attempt of custom resource
 
 ## [0.7.1] - 2017-10-12
 
