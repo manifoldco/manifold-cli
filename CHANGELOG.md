@@ -15,6 +15,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Fixed
 - Update success and failure output for `manifold config set`
+- Prevent error during resize attempt of custom resource
+- Amend output for NewUsageError to pull from framework help
 
 ## [0.7.1] - 2017-10-12
 
