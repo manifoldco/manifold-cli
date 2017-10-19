@@ -104,11 +104,13 @@ func resizeResourceCmd(cliCtx *cli.Context) error {
 	}
 	p := plans[pIdx]
 
-	spin := prompts.NewSpinner(fmt.Sprintf("Updating resource \"%s\"", r.Body.Label))
-	spin.Start()
-	defer spin.Stop()
-
-	if err := resizeResource(ctx, r, p, client, teamID, userID, dontWait); err != nil {
+	prompts.SpinStart(fmt.Sprintf("Updating resource \"%s\"", r.Body.Label))
+	err = resizeResource(ctx, r, p, client, teamID, userID, dontWait)
+	prompts.SpinStop()
+	if err != nil {
+		if err == errWaitForOpTimeout {
+			return handleWaitForOpTimeout()
+		}
 		return cli.NewExitError(fmt.Sprintf("Could not update resource \"%s\": %s", string(r.Body.Label), err), -1)
 	}
 

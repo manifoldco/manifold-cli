@@ -141,15 +141,13 @@ func createProjectCmd(cliCtx *cli.Context) error {
 		Body: body,
 	})
 
-	spin := prompts.NewSpinner("Creating new project")
-	spin.Start()
-	defer spin.Stop()
-
+	prompts.SpinStart("Creating new project")
 	if err := createProject(params); err != nil {
+		prompts.SpinStop()
 		return cli.NewExitError(fmt.Sprintf("Could not create project: %s", err), -1)
 	}
 
-	spin.Stop()
+	prompts.SpinStop()
 	fmt.Printf("Your project '%s' has been created\n", projectName)
 	return nil
 }
@@ -252,15 +250,13 @@ func updateProjectCmd(cliCtx *cli.Context) error {
 		Body: body,
 	})
 
-	spin := prompts.NewSpinner("Updating project")
-	spin.Start()
-	defer spin.Stop()
-
+	prompts.SpinStart("Updating project")
 	if err := updateProject(params); err != nil {
+		prompts.SpinStop()
 		return cli.NewExitError(fmt.Sprintf("Could not update project: %s", err), -1)
 	}
 
-	spin.Stop()
+	prompts.SpinStop()
 	fmt.Printf("\nYour project \"%s\" has been updated\n", newProjectName)
 	return nil
 }
@@ -297,10 +293,6 @@ func deleteProjectCmd(cliCtx *cli.Context) error {
 		return err
 	}
 
-	spin := prompts.NewSpinner(fmt.Sprintf("Deleting %s", p.Body.Label))
-	spin.Start()
-	defer spin.Stop()
-
 	ID, err := manifold.NewID(idtype.Operation)
 	if err != nil {
 		return err
@@ -332,6 +324,7 @@ func deleteProjectCmd(cliCtx *cli.Context) error {
 	d.SetBody(op)
 	d.SetID(ID.String())
 
+	prompts.SpinStart(fmt.Sprintf("Deleting %s", p.Body.Label))
 	res, err := client.Provisioning.Operation.PutOperationsID(d, nil)
 	if err != nil {
 		switch e := err.(type) {
@@ -350,8 +343,14 @@ func deleteProjectCmd(cliCtx *cli.Context) error {
 		}
 	}
 
-	waitForOp(ctx, client.Provisioning, res.Payload)
-	spin.Stop()
+	_, err = waitForOp(ctx, client.Provisioning, res.Payload)
+	prompts.SpinStop()
+	if err != nil {
+		if err == errWaitForOpTimeout {
+			return handleWaitForOpTimeout()
+		}
+		return cli.NewExitError(fmt.Sprintf("Could not delete project: %s", err), -1)
+	}
 	fmt.Printf("Your project '%s' has been deleted\n", p.Body.Label)
 	return nil
 }
@@ -630,6 +629,12 @@ func updateResourceProject(ctx context.Context, uid, tid *manifold.ID, r *mModel
 	}
 
 	_, err = waitForOp(ctx, provisioningClient, res.Payload)
+	if err != nil {
+		if err == errWaitForOpTimeout {
+			return handleWaitForOpTimeout()
+		}
+		return cli.NewExitError(fmt.Sprintf("Could not update project: %s", err), -1)
+	}
 	return err
 }
 
