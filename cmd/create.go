@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"strconv"
 	"time"
@@ -27,6 +28,12 @@ import (
 	"github.com/manifoldco/manifold-cli/generated/provisioning/client/operation"
 	pModels "github.com/manifoldco/manifold-cli/generated/provisioning/models"
 )
+
+var waitForOpTimeout = time.Second * 60
+
+// errWaitForOpTimeout occurs when the supplied timeout has been exceeded while
+// waiting for an operation to complete through watiForOp
+var errWaitForOpTimeout = errors.New("Waiting for operation has timed out")
 
 func init() {
 	createCmd := cli.Command{
@@ -175,21 +182,19 @@ func create(cliCtx *cli.Context) error {
 	if !custom {
 		descriptor = "an instance of " + string(product.Body.Name)
 	}
-	spin := prompts.NewSpinner(fmt.Sprintf("Creating %s", descriptor))
-	if !dontWait {
-		spin.Start()
-		defer spin.Stop()
-	}
-
+	prompts.SpinStart(fmt.Sprintf("Creating %s", descriptor))
 	op, err := createResource(ctx, cfg, teamID, s, client.Provisioning, custom, product, plan, region,
 		project, resourceName, dontWait)
+	prompts.SpinStop()
 	if err != nil {
+		if err == errWaitForOpTimeout {
+			return handleWaitForOpTimeout()
+		}
 		return cli.NewExitError("Could not create resource: "+err.Error(), -1)
 	}
 
 	provision := op.Body.(*pModels.Provision)
 	if !dontWait {
-		spin.Stop()
 		fmt.Printf("An instance named \"%s\" has been created!\n", *provision.Name)
 		return nil
 	}
@@ -310,6 +315,12 @@ func createResource(ctx context.Context, cfg *config.Config, teamID *manifold.ID
 	return waitForOp(ctx, pClient, res.Payload)
 }
 
+func handleWaitForOpTimeout() error {
+	fmt.Print("The current operation took too long, we have stopped waiting.\n\n")
+	fmt.Println("You can still monitor its status using `manifold list`")
+	return nil
+}
+
 func waitForOp(ctx context.Context, pClient *provisioning.Provisioning, op *pModels.Operation) (*pModels.Operation, error) {
 	checkOp := func() (*pModels.Operation, error) {
 		p := operation.NewGetOperationsIDParams()
@@ -335,10 +346,17 @@ func waitForOp(ctx context.Context, pClient *provisioning.Provisioning, op *pMod
 		return res.Payload, nil
 	}
 
+	start := time.Now()
 	ticker := time.NewTicker(time.Second * 5)
 	defer ticker.Stop()
 	for {
 		<-ticker.C
+
+		// Timeout has been exeeded
+		if time.Now().Sub(start) >= waitForOpTimeout {
+			return nil, errWaitForOpTimeout
+		}
+
 		op, err := checkOp()
 		if err != nil {
 			return nil, err

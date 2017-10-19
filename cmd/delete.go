@@ -133,18 +133,14 @@ func deleteCmd(cliCtx *cli.Context) error {
 		return cli.NewExitError("Resource not deleted", -1)
 	}
 
-	spin := prompts.NewSpinner(fmt.Sprintf("Deleting resource \"%s\"", resource.Body.Label))
-	if !dontWait {
-		spin.Start()
-	}
-
+	prompts.SpinStart(fmt.Sprintf("Deleting resource \"%s\"", resource.Body.Label))
 	err = deleteResource(ctx, cfg, teamID, s, resource, client.Provisioning, dontWait)
+	prompts.SpinStop()
 	if err != nil {
+		if err == errWaitForOpTimeout {
+			return handleWaitForOpTimeout()
+		}
 		return cli.NewExitError(fmt.Sprintf("Failed to delete resource: %s", err), -1)
-	}
-
-	if !dontWait {
-		spin.Stop()
 	}
 
 	fmt.Printf("Your instance \"%s\" has been deleted\n", resource.Body.Label)
