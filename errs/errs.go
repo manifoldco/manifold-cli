@@ -81,19 +81,14 @@ var ErrSomethingWentHorriblyWrong = cli.NewExitError("Something went horribly wr
 // NewUsageExitError returns a new error that includes the usage string for the
 // givne command along with the message from the given error.
 func NewUsageExitError(ctx *cli.Context, err error) error {
-	usage := usageString(ctx)
-	return cli.NewExitError(fmt.Sprintf("%s\n%s", err.Error(), usage), -1)
+	fmt.Printf("Invalid usage: %s\n\n", err.Error())
+	cli.ShowCommandHelpAndExit(ctx, ctx.Command.Name, -1)
+	return nil
 }
 
 // NewErrorExitError creates an ExitError with an appended error message
 func NewErrorExitError(message string, err error) error {
 	return cli.NewExitError(message+"\n"+err.Error(), -1)
-}
-
-func usageString(ctx *cli.Context) string {
-	spacer := "    "
-	return fmt.Sprintf("Usage:\n%s%s %s [comand options] %s",
-		spacer, ctx.App.HelpName, ctx.Command.Name, ctx.Command.ArgsUsage)
 }
 
 type stripeError struct {
