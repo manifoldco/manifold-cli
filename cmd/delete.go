@@ -27,7 +27,7 @@ import (
 func init() {
 	deleteCmd := cli.Command{
 		Name:      "delete",
-		ArgsUsage: "[name]",
+		ArgsUsage: "[resource-name]",
 		Usage:     "Delete a resource",
 		Category:  "RESOURCES",
 		Action:    middleware.Chain(middleware.EnsureSession, middleware.LoadTeamPrefs, deleteCmd),
@@ -49,7 +49,7 @@ func deleteCmd(cliCtx *cli.Context) error {
 		return err
 	}
 
-	resourceLabel, err := optionalArgLabel(cliCtx, 0, "resource")
+	resourceName, err := optionalArgName(cliCtx, 0, "resource")
 	if err != nil {
 		return err
 	}
@@ -59,7 +59,7 @@ func deleteCmd(cliCtx *cli.Context) error {
 		return err
 	}
 
-	projectLabel, err := validateLabel(cliCtx, "project")
+	projectName, err := validateName(cliCtx, "project")
 	if err != nil {
 		return err
 	}
@@ -79,7 +79,7 @@ func deleteCmd(cliCtx *cli.Context) error {
 		return err
 	}
 
-	resources, err := clients.FetchResources(ctx, client.Marketplace, teamID, projectLabel)
+	resources, err := clients.FetchResources(ctx, client.Marketplace, teamID, projectName)
 	if err != nil {
 		return cli.NewExitError(
 			fmt.Sprintf("Failed to fetch the list of provisioned resources: %s", err), -1)
@@ -96,14 +96,14 @@ func deleteCmd(cliCtx *cli.Context) error {
 	}
 
 	var resource *mModels.Resource
-	if resourceLabel != "" {
-		resource, err = pickResourcesByLabel(resources, resourceLabel)
+	if resourceName != "" {
+		resource, err = pickResourcesByName(resources, resourceName)
 		if err != nil {
 			return cli.NewExitError(
-				fmt.Sprintf("Failed to find resource \"%s\": %s", resourceLabel, err), -1)
+				fmt.Sprintf("Failed to find resource \"%s\": %s", resourceName, err), -1)
 		}
 	} else {
-		idx, _, err := prompts.SelectResource(resources, projects, resourceLabel)
+		idx, _, err := prompts.SelectResource(resources, projects, resourceName)
 		if err != nil {
 			return prompts.HandleSelectError(err, "Could not select Resource")
 		}

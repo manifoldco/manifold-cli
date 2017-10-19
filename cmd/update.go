@@ -21,13 +21,13 @@ import (
 func init() {
 	updateCmd := cli.Command{
 		Name:      "update",
-		ArgsUsage: "[label]",
+		ArgsUsage: "[resource-name]",
 		Usage:     "Update a resource",
 		Category:  "RESOURCES",
 		Action: middleware.Chain(middleware.EnsureSession, middleware.LoadDirPrefs,
 			middleware.LoadTeamPrefs, updateResourceCmd),
 		Flags: append(teamFlags, []cli.Flag{
-			nameFlag(),
+			titleFlag(),
 			projectFlag(),
 		}...),
 	}
@@ -42,7 +42,7 @@ func updateResourceCmd(cliCtx *cli.Context) error {
 		return err
 	}
 
-	label, err := optionalArgLabel(cliCtx, 0, "resource")
+	name, err := optionalArgName(cliCtx, 0, "resource")
 	if err != nil {
 		return err
 	}
@@ -52,7 +52,7 @@ func updateResourceCmd(cliCtx *cli.Context) error {
 		return err
 	}
 
-	project, err := validateLabel(cliCtx, "project")
+	project, err := validateName(cliCtx, "project")
 	if err != nil {
 		return err
 	}
@@ -82,36 +82,36 @@ func updateResourceCmd(cliCtx *cli.Context) error {
 	}
 
 	var resource *models.Resource
-	if label != "" {
+	if name != "" {
 		var err error
-		resource, err = pickResourcesByLabel(resources, label)
+		resource, err = pickResourcesByName(resources, name)
 		if err != nil {
 			return cli.NewExitError(fmt.Sprintf("Failed to fetch resource: %s", err), -1)
 		}
 	} else {
-		idx, _, err := prompts.SelectResource(resources, projects, label)
+		idx, _, err := prompts.SelectResource(resources, projects, name)
 		if err != nil {
 			return prompts.HandleSelectError(err, "Could not select Resource")
 		}
 		resource = resources[idx]
 	}
 
-	newName := cliCtx.String("name")
-	name := string(resource.Body.Name)
+	newTitle := cliCtx.String("title")
+	title := string(resource.Body.Name)
 	autoSelect := false
-	if newName != "" {
-		name = newName
+	if newTitle != "" {
+		title = newTitle
 		autoSelect = true
 	}
 
-	newName, err = prompts.ResourceName(name, autoSelect)
+	newTitle, err = prompts.ResourceName(title, autoSelect)
 	if err != nil {
 		cli.NewExitError(fmt.Sprintf("Could not rename the resource: %s", err), -1)
 	}
 
 	prompts.SpinStart(fmt.Sprintf("Updating resource %q", resource.Body.Label))
 
-	mrb, err := updateResource(ctx, resource, client.Marketplace, newName)
+	mrb, err := updateResource(ctx, resource, client.Marketplace, newTitle)
 	if err != nil {
 		return cli.NewExitError(fmt.Sprintf("Failed to update resource: %s", err), -1)
 	}
@@ -122,13 +122,13 @@ func updateResourceCmd(cliCtx *cli.Context) error {
 	return nil
 }
 
-func pickResourcesByLabel(resources []*models.Resource, label string) (*models.Resource, error) {
-	if label == "" {
+func pickResourcesByName(resources []*models.Resource, name string) (*models.Resource, error) {
+	if name == "" {
 		return nil, errs.ErrResourceNotFound
 	}
 
 	for _, resource := range resources {
-		if string(resource.Body.Label) == label {
+		if string(resource.Body.Label) == name {
 			return resource, nil
 		}
 	}
@@ -141,7 +141,7 @@ func updateResource(ctx context.Context, r *models.Resource,
 	rename := &models.PublicUpdateResource{
 		Body: &models.PublicUpdateResourceBody{
 			Name:  manifold.Name(resourceName),
-			Label: generateLabel(resourceName),
+			Label: generateName(resourceName),
 		},
 	}
 

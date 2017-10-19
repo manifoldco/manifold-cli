@@ -12,12 +12,12 @@ func formatFlag(defaultValue, description string) cli.Flag {
 	return placeholder.New("format, f", "FORMAT", description, defaultValue, "MANIFOLD_FORMAT", false)
 }
 
-func nameFlag() cli.Flag {
+func titleFlag() cli.Flag {
 	return cli.StringFlag{
-		Name:   "name, n",
-		Usage:  "Specify a name for a resource",
+		Name:   "title, t",
+		Usage:  "Specify a title to be used",
 		Value:  "",
-		EnvVar: "MANIFOLD_NAME",
+		EnvVar: "MANIFOLD_TITLE",
 	}
 }
 

@@ -21,7 +21,7 @@ func init() {
 		Name:      "switch",
 		Usage:     "Switch to a team context",
 		Category:  "ADMINISTRATIVE",
-		ArgsUsage: "[label]",
+		ArgsUsage: "[team-name]",
 		Flags: []cli.Flag{
 			meFlag(),
 		},
@@ -43,7 +43,7 @@ func switchTeamCmd(cliCtx *cli.Context) error {
 		return err
 	}
 
-	teamLabel, err := optionalArgLabel(cliCtx, 0, "team")
+	teamName, err := optionalArgName(cliCtx, 0, "team")
 	if err != nil {
 		return err
 	}
@@ -71,7 +71,7 @@ func switchTeamCmd(cliCtx *cli.Context) error {
 			return cli.NewExitError("Could not retrieve session: "+err.Error(), -1)
 		}
 
-		teamIdx, _, err := prompts.SelectContext(teams, teamLabel, s.LabelInfo())
+		teamIdx, _, err := prompts.SelectContext(teams, teamName, s.LabelInfo())
 		if err != nil {
 			return prompts.HandleSelectError(err, "Could not select context")
 		}
