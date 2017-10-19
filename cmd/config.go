@@ -10,6 +10,7 @@ import (
 
 	"github.com/manifoldco/manifold-cli/api"
 	"github.com/manifoldco/manifold-cli/clients"
+	"github.com/manifoldco/manifold-cli/errs"
 	"github.com/manifoldco/manifold-cli/middleware"
 	"github.com/manifoldco/manifold-cli/prompts"
 
@@ -53,6 +54,9 @@ func init() {
 
 func patchConfig(cliCtx *cli.Context, req map[string]*string) error {
 	ctx := context.Background()
+	if len(req) == 0 {
+		return errs.NewUsageExitError(cliCtx, fmt.Errorf("At least one key must be present"))
+	}
 
 	for k := range req {
 		if !configKeyRegexp.MatchString(k) {
@@ -96,14 +100,13 @@ func patchConfig(cliCtx *cli.Context, req map[string]*string) error {
 		return cli.NewExitError("Config can only be set on custom resources", -1)
 	}
 
-	spin := prompts.NewSpinner("Setting resource config")
-	spin.Start()
-	defer spin.Stop()
+	prompts.SpinStart("Updating resource config")
 	_, err = client.Marketplace.Credential.PatchResourcesIDConfig(&credential.PatchResourcesIDConfigParams{
 		ID:      resource.ID.String(),
 		Body:    req,
 		Context: ctx,
 	}, nil)
+	prompts.SpinStop()
 
 	if err != nil {
 		switch e := err.(type) {
@@ -114,6 +117,9 @@ func patchConfig(cliCtx *cli.Context, req map[string]*string) error {
 		}
 	}
 
+	fmt.Println("Your configuration has been updated.")
+	fmt.Println("")
+	fmt.Println("Use `manifold export` to review your config.")
 	return nil
 }
 
@@ -133,7 +139,7 @@ func configUnsetCmd(cliCtx *cli.Context) error {
 	args := cliCtx.Args()
 
 	if len(args) == 0 {
-		return cli.NewExitError("At least one key must be present", -1)
+		return errs.NewUsageExitError(cliCtx, fmt.Errorf("At least one key must be present"))
 	}
 
 	req := make(map[string]*string)
