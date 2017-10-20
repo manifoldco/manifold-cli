@@ -101,6 +101,14 @@ func productFlag() cli.Flag {
 	}
 }
 
+func yesFlag() cli.Flag {
+	return cli.BoolFlag{
+		Name:   "yes, y",
+		Usage:  "Automatically respond y to confirm prompts",
+		EnvVar: "MANIFOLD_NO_CONFIRM",
+	}
+}
+
 func skipFlag() cli.Flag {
 	return cli.BoolFlag{
 		Name:   "no-wait, w",
