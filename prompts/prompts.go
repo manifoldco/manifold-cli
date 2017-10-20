@@ -1,6 +1,7 @@
 package prompts
 
 import (
+	"errors"
 	"fmt"
 	"sort"
 	"strings"
@@ -29,7 +30,7 @@ const (
 // NumberMask is the character used to mask number inputs
 const NumberMask = '#'
 
-var errBad = promptui.NewValidationError("Bad Value")
+var errBad = errors.New("Bad Value")
 
 func formatResourceListItem(r *mModels.Resource, project string) string {
 	label := string(r.Body.Label)
@@ -362,7 +363,7 @@ func ResourceName(defaultValue string, autoSelect bool) (string, error) {
 
 		n := manifold.Name(input)
 		if err := n.Validate(nil); err != nil {
-			return promptui.NewValidationError("Please provide a valid App Name")
+			return errors.New("Please provide a valid resource name")
 		}
 
 		return nil
@@ -393,12 +394,12 @@ func ResourceName(defaultValue string, autoSelect bool) (string, error) {
 func ResourceLabel(defaultValue string, autoSelect bool) (string, error) {
 	validate := func(input string) error {
 		if len(input) == 0 {
-			return promptui.NewValidationError("Please provide a resource label")
+			return errors.New("Please provide a resource label")
 		}
 
 		l := manifold.Label(input)
 		if err := l.Validate(nil); err != nil {
-			return promptui.NewValidationError("Please provide a valid resource label")
+			return errors.New("Please provide a valid resource label")
 		}
 
 		return nil
@@ -430,12 +431,12 @@ func ResourceLabel(defaultValue string, autoSelect bool) (string, error) {
 func TeamName(defaultValue string, autoSelect bool) (string, error) {
 	validate := func(input string) error {
 		if len(input) == 0 {
-			return promptui.NewValidationError("Please provide a valid team name")
+			return errors.New("Please provide a valid team name")
 		}
 
 		l := manifold.Name(input)
 		if err := l.Validate(nil); err != nil {
-			return promptui.NewValidationError("Please provide a valid team name")
+			return errors.New("Please provide a valid team name")
 		}
 
 		return nil
@@ -466,12 +467,12 @@ func TeamName(defaultValue string, autoSelect bool) (string, error) {
 func ProjectName(defaultValue string, autoSelect bool) (string, error) {
 	validate := func(input string) error {
 		if len(input) == 0 {
-			return promptui.NewValidationError("Please provide a valid project name")
+			return errors.New("Please provide a valid project name")
 		}
 
 		l := manifold.Name(input)
 		if err := l.Validate(nil); err != nil {
-			return promptui.NewValidationError("Please provide a valid project name")
+			return errors.New("Please provide a valid project name")
 		}
 
 		return nil
@@ -526,7 +527,7 @@ func Email(defaultValue string) (string, error) {
 				return nil
 			}
 
-			return promptui.NewValidationError("Please enter a valid email address")
+			return errors.New("Please enter a valid email address")
 		},
 	}
 
@@ -545,7 +546,7 @@ func FullName(defaultValue string) (string, error) {
 			if govalidator.StringMatches(input, namePattern) {
 				return nil
 			}
-			return promptui.NewValidationError("Please enter a valid name")
+			return errors.New("Please enter a valid name")
 		},
 	}
 	if defaultValue != "" {
@@ -563,7 +564,7 @@ func CouponCode() (string, error) {
 			if govalidator.StringMatches(input, couponPattern) {
 				return nil
 			}
-			return promptui.NewValidationError("Please enter a valid code")
+			return errors.New("Please enter a valid code")
 		},
 	}
 
@@ -578,8 +579,7 @@ func EmailVerificationCode(defaultValue string) (string, error) {
 			if govalidator.StringMatches(input, codePattern) {
 				return nil
 			}
-			return promptui.NewValidationError("Please enter a valid e-mail " +
-				"verification code")
+			return errors.New("Please enter a valid e-mail verification code")
 		},
 	}
 	if defaultValue != "" {
@@ -599,8 +599,7 @@ func Password() (string, error) {
 		Mask:  PasswordMask,
 		Validate: func(input string) error {
 			if len(input) < 8 {
-				return promptui.NewValidationError(
-					"Passwords must be greater than 8 characters")
+				return errors.New("Passwords must be greater than 8 characters")
 			}
 
 			return nil

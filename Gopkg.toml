@@ -37,7 +37,7 @@ required=["github.com/go-swagger/go-swagger/cmd/swagger"]
   version = "0.7.2"
 
 [[constraint]]
-  name = "github.com/manifoldco/promptup"
+  name = "github.com/manifoldco/promptui"
   branch = "master"
 
 [[constraint]]
