@@ -1,4 +1,11 @@
-required=["github.com/go-swagger/go-swagger/cmd/swagger"]
+required=[
+  "github.com/alecthomas/gometalinter",
+  "github.com/go-swagger/go-swagger/cmd/swagger",
+  "github.com/golang/lint/golint",
+  "github.com/client9/misspell/cmd/misspell",
+  "github.com/gordonklaus/ineffassign",
+  "github.com/tsenart/deadcode",
+]
 
 [[constraint]]
   name = "github.com/asaskevich/govalidator"
