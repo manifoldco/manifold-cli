@@ -17,6 +17,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - Update success and failure output for `manifold config set`
 - Prevent error during resize attempt of custom resource
 - Amend output for NewUsageError to pull from framework help
+- `teams create` can be used non-interatively
 
 ## [0.7.1] - 2017-10-12
 
