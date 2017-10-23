@@ -101,7 +101,7 @@ func createTeamCmd(cliCtx *cli.Context) error {
 		return err
 	}
 
-	teamName, err := optionalArgLabel(cliCtx, 0, "team")
+	teamName, err := optionalArgName(cliCtx, 0, "team")
 	if err != nil {
 		return err
 	}
