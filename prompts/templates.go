@@ -2,6 +2,7 @@ package prompts
 
 import (
 	"fmt"
+	"strings"
 	"text/template"
 
 	"github.com/manifoldco/promptui"
@@ -9,9 +10,9 @@ import (
 )
 
 const (
-	active   = `▸ {{.Body.Name | bold}} ({{ .Body.Label | blue }})`
-	inactive = `  {{.Body.Name }} ({{ .Body.Label | blue }})`
-	selected = `{{"✔" | green }} %s: {{.Body.Name | bold}} ({{ .Body.Label | blue }})`
+	active   = `▸ {{.Body.Label | blue | bold }} ({{ .Body.Name }})`
+	inactive = `  {{.Body.Label | blue }} ({{ .Body.Name }})`
+	selected = `{{"✔" | green }} %s: {{.Body.Label | blue}} ({{ .Body.Name }})`
 )
 
 var funcMap template.FuncMap
@@ -19,6 +20,7 @@ var funcMap template.FuncMap
 func init() {
 	funcMap = promptui.FuncMap
 	funcMap["price"] = price
+	funcMap["title"] = title
 }
 
 var ProductSelect = &promptui.SelectTemplates{
@@ -26,11 +28,12 @@ var ProductSelect = &promptui.SelectTemplates{
 	Inactive: inactive,
 	Selected: fmt.Sprintf(selected, "Product"),
 	Details: `
-{{ .Body.Name | bold }}:
-{{ .Body.Tagline }}
+Product:	{{.Body.Label | blue}} ({{ .Body.Label }})
+Tagline	{{ .Body.Tagline }}
+Features:
 {{- range $i, $el := .Body.ValueProps }}
 {{- if lt $i 3 }}
- - {{ $el.Header -}}
+ {{ $el.Header -}}
 {{- end -}}
 {{- end -}}`,
 }
@@ -41,10 +44,11 @@ var PlanSelect = &promptui.SelectTemplates{
 	Inactive: inactive,
 	Selected: fmt.Sprintf(selected, "Plan"),
 	Details: `
-{{ .Body.Name | bold }} - {{ .Body.Cost | price }}:
+Plan:	{{.Body.Label | blue}} ({{ .Body.Label }})
+Price:	{{ .Body.Cost | price }}
 {{- range $i, $el := .Body.Features }}
 {{- if lt $i 3 }}
- - {{ $el.Feature }}: {{ $el.Value -}}
+{{ $el.Feature | title }}:	{{ $el.Value -}}
 {{- end -}}
 {{- end -}}`,
 }
@@ -54,5 +58,10 @@ func price(value *int64) string {
 	if price == 0 {
 		return "Free"
 	}
-	return money.New(price, "USD").Display()
+	return money.New(price, "USD").Display() + "/month"
+}
+
+func title(v interface{}) string {
+	val := fmt.Sprintf("%v", v)
+	return strings.Title(val)
 }
