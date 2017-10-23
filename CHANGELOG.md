@@ -21,6 +21,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - Amend output for NewUsageError to pull from framework help
 - `teams create` can be used non-interatively
 - Terminology has changed: Name becomes Title, Label becomes Name
+- Remove -t from title flag to prevent panic
 
 ## [0.7.1] - 2017-10-12
 
