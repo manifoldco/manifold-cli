@@ -18,6 +18,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - Prevent error during resize attempt of custom resource
 - Amend output for NewUsageError to pull from framework help
 - `teams create` can be used non-interatively
+- Terminology has changed: Name becomes Title, Label becomes Name
 
 ## [0.7.1] - 2017-10-12
 

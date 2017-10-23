@@ -64,7 +64,7 @@ func patchConfig(cliCtx *cli.Context, req map[string]*string) error {
 		}
 	}
 
-	label, err := requiredLabel(cliCtx, "resource")
+	name, err := requiredName(cliCtx, "resource")
 	if err != nil {
 		return err
 	}
@@ -87,14 +87,14 @@ func patchConfig(cliCtx *cli.Context, req map[string]*string) error {
 	// XXX just get a single resource
 	var resource *models.Resource
 	for _, r := range resources {
-		if string(r.Body.Label) == label {
+		if string(r.Body.Label) == name {
 			resource = r
 			break
 		}
 	}
 
 	if resource == nil {
-		return cli.NewExitError("No resource found with that label", -1)
+		return cli.NewExitError("No resource found with that name", -1)
 	}
 	if *resource.Body.Source != "custom" {
 		return cli.NewExitError("Config can only be set on custom resources", -1)

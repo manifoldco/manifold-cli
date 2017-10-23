@@ -34,15 +34,15 @@ func init() {
 			{
 				Name:      "create",
 				Usage:     "Create a new team",
-				ArgsUsage: "[name]",
+				ArgsUsage: "[team-name]",
 				Action:    middleware.Chain(middleware.EnsureSession, createTeamCmd),
 			},
 			{
 				Name:      "update",
 				Usage:     "Update an existing team",
-				ArgsUsage: "[label]",
+				ArgsUsage: "[team-name]",
 				Flags: []cli.Flag{
-					nameFlag(),
+					titleFlag(),
 				},
 				Action: middleware.Chain(middleware.EnsureSession, updateTeamCmd),
 			},
@@ -56,7 +56,7 @@ func init() {
 			},
 			{
 				Name:      "invite",
-				ArgsUsage: "[email] [name]",
+				ArgsUsage: "[email] [display-name]",
 				Usage:     "Invite a user to join a team",
 				Flags:     teamFlags,
 				Action: middleware.Chain(middleware.LoadDirPrefs, middleware.EnsureSession,
@@ -76,7 +76,7 @@ func init() {
 			},
 			{
 				Name:      "leave",
-				ArgsUsage: "[name]",
+				ArgsUsage: "[team-name]",
 				Usage:     "Remove yourself from a team",
 				Action:    middleware.Chain(middleware.EnsureSession, leaveTeamCmd),
 			},
@@ -101,7 +101,7 @@ func createTeamCmd(cliCtx *cli.Context) error {
 		return err
 	}
 
-	teamName, err := optionalArgName(cliCtx, 0, "team")
+	teamTitle, err := optionalArgTitle(cliCtx, 0, "team")
 	if err != nil {
 		return err
 	}
@@ -111,17 +111,17 @@ func createTeamCmd(cliCtx *cli.Context) error {
 		return err
 	}
 
-	autoSelect := teamName != ""
-	teamName, err = prompts.TeamName(teamName, autoSelect)
+	autoSelect := teamTitle != ""
+	teamTitle, err = prompts.TeamTitle(teamTitle, autoSelect)
 	if err != nil {
 		return prompts.HandleSelectError(err, "Failed to name team")
 	}
 
-	if err := createTeam(ctx, teamName, client.Identity); err != nil {
+	if err := createTeam(ctx, teamTitle, client.Identity); err != nil {
 		return cli.NewExitError(fmt.Sprintf("Could not create team: %s", err), -1)
 	}
 
-	fmt.Printf("Your team '%s' has been created\n", teamName)
+	fmt.Printf("Your team '%s' has been created\n", teamTitle)
 	return nil
 }
 
@@ -132,12 +132,12 @@ func updateTeamCmd(cliCtx *cli.Context) error {
 		return err
 	}
 
-	teamName, err := optionalArgLabel(cliCtx, 0, "team")
+	teamName, err := optionalArgName(cliCtx, 0, "team")
 	if err != nil {
 		return err
 	}
 
-	newTeamName, err := validateName(cliCtx, "name", "team")
+	newTeamTitle, err := validateTitle(cliCtx, "title", "team")
 	if err != nil {
 		return err
 	}
@@ -152,17 +152,17 @@ func updateTeamCmd(cliCtx *cli.Context) error {
 		return err
 	}
 
-	autoSelect := newTeamName != ""
-	newTeamName, err = prompts.TeamName(newTeamName, autoSelect)
+	autoSelect := newTeamTitle != ""
+	newTeamTitle, err = prompts.TeamTitle(newTeamTitle, autoSelect)
 	if err != nil {
 		return prompts.HandleSelectError(err, "Could not validate name")
 	}
 
-	if err := updateTeam(ctx, team, newTeamName, client.Identity); err != nil {
+	if err := updateTeam(ctx, team, newTeamTitle, client.Identity); err != nil {
 		return cli.NewExitError(fmt.Sprintf("Could not update team: %s", err), -1)
 	}
 
-	fmt.Printf("Your team \"%s\" has been updated\n", newTeamName)
+	fmt.Printf("Your team \"%s\" has been updated\n", newTeamTitle)
 	return nil
 }
 
@@ -314,7 +314,7 @@ func leaveTeamCmd(cliCtx *cli.Context) error {
 		return err
 	}
 
-	teamName, err := optionalArgLabel(cliCtx, 0, "team")
+	teamName, err := optionalArgName(cliCtx, 0, "team")
 	if err != nil {
 		return err
 	}
@@ -354,11 +354,11 @@ func leaveTeamCmd(cliCtx *cli.Context) error {
 	return nil
 }
 
-func createTeam(ctx context.Context, teamName string, identityClient *client.Identity) error {
+func createTeam(ctx context.Context, teamTitle string, identityClient *client.Identity) error {
 	createTeam := &models.CreateTeam{
 		Body: &models.CreateTeamBody{
-			Name:  manifold.Name(teamName),
-			Label: generateLabel(teamName),
+			Name:  manifold.Name(teamTitle),
+			Label: generateName(teamTitle),
 		},
 	}
 
@@ -385,11 +385,11 @@ func createTeam(ctx context.Context, teamName string, identityClient *client.Ide
 	return nil
 }
 
-func updateTeam(ctx context.Context, team *models.Team, teamName string, identityClient *client.Identity) error {
+func updateTeam(ctx context.Context, team *models.Team, teamTitle string, identityClient *client.Identity) error {
 	updateTeam := &models.UpdateTeam{
 		Body: &models.UpdateTeamBody{
-			Name:  manifold.Name(teamName),
-			Label: generateLabel(teamName),
+			Name:  manifold.Name(teamTitle),
+			Label: generateName(teamTitle),
 		},
 	}
 
@@ -591,7 +591,7 @@ func setRoleCmd(cliCtx *cli.Context) error {
 		if err != nil {
 			return err
 		}
-		roleLabel, err = optionalArgLabel(cliCtx, 1, "role")
+		roleLabel, err = optionalArgName(cliCtx, 1, "role")
 		if err != nil {
 			return err
 		}

@@ -21,7 +21,7 @@ import (
 func init() {
 	ssoCmd := cli.Command{
 		Name:      "sso",
-		ArgsUsage: "[label]",
+		ArgsUsage: "[resource-name]",
 		Usage:     "Get an SSO link for a resource",
 		Category:  "RESOURCES",
 		Action: middleware.Chain(middleware.EnsureSession, middleware.LoadDirPrefs, middleware.LoadTeamPrefs,
@@ -42,7 +42,7 @@ func ssoCmd(cliCtx *cli.Context) error {
 		return err
 	}
 
-	label, err := optionalArgLabel(cliCtx, 0, "resource")
+	name, err := optionalArgName(cliCtx, 0, "resource")
 	if err != nil {
 		return err
 	}
@@ -53,7 +53,7 @@ func ssoCmd(cliCtx *cli.Context) error {
 	}
 
 	open := cliCtx.Bool("open")
-	project, err := validateLabel(cliCtx, "project")
+	project, err := validateName(cliCtx, "project")
 	if err != nil {
 		return err
 	}
@@ -76,7 +76,7 @@ func ssoCmd(cliCtx *cli.Context) error {
 		return cli.NewExitError(fmt.Sprintf("Could not load teams: %s", err), -1)
 	}
 
-	rIdx, _, err := prompts.SelectResource(res, projects, label)
+	rIdx, _, err := prompts.SelectResource(res, projects, name)
 	if err != nil {
 		return prompts.HandleSelectError(err, "Could not select project")
 	}

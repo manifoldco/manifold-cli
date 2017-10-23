@@ -42,7 +42,7 @@ func view(cliCtx *cli.Context) error {
 		return err
 	}
 
-	resourceLabel, err := optionalArgLabel(cliCtx, 0, "resource")
+	resourceName, err := optionalArgName(cliCtx, 0, "resource")
 	if err != nil {
 		return err
 	}
@@ -52,7 +52,7 @@ func view(cliCtx *cli.Context) error {
 		return err
 	}
 
-	project, err := validateLabel(cliCtx, "project")
+	project, err := validateName(cliCtx, "project")
 	if err != nil {
 		return err
 	}
@@ -93,14 +93,14 @@ func view(cliCtx *cli.Context) error {
 	}
 
 	var resource *models.Resource
-	if resourceLabel != "" {
-		resource, err = pickResourcesByLabel(resources, resourceLabel)
+	if resourceName != "" {
+		resource, err = pickResourcesByName(resources, resourceName)
 		if err != nil {
 			return cli.NewExitError(
-				fmt.Sprintf("Failed to find resource \"%s\": %s", resourceLabel, err), -1)
+				fmt.Sprintf("Failed to find resource \"%s\": %s", resourceName, err), -1)
 		}
 	} else {
-		idx, _, err := prompts.SelectResource(resources, projects, resourceLabel)
+		idx, _, err := prompts.SelectResource(resources, projects, resourceName)
 		if err != nil {
 			return prompts.HandleSelectError(err, "Could not select Resource")
 		}
@@ -144,7 +144,7 @@ func view(cliCtx *cli.Context) error {
 	}
 
 	projectID := resource.Body.ProjectID
-	projectLabel := "-"
+	projectName := "-"
 	if projectID != nil {
 		var project *models.Project
 		for _, p := range projects {
@@ -156,15 +156,15 @@ func view(cliCtx *cli.Context) error {
 			cli.NewExitError("Project referenced by resource does not exist: "+
 				err.Error(), -1)
 		}
-		projectLabel = string(project.Body.Label)
+		projectName = string(project.Body.Label)
 	}
 
-	fmt.Println("Use `manifold update [label] --project [project]` to edit your resource")
+	fmt.Println("Use `manifold update [resource-name] --project [project]` to edit your resource")
 	fmt.Println("")
 	w := ansiterm.NewTabWriter(os.Stdout, 0, 0, 8, ' ', 0)
-	fmt.Fprintln(w, fmt.Sprintf("%s\t%s", color.Faint("Name"), color.Bold(resource.Body.Name)))
-	fmt.Fprintln(w, fmt.Sprintf("%s\t%s", color.Faint("Label"), resource.Body.Label))
-	fmt.Fprintln(w, fmt.Sprintf("%s\t%s", color.Faint("Project"), projectLabel))
+	fmt.Fprintln(w, fmt.Sprintf("%s\t%s", color.Faint("Name"), color.Bold(resource.Body.Label)))
+	fmt.Fprintln(w, fmt.Sprintf("%s\t%s", color.Faint("Title"), color.Faint(resource.Body.Name)))
+	fmt.Fprintln(w, fmt.Sprintf("%s\t%s", color.Faint("Project"), projectName))
 	fmt.Fprintln(w, fmt.Sprintf("%s\t%s", color.Faint("State"), status))
 	fmt.Fprintln(w, fmt.Sprintf("%s\t%s", color.Faint("Custom"), isCustom))
 	fmt.Fprintln(w, fmt.Sprintf("%s\t%s", color.Faint("Product"), productName))

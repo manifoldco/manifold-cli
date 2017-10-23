@@ -31,7 +31,7 @@ import (
 func init() {
 	createCmd := cli.Command{
 		Name:      "create",
-		ArgsUsage: "[name]",
+		ArgsUsage: "[resource-name]",
 		Usage:     "Create a new resource",
 		Category:  "RESOURCES",
 		Action: middleware.Chain(middleware.LoadDirPrefs, middleware.EnsureSession,
@@ -62,7 +62,7 @@ func create(cliCtx *cli.Context) error {
 		return err
 	}
 
-	resourceName, err := optionalArgName(cliCtx, 0, "resource")
+	resourceTitle, err := optionalArgTitle(cliCtx, 0, "resource")
 	if err != nil {
 		return err
 	}
@@ -73,28 +73,28 @@ func create(cliCtx *cli.Context) error {
 	}
 
 	dontWait := cliCtx.Bool("no-wait")
-	projectLabel, err := validateLabel(cliCtx, "project")
+	projectName, err := validateName(cliCtx, "project")
 	if err != nil {
 		return err
 	}
 
-	planLabel, err := validateLabel(cliCtx, "plan")
+	planName, err := validateName(cliCtx, "plan")
 	if err != nil {
 		return err
 	}
 
-	productLabel, err := validateLabel(cliCtx, "product")
+	productName, err := validateName(cliCtx, "product")
 	if err != nil {
 		return err
 	}
 
-	regionLabel, err := validateLabel(cliCtx, "region")
+	regionName, err := validateName(cliCtx, "region")
 	if err != nil {
 		return err
 	}
 
 	custom := cliCtx.Bool("custom")
-	if custom && (planLabel != "" || productLabel != "" || regionLabel != "") {
+	if custom && (planName != "" || productName != "" || regionName != "") {
 		return errs.NewUsageExitError(cliCtx, cli.NewExitError(
 			"You cannot specify product options for a custom resource", -1,
 		))
@@ -126,13 +126,13 @@ func create(cliCtx *cli.Context) error {
 
 	if !custom {
 		products := catalog.Products()
-		productIdx, _, err := prompts.SelectProduct(products, productLabel)
+		productIdx, _, err := prompts.SelectProduct(products, productName)
 		if err != nil {
 			return prompts.HandleSelectError(err, "Could not select product.")
 		}
 
 		plans := filterPlansByProductID(catalog.Plans(), products[productIdx].ID)
-		planIdx, _, err := prompts.SelectPlan(plans, planLabel, false)
+		planIdx, _, err := prompts.SelectPlan(plans, planName, false)
 		if err != nil {
 			return prompts.HandleSelectError(err, "Could not select plan.")
 		}
@@ -156,7 +156,7 @@ func create(cliCtx *cli.Context) error {
 	var project *mModels.Project
 
 	if len(projects) > 0 {
-		pidx, _, err := prompts.SelectProject(projects, projectLabel, true)
+		pidx, _, err := prompts.SelectProject(projects, projectName, true)
 		if err != nil {
 			return prompts.HandleSelectError(err, "Could not select project.")
 		}
@@ -166,7 +166,7 @@ func create(cliCtx *cli.Context) error {
 		}
 	}
 
-	resourceName, err = prompts.ResourceName(resourceName, false)
+	resourceTitle, err = prompts.ResourceTitle(resourceTitle, false)
 	if err != nil {
 		return cli.NewExitError("Could not name the resource: "+err.Error(), -1)
 	}
@@ -182,7 +182,7 @@ func create(cliCtx *cli.Context) error {
 	}
 
 	op, err := createResource(ctx, cfg, teamID, s, client.Provisioning, custom, product, plan, region,
-		project, resourceName, dontWait)
+		project, resourceTitle, dontWait)
 	if err != nil {
 		return cli.NewExitError("Could not create resource: "+err.Error(), -1)
 	}
@@ -206,7 +206,7 @@ func create(cliCtx *cli.Context) error {
 
 func createResource(ctx context.Context, cfg *config.Config, teamID *manifold.ID, s session.Session,
 	pClient *provisioning.Provisioning, custom bool, product *cModels.Product, plan *cModels.Plan,
-	region *cModels.Region, project *mModels.Project, resourceName string, dontWait bool) (*pModels.Operation, error) {
+	region *cModels.Region, project *mModels.Project, resourceTitle string, dontWait bool) (*pModels.Operation, error) {
 
 	a, err := analytics.New(cfg, s)
 	if err != nil {
@@ -252,7 +252,7 @@ func createResource(ctx context.Context, cfg *config.Config, teamID *manifold.ID
 		Body: &pModels.Provision{
 			ResourceID: resourceID,
 			Label:      &empty,
-			Name:       &resourceName,
+			Name:       &resourceTitle,
 			Source:     &source,
 			PlanID:     planID,
 			ProductID:  productID,
