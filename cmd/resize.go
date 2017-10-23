@@ -52,14 +52,17 @@ func resizeResourceCmd(cliCtx *cli.Context) error {
 		return err
 	}
 
-	userID, err := loadUserID(ctx)
-	if err != nil {
-		return err
+	userID, userIDErr := loadUserID(ctx)
+	if userIDErr != nil && userIDErr != errUserActionAsTeam {
+		return userIDErr
 	}
 
-	teamID, err := validateTeamID(cliCtx)
-	if err != nil {
-		return err
+	teamID, teamIDErr := validateTeamID(cliCtx)
+	if teamIDErr != nil {
+		return teamIDErr
+	}
+	if teamID == nil && userIDErr == errUserActionAsTeam {
+		return errUserActionAsTeam
 	}
 
 	dontWait := cliCtx.Bool("no-wait")

@@ -122,13 +122,19 @@ func list(cliCtx *cli.Context) error {
 				// Get catalog data
 				product, err := catalog.GetProduct(*resource.Body.ProductID)
 				if err != nil {
-					cli.NewExitError("Product referenced by resource does not exist: "+
+					return cli.NewExitError("Product referenced by resource does not exist: "+
 						err.Error(), -1)
+				}
+				if product == nil {
+					return cli.NewExitError("Product not found", -1)
 				}
 				plan, err := catalog.GetPlan(*resource.Body.PlanID)
 				if err != nil {
-					cli.NewExitError("Plan referenced by resource does not exist: "+
+					return cli.NewExitError("Plan referenced by resource does not exist: "+
 						err.Error(), -1)
+				}
+				if plan == nil {
+					return cli.NewExitError("Product not found", -1)
 				}
 
 				rType = fmt.Sprintf("%s %s", product.Body.Name, plan.Body.Name)
@@ -326,6 +332,11 @@ func userEmail(ctx context.Context) (string, error) {
 	s, err := session.Retrieve(ctx, cfg)
 	if err != nil {
 		return "", cli.NewExitError("Could not retrieve session: "+err.Error(), -1)
+	}
+
+	// If the session is not a user, we cannot return their identity
+	if !s.IsUser() {
+		return "", nil
 	}
 
 	userDetail := s.LabelInfo()

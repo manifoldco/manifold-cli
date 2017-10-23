@@ -71,7 +71,12 @@ func switchTeamCmd(cliCtx *cli.Context) error {
 			return cli.NewExitError("Could not retrieve session: "+err.Error(), -1)
 		}
 
-		teamIdx, _, err := prompts.SelectContext(teams, teamName, s.LabelInfo())
+		var userLabel *[]string
+		if s.IsUser() {
+			userLabel = s.LabelInfo()
+		}
+
+		teamIdx, _, err := prompts.SelectContext(teams, teamName, userLabel)
 		if err != nil {
 			return prompts.HandleSelectError(err, "Could not select context")
 		}

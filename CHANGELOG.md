@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - `manifold teams remove` will remove a team member or revoke an invite
 - `manifold context` command to display current account and context
 - `manifold tokens add` will create a new API token
+- `MANIFOLD_API_TOKEN` as means for authenticating
 
 ### Fixed
 - Update success and failure output for `manifold config set`

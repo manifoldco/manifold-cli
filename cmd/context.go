@@ -56,6 +56,9 @@ func contextLookup(cliCtx *cli.Context) error {
 		}
 	} else {
 		me = true
+		if !s.IsUser() {
+			return errUserActionAsTeam
+		}
 	}
 	if !cliCtx.Bool("short") || me {
 		s, err = session.Retrieve(ctx, cfg)
@@ -89,14 +92,16 @@ func contextLookup(cliCtx *cli.Context) error {
 			return color.Color(ansiterm.Gray, i)
 		}
 
-		fmt.Println(color.Bold("Account"))
-		w := ansiterm.NewTabWriter(os.Stdout, 0, 0, 8, ' ', 0)
-		fmt.Fprintln(w, fmt.Sprintf("%s\t%s", faint("Name"), usr.Body.Name))
-		fmt.Fprintln(w, fmt.Sprintf("%s\t%s", faint("Email"), usr.Body.Email))
-		w.Flush()
-		fmt.Println("")
+		if s.IsUser() {
+			fmt.Println(color.Bold("Account"))
+			w := ansiterm.NewTabWriter(os.Stdout, 0, 0, 8, ' ', 0)
+			fmt.Fprintln(w, fmt.Sprintf("%s\t%s", faint("Name"), usr.Body.Name))
+			fmt.Fprintln(w, fmt.Sprintf("%s\t%s", faint("Email"), usr.Body.Email))
+			w.Flush()
+			fmt.Println("")
+		}
 		fmt.Println(color.Bold("Context"))
-		w = ansiterm.NewTabWriter(os.Stdout, 0, 0, 8, ' ', 0)
+		w := ansiterm.NewTabWriter(os.Stdout, 0, 0, 8, ' ', 0)
 		fmt.Fprintln(w, fmt.Sprintf("%s\t%s", faint("Type"), ctxType))
 		fmt.Fprintln(w, fmt.Sprintf("%s\t%s", faint("Value"), ctxValue))
 		w.Flush()
