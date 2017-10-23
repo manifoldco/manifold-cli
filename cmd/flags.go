@@ -14,7 +14,7 @@ func formatFlag(defaultValue, description string) cli.Flag {
 
 func titleFlag() cli.Flag {
 	return cli.StringFlag{
-		Name:   "title, t",
+		Name:   "title",
 		Usage:  "Specify a title to be used",
 		Value:  "",
 		EnvVar: "MANIFOLD_TITLE",
