@@ -132,7 +132,7 @@ func create(cliCtx *cli.Context) error {
 		}
 
 		plans := filterPlansByProductID(catalog.Plans(), products[productIdx].ID)
-		planIdx, _, err := prompts.SelectPlan(plans, planLabel, false)
+		planIdx, _, err := prompts.SelectPlan(plans, planLabel)
 		if err != nil {
 			return prompts.HandleSelectError(err, "Could not select plan.")
 		}

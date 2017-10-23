@@ -64,6 +64,12 @@ func SelectProduct(products []*cModels.Product, label string) (int, string, erro
 		return idx, label, nil
 	}
 
+	sort.Slice(products, func(i, j int) bool {
+		a := string(products[i].Body.Name)
+		b := string(products[j].Body.Name)
+		return strings.ToLower(a) < strings.ToLower(b)
+	})
+
 	prompt := promptui.Select{
 		Label:     "Select Product",
 		Items:     products,
@@ -74,13 +80,8 @@ func SelectProduct(products []*cModels.Product, label string) (int, string, erro
 }
 
 // SelectPlan prompts the user to select a plan from the given list.
-func SelectPlan(plans []*cModels.Plan, label string, filterLabelTop bool) (int, string, error) {
-	line := func(p *cModels.Plan) string {
-		return fmt.Sprintf("%s (%s) - %s", p.Body.Name, p.Body.Label, getPlanCost(p))
-	}
-
+func SelectPlan(plans []*cModels.Plan, label string) (int, string, error) {
 	var idx int
-	var fp *cModels.Plan
 	if label != "" {
 		found := false
 		for i, p := range plans {
@@ -91,16 +92,13 @@ func SelectPlan(plans []*cModels.Plan, label string, filterLabelTop bool) (int, 
 			}
 		}
 
-		fp = plans[idx]
 		if !found {
 			fmt.Println(promptui.FailedValue("Plan", label))
 			return 0, "", errs.ErrPlanNotFound
 		}
 
-		if !filterLabelTop {
-			fmt.Println(promptui.SuccessfulValue("Plan", line(fp)))
-			return idx, label, nil
-		}
+		fmt.Println(promptui.SuccessfulValue("Plan", label)) //FIXME
+		return idx, label, nil
 	}
 
 	sort.Slice(plans, func(i, j int) bool {
@@ -114,23 +112,10 @@ func SelectPlan(plans []*cModels.Plan, label string, filterLabelTop bool) (int, 
 		return *a.Body.Cost < *b.Body.Cost
 	})
 
-	labels := make([]string, len(plans))
-
-	var selectedIdx int
-	for i, p := range plans {
-		labels[i] = line(p)
-		if p == fp {
-			selectedIdx = i
-		}
-	}
-
-	if filterLabelTop {
-		labels[0], labels[selectedIdx] = labels[selectedIdx], labels[0]
-	}
-
 	prompt := promptui.Select{
-		Label: "Select Plan",
-		Items: labels,
+		Label:     "Select Plan",
+		Items:     plans,
+		Templates: PlanSelect,
 	}
 
 	return prompt.Run()

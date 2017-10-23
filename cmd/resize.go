@@ -102,7 +102,7 @@ func resizeResourceCmd(cliCtx *cli.Context) error {
 		return errs.ErrNoPlans
 	}
 
-	pIdx, _, err := prompts.SelectPlan(plans, planLabel, false)
+	pIdx, _, err := prompts.SelectPlan(plans, planLabel)
 	if err != nil {
 		return prompts.HandleSelectError(err, "Could not select Plan")
 	}
