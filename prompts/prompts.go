@@ -44,10 +44,6 @@ func formatResourceListItem(r *mModels.Resource, project string) string {
 
 // SelectProduct prompts the user to select a product from the given list.
 func SelectProduct(products []*cModels.Product, label string) (int, string, error) {
-	line := func(p *cModels.Product) string {
-		return fmt.Sprintf("%s (%s)", p.Body.Name, p.Body.Label)
-	}
-
 	var idx int
 	if label != "" {
 		found := false
@@ -64,18 +60,14 @@ func SelectProduct(products []*cModels.Product, label string) (int, string, erro
 			return 0, "", errs.ErrProductNotFound
 		}
 
-		fmt.Println(promptui.SuccessfulValue("Product", line(products[idx])))
+		fmt.Println(promptui.SuccessfulValue("Product", label)) // FIXME
 		return idx, label, nil
 	}
 
-	labels := make([]string, len(products))
-	for i, p := range products {
-		labels[i] = line(p)
-	}
-
 	prompt := promptui.Select{
-		Label: "Select Product",
-		Items: labels,
+		Label:     "Select Product",
+		Items:     products,
+		Templates: ProductSelect,
 	}
 
 	return prompt.Run()
