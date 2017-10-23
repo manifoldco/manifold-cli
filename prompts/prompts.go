@@ -499,6 +499,15 @@ func ProjectTitle(defaultValue string, autoSelect bool) (string, error) {
 	return p.Run()
 }
 
+// TokenDescription prompts the user to enter a token description
+func TokenDescription() (string, error) {
+	p := promptui.Prompt{
+		Label:   "Token Description",
+		Default: "",
+	}
+	return p.Run()
+}
+
 // ProjectDescription prompts the user to enter a project description
 func ProjectDescription(defaultValue string, autoSelect bool) (string, error) {
 	label := "Project Description"
@@ -732,4 +741,25 @@ func SelectProvider(providers []*cModels.Provider) (*cModels.Provider, error) {
 	}
 
 	return providers[idx-1], nil
+}
+
+// SelectAPIToken prompts the user to choose from a list of tokens
+func SelectAPIToken(tokens []*iModels.APIToken) (*iModels.APIToken, error) {
+	var labels []string
+	for _, t := range tokens {
+		val := fmt.Sprintf("%s****%s", *t.Body.FirstFour, *t.Body.LastFour)
+		labels = append(labels, fmt.Sprintf("%s - %s", val, *t.Body.Description))
+	}
+
+	prompt := promptui.Select{
+		Label: "Select API token",
+		Items: labels,
+	}
+
+	idx, _, err := prompt.Run()
+	if err != nil {
+		return nil, err
+	}
+
+	return tokens[idx], nil
 }

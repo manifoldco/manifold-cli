@@ -153,6 +153,71 @@ paths:
           description: Unexpected error
           schema:
             $ref: '#/definitions/Error'
+  /tokens:
+    get:
+      summary: List API tokens
+      parameters:
+        - name: type
+          in: query
+          description: Only list tokens which match this type
+          type: string
+          enum: [api]
+          required: true
+        - name: me
+          in: query
+          description: Only list tokens with the user as the owner
+          type: boolean
+          required: false
+        - name: team_id
+          in: query
+          description: |
+            ID of the Team to filter tokens by, stored as a
+            base32 encoded 18 byte identifier.
+          type: string
+          pattern: '^[0-9abcdefghjkmnpqrtuvwxyz]{29}$'
+          format: base32ID
+          required: false
+      tags:
+        - Authentication
+      responses:
+        200:
+          description: A list of API tokens.
+          schema:
+            type: array
+            items: { $ref: "#/definitions/APIToken" }
+        401:
+          description: Unknown token, or token not owned the the requester
+          schema: { $ref: '#/definitions/Error' }
+        500:
+          description: Request failed due to an internal server error.
+          schema: { $ref: '#/definitions/Error' }
+        default:
+          description: Unexpected error
+          schema: { $ref: '#/definitions/Error' }
+    post:
+      summary: Create a new api token
+      parameters:
+        - name: body
+          in: body
+          description: |
+            API token create request
+          required: true
+          schema: { $ref: '#/definitions/APITokenRequest' }
+      tags:
+        - Authentication
+      responses:
+        201:
+          description: An API token.
+          schema: { $ref: '#/definitions/APIToken' }
+        400:
+          description: Invalid token request supplied
+          schema: { $ref: '#/definitions/Error' }
+        500:
+          description: Request failed due to an internal server error.
+          schema: { $ref: '#/definitions/Error' }
+        default:
+          description: Unexpected error
+          schema: { $ref: '#/definitions/Error' }
   /self:
     get:
       summary: Retrieve the underlying user represented by a Token
@@ -1358,3 +1423,58 @@ definitions:
     minLength: 43
     maxLength: 43
     pattern: ^[a-zA-Z0-9_-]{43}$
+  OptionalID:
+    type: string
+    description: A base32 encoded 18 byte identifier.
+    pattern: '^[0-9abcdefghjkmnpqrtuvwxyz]{29}$'
+    format: base32ID
+    x-nullable: true
+    x-go-type:
+      type: ID
+      import:
+        package: 'github.com/manifoldco/go-manifold'
+        alias: manifold
+  APITokenRequest:
+    type: object
+    properties:
+      description: { type: string, minLength: 1, maxLength: 1000 }
+      role: { $ref: '#/definitions/RoleLabel' }
+      user_id: { $ref: '#/definitions/OptionalID' }
+      team_id: { $ref: '#/definitions/OptionalID' }
+    additionalProperties: false
+    required:
+      - role
+      - description
+  APIToken:
+    type: object
+    properties:
+      id: { $ref: '#/definitions/ID' }
+      version: { type: integer, enum: [1] }
+      type: { type: string, enum: [api_token] }
+      body:
+        type: object
+        properties:
+          first_four:
+            type: string
+          last_four:
+            type: string
+          role: { $ref: '#/definitions/RoleLabel' }
+          user_id: { $ref: '#/definitions/OptionalID' }
+          team_id: { $ref: '#/definitions/OptionalID' }
+          token:
+            type: string
+            maxLength: 60
+          description: { type: string, minLength: 1, maxLength: 1000 }
+        additionalProperties: false
+        required:
+          - role
+          - user_id
+          - team_id
+          - first_four
+          - last_four
+          - description
+    additionalProperties: false
+    required:
+      - id
+      - version
+      - type

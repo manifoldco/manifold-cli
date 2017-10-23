@@ -59,6 +59,22 @@ func requiredName(cliCtx *cli.Context, option string) (string, error) {
 	return validateName(cliCtx, option)
 }
 
+func optionalArgID(cliCtx *cli.Context, idx int, name string) (*manifold.ID, error) {
+	args := cliCtx.Args()
+
+	if len(args) < idx+1 {
+		return nil, nil
+	}
+
+	val := args[idx]
+	id, err := manifold.DecodeIDFromString(val)
+	if err != nil {
+		return nil, cli.NewExitError(fmt.Sprintf("Invalid %s ID: %s", name, err), -1)
+	}
+
+	return &id, nil
+}
+
 func optionalArgTitle(cliCtx *cli.Context, idx int, title string) (string, error) {
 	args := cliCtx.Args()
 
