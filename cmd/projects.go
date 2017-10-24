@@ -39,7 +39,7 @@ func init() {
 				Name:      "create",
 				Usage:     "Create a new project",
 				Flags:     teamFlags,
-				ArgsUsage: "[project-name]",
+				ArgsUsage: "[project-title]",
 				Action: middleware.Chain(middleware.EnsureSession,
 					middleware.LoadTeamPrefs, createProjectCmd),
 			},
@@ -117,21 +117,21 @@ func createProjectCmd(cliCtx *cli.Context) error {
 		return errUserActionAsTeam
 	}
 
-	projectName, err := optionalArgName(cliCtx, 0, "name")
+	projectTitle, err := optionalArgTitle(cliCtx, 0, "title")
 	if err != nil {
 		return err
 	}
 
-	autoSelect := projectName != ""
-	projectTitle, err := prompts.ProjectTitle(projectName, autoSelect)
+	autoSelect := projectTitle != ""
+	projectTitle, err = prompts.ProjectTitle(projectTitle, autoSelect)
 	if err != nil {
-		return prompts.HandleSelectError(err, "Failed to name project")
+		return prompts.HandleSelectError(err, "Failed to select project title")
 	}
 
 	params := projectClient.NewPostProjectsParamsWithContext(ctx)
 	body := &mModels.CreateProjectBody{
 		Name:  manifold.Name(projectTitle),
-		Label: generateName(projectName),
+		Label: generateName(projectTitle),
 	}
 
 	if teamID == nil {
