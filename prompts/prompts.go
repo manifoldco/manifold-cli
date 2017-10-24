@@ -8,7 +8,6 @@ import (
 
 	"github.com/asaskevich/govalidator"
 	"github.com/manifoldco/go-manifold"
-	"github.com/manifoldco/manifold-cli/color"
 	"github.com/manifoldco/promptui"
 	"github.com/rhymond/go-money"
 	"github.com/stripe/stripe-go"
@@ -31,16 +30,6 @@ const (
 const NumberMask = '#'
 
 var errBad = errors.New("Bad Value")
-
-func formatResourceListItem(r *mModels.Resource, project string) string {
-	label := string(r.Body.Label)
-
-	if project == "" {
-		return label
-	}
-
-	return fmt.Sprintf("%s/%s", project, color.Bold(label))
-}
 
 // SelectProduct prompts the user to select a product from the given list.
 func SelectProduct(products []*cModels.Product, label string) (int, string, error) {
@@ -122,25 +111,38 @@ func SelectPlan(plans []*cModels.Plan, label string) (int, string, error) {
 }
 
 // SelectResource promps the user to select a provisioned resource from the given list
-func SelectResource(resources []*mModels.Resource, projects []*mModels.Project,
+func SelectResource(mResources []*mModels.Resource, projects []*mModels.Project,
 	label string) (int, string, error) {
 
-	projectLabels := make(map[manifold.ID]string)
-	for _, p := range projects {
-		projectLabels[p.ID] = string(p.Body.Label)
+	type resource struct {
+		Name    manifold.Label
+		Title   manifold.Name
+		Project manifold.Label
 	}
 
-	line := func(r *mModels.Resource) string {
-		if r.Body.ProjectID == nil {
-			return formatResourceListItem(r, "")
+	resources := make([]resource, len(mResources))
+
+	for i, m := range mResources {
+		r := resource{
+			Name:  m.Body.Label,
+			Title: m.Body.Name,
 		}
-		return formatResourceListItem(r, projectLabels[*r.Body.ProjectID])
+
+		if m.Body.ProjectID != nil {
+			for _, p := range projects {
+				if *m.Body.ProjectID == p.ID {
+					r.Project = p.Body.Label
+				}
+			}
+		}
+
+		resources[i] = r
 	}
 
 	var idx int
 	if label != "" {
 		found := false
-		for i, p := range resources {
+		for i, p := range mResources {
 			if string(p.Body.Label) == label {
 				idx = i
 				found = true
@@ -148,30 +150,25 @@ func SelectResource(resources []*mModels.Resource, projects []*mModels.Project,
 			}
 		}
 
-		r := resources[idx]
 		if !found {
 			fmt.Println(promptui.FailedValue("Resource", label))
 			return 0, "", errs.ErrResourceNotFound
 		}
 
-		fmt.Println(promptui.SuccessfulValue("Resource", line(r)))
+		fmt.Println(promptui.SuccessfulValue("Resource", label)) //FIXME
 		return idx, label, nil
 	}
 
 	sort.Slice(resources, func(i, j int) bool {
-		a := line(resources[i])
-		b := line(resources[j])
+		a := string(resources[i].Name)
+		b := string(resources[j].Name)
 		return strings.ToLower(a) < strings.ToLower(b)
 	})
 
-	labels := make([]string, len(resources))
-	for i, r := range resources {
-		labels[i] = line(r)
-	}
-
 	prompt := promptui.Select{
-		Label: "Select Resource",
-		Items: labels,
+		Label:     "Select Resource",
+		Items:     resources,
+		Templates: ResourceSelect,
 	}
 
 	return prompt.Run()
@@ -340,7 +337,7 @@ func ResourceTitle(defaultValue string, autoSelect bool) (string, error) {
 
 		t := manifold.Name(input)
 		if err := t.Validate(nil); err != nil {
-			return promptui.NewValidationError("Please provide a valid resource title")
+			return errors.New("Please provide a valid resource title")
 		}
 
 		return nil

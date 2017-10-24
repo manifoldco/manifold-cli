@@ -24,6 +24,7 @@ func init() {
 }
 
 var ProductSelect = &promptui.SelectTemplates{
+	FuncMap:  funcMap,
 	Active:   active,
 	Inactive: inactive,
 	Selected: fmt.Sprintf(selected, "Product"),
@@ -51,6 +52,13 @@ Price:	{{ .Body.Cost | price }}
 {{ $el.Feature | title }}:	{{ $el.Value -}}
 {{- end -}}
 {{- end -}}`,
+}
+
+var ResourceSelect = &promptui.SelectTemplates{
+	FuncMap:  funcMap,
+	Active:   `▸ {{ if .Project }}{{ .Project | bold }}/{{end}}{{ .Name | blue | bold }} ({{ .Title }})`,
+	Inactive: `  {{ if .Project }}{{ .Project }}/{{end}}{{ .Name | blue }} ({{ .Title }})`,
+	Selected: `{{"✔" | green }} Resource: {{ if .Project }}{{ .Project }}/{{end}}{{ .Name | blue }} ({{ .Title }})`,
 }
 
 func price(value *int64) string {
