@@ -117,7 +117,7 @@ func createProjectCmd(cliCtx *cli.Context) error {
 		return errUserActionAsTeam
 	}
 
-	projectTitle, err := optionalArgTitle(cliCtx, 0, "name")
+	projectTitle, err := optionalArgTitle(cliCtx, 0, "title")
 	if err != nil {
 		return err
 	}
@@ -125,7 +125,7 @@ func createProjectCmd(cliCtx *cli.Context) error {
 	autoSelect := projectTitle != ""
 	projectTitle, err = prompts.ProjectTitle(projectTitle, autoSelect)
 	if err != nil {
-		return prompts.HandleSelectError(err, "Failed to name project")
+		return prompts.HandleSelectError(err, "Failed to select project title")
 	}
 
 	params := projectClient.NewPostProjectsParamsWithContext(ctx)
