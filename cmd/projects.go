@@ -39,7 +39,7 @@ func init() {
 				Name:      "create",
 				Usage:     "Create a new project",
 				Flags:     teamFlags,
-				ArgsUsage: "[name]",
+				ArgsUsage: "[project-name]",
 				Action: middleware.Chain(middleware.EnsureSession,
 					middleware.LoadTeamPrefs, createProjectCmd),
 			},
@@ -57,9 +57,9 @@ func init() {
 				Name:  "update",
 				Usage: "Update an existing project",
 				Flags: append(teamFlags, []cli.Flag{
-					nameFlag(), descriptionFlag(),
+					titleFlag(), descriptionFlag(),
 				}...),
-				ArgsUsage: "[label]",
+				ArgsUsage: "[project-name]",
 				Action: middleware.Chain(middleware.EnsureSession, middleware.LoadTeamPrefs,
 					updateProjectCmd),
 			},
@@ -67,7 +67,7 @@ func init() {
 				Name:      "delete",
 				Usage:     "Delete a project",
 				Flags:     teamFlags,
-				ArgsUsage: "[name]",
+				ArgsUsage: "[project-name]",
 				Action: middleware.Chain(middleware.EnsureSession,
 					middleware.LoadTeamPrefs, deleteProjectCmd),
 			},
@@ -75,7 +75,7 @@ func init() {
 
 				Name:      "add",
 				Usage:     "Adds or moves a resource to a project",
-				ArgsUsage: "[project-label] [resource-label]",
+				ArgsUsage: "[project-name] [resource-name]",
 				Flags: append(teamFlags, []cli.Flag{
 					skipFlag(),
 				}...),
@@ -104,14 +104,17 @@ func createProjectCmd(cliCtx *cli.Context) error {
 		return err
 	}
 
-	userID, err := loadUserID(ctx)
-	if err != nil {
-		return err
+	userID, userIDErr := loadUserID(ctx)
+	if userIDErr != nil && userIDErr != errUserActionAsTeam {
+		return userIDErr
 	}
 
-	teamID, err := validateTeamID(cliCtx)
-	if err != nil {
-		return err
+	teamID, teamIDErr := validateTeamID(cliCtx)
+	if teamIDErr != nil {
+		return teamIDErr
+	}
+	if teamID == nil && userIDErr == errUserActionAsTeam {
+		return errUserActionAsTeam
 	}
 
 	projectName, err := optionalArgName(cliCtx, 0, "name")
@@ -120,15 +123,15 @@ func createProjectCmd(cliCtx *cli.Context) error {
 	}
 
 	autoSelect := projectName != ""
-	projectName, err = prompts.ProjectName(projectName, autoSelect)
+	projectTitle, err := prompts.ProjectTitle(projectName, autoSelect)
 	if err != nil {
 		return prompts.HandleSelectError(err, "Failed to name project")
 	}
 
 	params := projectClient.NewPostProjectsParamsWithContext(ctx)
 	body := &mModels.CreateProjectBody{
-		Name:  manifold.Name(projectName),
-		Label: generateLabel(projectName),
+		Name:  manifold.Name(projectTitle),
+		Label: generateName(projectName),
 	}
 
 	if teamID == nil {
@@ -150,7 +153,7 @@ func createProjectCmd(cliCtx *cli.Context) error {
 	}
 
 	spin.Stop()
-	fmt.Printf("Your project '%s' has been created\n", projectName)
+	fmt.Printf("Your project '%s' has been created\n", projectTitle)
 	return nil
 }
 
@@ -203,12 +206,12 @@ func updateProjectCmd(cliCtx *cli.Context) error {
 		return err
 	}
 
-	projectLabel, err := optionalArgLabel(cliCtx, 0, "project")
+	projectName, err := optionalArgName(cliCtx, 0, "project")
 	if err != nil {
 		return err
 	}
 
-	newProjectName, err := validateName(cliCtx, "name", "project")
+	newProjectTitle, err := validateTitle(cliCtx, "title", "project")
 	if err != nil {
 		return err
 	}
@@ -220,13 +223,13 @@ func updateProjectCmd(cliCtx *cli.Context) error {
 		return err
 	}
 
-	p, err := selectProject(ctx, projectLabel, teamID, client.Marketplace)
+	p, err := selectProject(ctx, projectName, teamID, client.Marketplace)
 	if err != nil {
 		return err
 	}
 
-	autoSelectName := newProjectName != ""
-	newProjectName, err = prompts.ProjectName(newProjectName, autoSelectName)
+	autoSelectTitle := newProjectTitle != ""
+	newProjectTitle, err = prompts.ProjectTitle(newProjectTitle, autoSelectTitle)
 	if err != nil {
 		return prompts.HandleSelectError(err, "Could not select project")
 	}
@@ -239,8 +242,8 @@ func updateProjectCmd(cliCtx *cli.Context) error {
 
 	params := projectClient.NewPatchProjectsIDParamsWithContext(ctx)
 	body := &mModels.PublicUpdateProjectBody{
-		Name:  manifold.Name(newProjectName),
-		Label: generateLabel(newProjectName),
+		Name:  manifold.Name(newProjectTitle),
+		Label: generateName(newProjectTitle),
 	}
 
 	if projectDescription != "" {
@@ -261,7 +264,7 @@ func updateProjectCmd(cliCtx *cli.Context) error {
 	}
 
 	spin.Stop()
-	fmt.Printf("\nYour project \"%s\" has been updated\n", newProjectName)
+	fmt.Printf("\nYour project \"%s\" has been updated\n", newProjectTitle)
 	return nil
 }
 
@@ -282,7 +285,7 @@ func deleteProjectCmd(cliCtx *cli.Context) error {
 		return err
 	}
 
-	projectLabel, err := optionalArgName(cliCtx, 0, "project")
+	projectName, err := optionalArgName(cliCtx, 0, "project")
 	if err != nil {
 		return err
 	}
@@ -292,7 +295,7 @@ func deleteProjectCmd(cliCtx *cli.Context) error {
 		return err
 	}
 
-	p, err := selectProject(ctx, projectLabel, teamID, client.Marketplace)
+	p, err := selectProject(ctx, projectName, teamID, client.Marketplace)
 	if err != nil {
 		return err
 	}
@@ -363,12 +366,12 @@ func addProjectCmd(cliCtx *cli.Context) error {
 		return err
 	}
 
-	projectLabel, err := optionalArgLabel(cliCtx, 0, "project")
+	projectName, err := optionalArgName(cliCtx, 0, "project")
 	if err != nil {
 		return err
 	}
 
-	resourceLabel, err := optionalArgLabel(cliCtx, 1, "resource")
+	resourceName, err := optionalArgName(cliCtx, 1, "resource")
 	if err != nil {
 		return err
 	}
@@ -395,7 +398,7 @@ func addProjectCmd(cliCtx *cli.Context) error {
 		return cli.NewExitError(fmt.Sprintf("Failed to fetch projects list: %s", err), -1)
 	}
 
-	p, err := selectProject(ctx, projectLabel, teamID, client.Marketplace)
+	p, err := selectProject(ctx, projectName, teamID, client.Marketplace)
 	if err != nil {
 		return err
 	}
@@ -407,7 +410,7 @@ func addProjectCmd(cliCtx *cli.Context) error {
 	if len(res) == 0 {
 		return errs.ErrNoResources
 	}
-	resourceIdx, _, err := prompts.SelectResource(res, ps, resourceLabel)
+	resourceIdx, _, err := prompts.SelectResource(res, ps, resourceName)
 	if err != nil {
 		return prompts.HandleSelectError(err, "Could not select Resource")
 	}
@@ -443,7 +446,7 @@ func removeProjectCmd(cliCtx *cli.Context) error {
 		return err
 	}
 
-	resourceLabel, err := optionalArgLabel(cliCtx, 0, "resource")
+	resourceName, err := optionalArgName(cliCtx, 0, "resource")
 	if err != nil {
 		return err
 	}
@@ -488,7 +491,7 @@ func removeProjectCmd(cliCtx *cli.Context) error {
 		return cli.NewExitError(
 			fmt.Sprintf("Failed to fetch list of projects: %s", err), -1)
 	}
-	idx, _, err := prompts.SelectResource(filtered, projects, resourceLabel)
+	idx, _, err := prompts.SelectResource(filtered, projects, resourceName)
 	if err != nil {
 		return prompts.HandleSelectError(err, "Could not select Resource")
 	}
@@ -634,7 +637,7 @@ func updateResourceProject(ctx context.Context, uid, tid *manifold.ID, r *mModel
 }
 
 // selectProject prompts a user to select a project (if selects the one provided automatically)
-func selectProject(ctx context.Context, projectLabel string, teamID *manifold.ID, marketplaceClient *mClient.Marketplace) (*mModels.Project, error) {
+func selectProject(ctx context.Context, projectName string, teamID *manifold.ID, marketplaceClient *mClient.Marketplace) (*mModels.Project, error) {
 	projects, err := clients.FetchProjects(ctx, marketplaceClient, teamID)
 	if err != nil {
 		return nil, cli.NewExitError(fmt.Sprintf("Failed to fetch list of projects: %s", err), -1)
@@ -644,7 +647,7 @@ func selectProject(ctx context.Context, projectLabel string, teamID *manifold.ID
 		return nil, errs.ErrNoProjects
 	}
 
-	idx, _, err := prompts.SelectProject(projects, projectLabel, false)
+	idx, _, err := prompts.SelectProject(projects, projectName, false)
 	if err != nil {
 		return nil, prompts.HandleSelectError(err, "Could not select project")
 	}
@@ -653,8 +656,8 @@ func selectProject(ctx context.Context, projectLabel string, teamID *manifold.ID
 	return p, nil
 }
 
-// generateLabel makes a name lowercase and replace spaces with dashes
-func generateLabel(name string) manifold.Label {
-	label := strings.Replace(strings.ToLower(name), " ", "-", -1)
-	return manifold.Label(label)
+// generateName makes a title lowercase and replace spaces with dashes
+func generateName(title string) manifold.Label {
+	name := strings.Replace(strings.ToLower(title), " ", "-", -1)
+	return manifold.Label(name)
 }

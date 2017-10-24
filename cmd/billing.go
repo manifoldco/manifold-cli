@@ -54,17 +54,23 @@ func init() {
 	cmds = append(cmds, billingCmd)
 }
 
+// Error returned when attempting to use a team token to perform user actions
+var errUserActionAsTeam = cli.NewExitError("Cannot perform user action as team", -1)
+
 func addBillingProfileCmd(cliCtx *cli.Context) error {
 	ctx := context.Background()
 
-	userID, err := loadUserID(ctx)
-	if err != nil {
-		return err
+	userID, userIDErr := loadUserID(ctx)
+	if userIDErr != nil && userIDErr != errUserActionAsTeam {
+		return userIDErr
 	}
 
-	teamID, err := validateTeamID(cliCtx)
-	if err != nil {
-		return err
+	teamID, teamIDErr := validateTeamID(cliCtx)
+	if teamIDErr != nil {
+		return teamIDErr
+	}
+	if teamID == nil && userIDErr == errUserActionAsTeam {
+		return errUserActionAsTeam
 	}
 
 	token, err := creditCardInput(ctx)
@@ -223,6 +229,9 @@ func loadUserID(ctx context.Context) (*manifold.ID, error) {
 	s, err := session.Retrieve(ctx, cfg)
 	if err != nil {
 		return nil, cli.NewExitError("Could not retrieve session: "+err.Error(), -1)
+	}
+	if !s.IsUser() {
+		return nil, errUserActionAsTeam
 	}
 
 	return &s.User().ID, nil

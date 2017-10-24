@@ -25,7 +25,7 @@ import (
 func init() {
 	resizeCmd := cli.Command{
 		Name:      "resize",
-		ArgsUsage: "[label]",
+		ArgsUsage: "[resource-name]",
 		Usage:     "Resize a resource",
 		Category:  "RESOURCES",
 		Action: middleware.Chain(middleware.EnsureSession, middleware.LoadDirPrefs, middleware.LoadTeamPrefs,
@@ -47,23 +47,26 @@ func resizeResourceCmd(cliCtx *cli.Context) error {
 		return err
 	}
 
-	label, err := optionalArgLabel(cliCtx, 0, "resource")
+	name, err := optionalArgName(cliCtx, 0, "resource")
 	if err != nil {
 		return err
 	}
 
-	userID, err := loadUserID(ctx)
-	if err != nil {
-		return err
+	userID, userIDErr := loadUserID(ctx)
+	if userIDErr != nil && userIDErr != errUserActionAsTeam {
+		return userIDErr
 	}
 
-	teamID, err := validateTeamID(cliCtx)
-	if err != nil {
-		return err
+	teamID, teamIDErr := validateTeamID(cliCtx)
+	if teamIDErr != nil {
+		return teamIDErr
+	}
+	if teamID == nil && userIDErr == errUserActionAsTeam {
+		return errUserActionAsTeam
 	}
 
 	dontWait := cliCtx.Bool("no-wait")
-	planLabel := cliCtx.String("plan")
+	planName := cliCtx.String("plan")
 
 	client, err := api.New(api.Catalog, api.Marketplace, api.Provisioning)
 	if err != nil {
@@ -87,7 +90,7 @@ func resizeResourceCmd(cliCtx *cli.Context) error {
 	if err != nil {
 		return cli.NewExitError(fmt.Sprintf("Could not load projects: %s", err), -1)
 	}
-	rIdx, _, err := prompts.SelectResource(res, projects, label)
+	rIdx, _, err := prompts.SelectResource(res, projects, name)
 	if err != nil {
 		return prompts.HandleSelectError(err, "Could not select resource")
 	}
@@ -102,7 +105,7 @@ func resizeResourceCmd(cliCtx *cli.Context) error {
 		return errs.ErrNoPlans
 	}
 
-	pIdx, _, err := prompts.SelectPlan(plans, planLabel)
+	pIdx, _, err := prompts.SelectPlan(plans, planName)
 	if err != nil {
 		return prompts.HandleSelectError(err, "Could not select Plan")
 	}

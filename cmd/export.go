@@ -45,7 +45,7 @@ func init() {
 func export(cliCtx *cli.Context) error {
 	ctx := context.Background()
 
-	projectLabel, err := validateLabel(cliCtx, "project")
+	projectName, err := validateName(cliCtx, "project")
 	if err != nil {
 		return err
 	}
@@ -66,13 +66,13 @@ func export(cliCtx *cli.Context) error {
 	}
 
 	prompts.SpinStart("Fetching Resources")
-	resources, err := clients.FetchResources(ctx, client.Marketplace, teamID, projectLabel)
+	resources, err := clients.FetchResources(ctx, client.Marketplace, teamID, projectName)
 	prompts.SpinStop()
 	if err != nil {
 		return cli.NewExitError("Could not retrieve resources: "+err.Error(), -1)
 	}
 
-	if projectLabel == "" {
+	if projectName == "" {
 		resources = filterResourcesWithoutProjects(resources)
 	}
 
@@ -88,8 +88,8 @@ func export(cliCtx *cli.Context) error {
 	params := map[string]string{
 		format: format,
 	}
-	if projectLabel != "" {
-		params["project"] = projectLabel
+	if projectName != "" {
+		params["project"] = projectName
 	}
 
 	client.Analytics.Track(ctx, "Exported Credentials", &params)

@@ -7,16 +7,24 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
 
+## [0.8.1] - 2017-10-24
+
 ### Added
 - `manifold teams members` can list members of a team
 - `manifold teams invite` now supports Role selection
 - `manifold teams set-role` can update the role of an existing team member
 - `manifold teams remove` will remove a team member or revoke an invite
+- `manifold context` command to display current account and context
+- `manifold tokens add` will create a new API token
+- `MANIFOLD_API_TOKEN` as means for authenticating
 
 ### Fixed
 - Update success and failure output for `manifold config set`
 - Prevent error during resize attempt of custom resource
 - Amend output for NewUsageError to pull from framework help
+- `teams create` can be used non-interatively
+- Terminology has changed: Name becomes Title, Label becomes Name
+- Remove -t from title flag to prevent panic
 
 ## [0.7.1] - 2017-10-12
 

@@ -330,59 +330,59 @@ func selectTeam(teams []*iModels.Team, prefix, label string, userTuple *[]string
 	return teamIdx, name, err
 }
 
-// ResourceName prompts the user to provide a resource name or to accept empty
+// ResourceTitle prompts the user to provide a resource title or to accept empty
 // to let the system generate one.
-func ResourceName(defaultValue string, autoSelect bool) (string, error) {
+func ResourceTitle(defaultValue string, autoSelect bool) (string, error) {
 	validate := func(input string) error {
 		if len(input) == 0 {
 			return nil
 		}
 
-		n := manifold.Name(input)
-		if err := n.Validate(nil); err != nil {
+		t := manifold.Name(input)
+		if err := t.Validate(nil); err != nil {
+			return promptui.NewValidationError("Please provide a valid resource title")
+		}
+
+		return nil
+	}
+
+	label := "Resource Title (one will be generated if left blank)"
+
+	if autoSelect {
+		err := validate(defaultValue)
+		if err != nil {
+			fmt.Println(promptui.FailedValue(label, defaultValue))
+		} else {
+			fmt.Println(promptui.SuccessfulValue(label, defaultValue))
+		}
+		return defaultValue, err
+	}
+
+	p := promptui.Prompt{
+		Label:    label,
+		Default:  defaultValue,
+		Validate: validate,
+	}
+
+	return p.Run()
+}
+
+// ResourceName prompts the user to provide a label name
+func ResourceName(defaultValue string, autoSelect bool) (string, error) {
+	validate := func(input string) error {
+		if len(input) == 0 {
+			return errors.New("Please provide a resource name")
+		}
+
+		l := manifold.Label(input)
+		if err := l.Validate(nil); err != nil {
 			return errors.New("Please provide a valid resource name")
 		}
 
 		return nil
 	}
 
-	label := "Resource Name (one will be generated if left blank)"
-
-	if autoSelect {
-		err := validate(defaultValue)
-		if err != nil {
-			fmt.Println(promptui.FailedValue(label, defaultValue))
-		} else {
-			fmt.Println(promptui.SuccessfulValue(label, defaultValue))
-		}
-		return defaultValue, err
-	}
-
-	p := promptui.Prompt{
-		Label:    label,
-		Default:  defaultValue,
-		Validate: validate,
-	}
-
-	return p.Run()
-}
-
-// ResourceLabel prompts the user to provide a label name
-func ResourceLabel(defaultValue string, autoSelect bool) (string, error) {
-	validate := func(input string) error {
-		if len(input) == 0 {
-			return errors.New("Please provide a resource label")
-		}
-
-		l := manifold.Label(input)
-		if err := l.Validate(nil); err != nil {
-			return errors.New("Please provide a valid resource label")
-		}
-
-		return nil
-	}
-
-	label := "Resource Label"
+	label := "Resource Name"
 
 	if autoSelect {
 		err := validate(defaultValue)
@@ -404,22 +404,22 @@ func ResourceLabel(defaultValue string, autoSelect bool) (string, error) {
 	return p.Run()
 }
 
-// TeamName prompts the user to enter a new Team name
-func TeamName(defaultValue string, autoSelect bool) (string, error) {
+// TeamTitle prompts the user to enter a new Team title
+func TeamTitle(defaultValue string, autoSelect bool) (string, error) {
 	validate := func(input string) error {
 		if len(input) == 0 {
-			return errors.New("Please provide a valid team name")
+			return errors.New("Please provide a valid team title")
 		}
 
 		l := manifold.Name(input)
 		if err := l.Validate(nil); err != nil {
-			return errors.New("Please provide a valid team name")
+			return errors.New("Please provide a valid team title")
 		}
 
 		return nil
 	}
 
-	label := "Team Name"
+	label := "Team Title"
 
 	if autoSelect {
 		err := validate(defaultValue)
@@ -440,22 +440,22 @@ func TeamName(defaultValue string, autoSelect bool) (string, error) {
 	return p.Run()
 }
 
-// ProjectName prompts the user to enter a new project name
-func ProjectName(defaultValue string, autoSelect bool) (string, error) {
+// ProjectTitle prompts the user to enter a new project title
+func ProjectTitle(defaultValue string, autoSelect bool) (string, error) {
 	validate := func(input string) error {
 		if len(input) == 0 {
-			return errors.New("Please provide a valid project name")
+			return errors.New("Please provide a valid project title")
 		}
 
 		l := manifold.Name(input)
 		if err := l.Validate(nil); err != nil {
-			return errors.New("Please provide a valid project name")
+			return errors.New("Please provide a valid project title")
 		}
 
 		return nil
 	}
 
-	label := "Project Name"
+	label := "Project Title"
 
 	if autoSelect {
 		err := validate(defaultValue)
@@ -473,6 +473,15 @@ func ProjectName(defaultValue string, autoSelect bool) (string, error) {
 		Validate: validate,
 	}
 
+	return p.Run()
+}
+
+// TokenDescription prompts the user to enter a token description
+func TokenDescription() (string, error) {
+	p := promptui.Prompt{
+		Label:   "Token Description",
+		Default: "",
+	}
 	return p.Run()
 }
 
@@ -709,4 +718,25 @@ func SelectProvider(providers []*cModels.Provider) (*cModels.Provider, error) {
 	}
 
 	return providers[idx-1], nil
+}
+
+// SelectAPIToken prompts the user to choose from a list of tokens
+func SelectAPIToken(tokens []*iModels.APIToken) (*iModels.APIToken, error) {
+	var labels []string
+	for _, t := range tokens {
+		val := fmt.Sprintf("%s****%s", *t.Body.FirstFour, *t.Body.LastFour)
+		labels = append(labels, fmt.Sprintf("%s - %s", val, *t.Body.Description))
+	}
+
+	prompt := promptui.Select{
+		Label: "Select API token",
+		Items: labels,
+	}
+
+	idx, _, err := prompt.Run()
+	if err != nil {
+		return nil, err
+	}
+
+	return tokens[idx], nil
 }

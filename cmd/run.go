@@ -43,7 +43,7 @@ func run(cliCtx *cli.Context) error {
 		args = strings.Split(args[0], " ")
 	}
 
-	projectLabel, err := validateName(cliCtx, "project")
+	projectName, err := validateName(cliCtx, "project")
 	if err != nil {
 		return err
 	}
@@ -58,7 +58,7 @@ func run(cliCtx *cli.Context) error {
 		return err
 	}
 
-	rs, err := clients.FetchResources(ctx, client.Marketplace, teamID, projectLabel)
+	rs, err := clients.FetchResources(ctx, client.Marketplace, teamID, projectName)
 	if err != nil {
 		return cli.NewExitError("Could not retrieve resources: "+err.Error(), -1)
 	}
@@ -74,8 +74,8 @@ func run(cliCtx *cli.Context) error {
 	}
 
 	params := map[string]string{}
-	if projectLabel != "" {
-		params["project"] = projectLabel
+	if projectName != "" {
+		params["project"] = projectName
 	}
 
 	client.Analytics.Track(ctx, "Project Run", &params)

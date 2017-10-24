@@ -26,12 +26,20 @@ const EnvManifoldEmail string = "MANIFOLD_EMAIL"
 // Manifold login password
 const EnvManifoldPass string = "MANIFOLD_PASS"
 
+// EnvManifoldToken describes the environment variable name used to reference a
+// Manifold api token
+const EnvManifoldToken string = "MANIFOLD_API_TOKEN"
+
+// EnvManifoldTokenLen specifies the character length of a token
+const EnvManifoldTokenLen int = 60
+
 // Session interface to describe user session and authentication with Manifold
 //  API
 type Session interface {
 	Authenticated() bool
 	FromEnvVars() bool
 	User() *models.User
+	IsUser() bool
 	LabelInfo() *[]string
 }
 
@@ -49,12 +57,16 @@ func (*Unauthorized) FromEnvVars() bool { return false }
 // User returns the user object associated with this session, in this case nil
 func (*Unauthorized) User() *models.User { return nil }
 
+// IsUser returns true if the authenticated session is based on a user
+func (*Unauthorized) IsUser() bool { return false }
+
 // LabelInfo returns information used in selects for this user
 func (*Unauthorized) LabelInfo() *[]string { return nil }
 
 // Authorized struct to represent an authorized user session
 type Authorized struct {
 	user        *models.User
+	isTeam      bool
 	fromEnvVars bool
 }
 
@@ -64,6 +76,11 @@ func (a *Authorized) Authenticated() bool { return true }
 
 // User returns the user object associated with this session, in this case nil
 func (a *Authorized) User() *models.User { return a.user }
+
+// IsUser returns true if the authenticated session is based on a user
+func (a *Authorized) IsUser() bool {
+	return !a.isTeam
+}
 
 // LabelInfo returns information used in selects for this user
 func (a *Authorized) LabelInfo() *[]string {
@@ -94,10 +111,6 @@ func Retrieve(ctx context.Context, cfg *config.Config) (Session, error) {
 
 func retrieveSession(ctx context.Context, cfg *config.Config,
 	fromEnvVars bool) (Session, error) {
-	if cfg.AuthToken == "" {
-		return &Unauthorized{}, nil
-	}
-
 	c, err := clients.NewIdentity(cfg)
 	if err != nil {
 		return nil, err
@@ -107,15 +120,22 @@ func retrieveSession(ctx context.Context, cfg *config.Config,
 	r, err := c.User.GetSelf(p, nil)
 	if err != nil {
 		switch err.(type) {
+		case *user.GetSelfBadRequest:
+			// 400 is returned when an authenticated request is performed to
+			// /v1/self as a team and not a user
+			return &Authorized{fromEnvVars: fromEnvVars, isTeam: true}, nil
+
 		case *user.GetSelfUnauthorized:
 			// Stored token is not valid
 
 			// Clear stored token
-			cfg.AuthToken = ""
-			err = cfg.Write()
-			if err != nil {
-				return nil, hierr.Errorf(err,
-					"Failed to update config after clearing expired auth token.")
+			if cfg.AuthToken != "" {
+				cfg.AuthToken = ""
+				err = cfg.Write()
+				if err != nil {
+					return nil, hierr.Errorf(err,
+						"Failed to update config after clearing expired auth token.")
+				}
 			}
 
 			return &Unauthorized{}, nil
@@ -124,15 +144,19 @@ func retrieveSession(ctx context.Context, cfg *config.Config,
 		}
 	}
 
-	return &Authorized{user: r.Payload, fromEnvVars: fromEnvVars}, nil
+	return &Authorized{user: r.Payload, fromEnvVars: fromEnvVars, isTeam: false}, nil
 }
 
 func loginFromEnv(ctx context.Context, cfg *config.Config) (Session, error) {
 	envUser := os.Getenv(EnvManifoldEmail)
 	envPass := os.Getenv(EnvManifoldPass)
+	envToken := os.Getenv(EnvManifoldToken)
 
-	if envUser == "" || envPass == "" {
+	if (envUser == "" || envPass == "") && len(envToken) != EnvManifoldTokenLen {
 		return &Unauthorized{}, nil
+	}
+	if len(envToken) == EnvManifoldTokenLen {
+		return retrieveSession(ctx, cfg, true)
 	}
 
 	sess, err := createSession(ctx, cfg, envUser, envPass, true)

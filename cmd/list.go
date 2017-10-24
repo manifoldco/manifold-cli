@@ -51,7 +51,7 @@ func init() {
 func list(cliCtx *cli.Context) error {
 	ctx := context.Background()
 
-	projectLabel, err := validateLabel(cliCtx, "project")
+	projectName, err := validateName(cliCtx, "project")
 	if err != nil {
 		return err
 	}
@@ -73,7 +73,7 @@ func list(cliCtx *cli.Context) error {
 	}
 
 	// Get resources
-	res, err := clients.FetchResources(ctx, client.Marketplace, teamID, projectLabel)
+	res, err := clients.FetchResources(ctx, client.Marketplace, teamID, projectName)
 	if err != nil {
 		return cli.NewExitError("Failed to fetch the list of provisioned "+
 			"resources: "+err.Error(), -1)
@@ -93,7 +93,7 @@ func list(cliCtx *cli.Context) error {
 	}
 
 	fmt.Printf("%d resources in %d projects\n", list.totalResources, list.totalProjects)
-	fmt.Println("Use `manifold view [label]` to display resource details")
+	fmt.Println("Use `manifold view [resource-name]` to display resource details")
 
 	w := ansiterm.NewTabWriter(os.Stdout, 0, 0, 8, ' ', 0)
 
@@ -112,7 +112,7 @@ func list(cliCtx *cli.Context) error {
 		fmt.Fprintf(w, "\n")
 
 		w.SetForeground(ansiterm.Gray)
-		fmt.Fprintln(w, "Label\tType\tStatus")
+		fmt.Fprintln(w, "Name\tTitle\tType\tStatus")
 		w.Reset()
 
 		for _, resource := range group.resources {
@@ -122,13 +122,19 @@ func list(cliCtx *cli.Context) error {
 				// Get catalog data
 				product, err := catalog.GetProduct(*resource.Body.ProductID)
 				if err != nil {
-					cli.NewExitError("Product referenced by resource does not exist: "+
+					return cli.NewExitError("Product referenced by resource does not exist: "+
 						err.Error(), -1)
+				}
+				if product == nil {
+					return cli.NewExitError("Product not found", -1)
 				}
 				plan, err := catalog.GetPlan(*resource.Body.PlanID)
 				if err != nil {
-					cli.NewExitError("Plan referenced by resource does not exist: "+
+					return cli.NewExitError("Plan referenced by resource does not exist: "+
 						err.Error(), -1)
+				}
+				if plan == nil {
+					return cli.NewExitError("Product not found", -1)
 				}
 
 				rType = fmt.Sprintf("%s %s", product.Body.Name, plan.Body.Name)
@@ -139,7 +145,7 @@ func list(cliCtx *cli.Context) error {
 				status = "Ready"
 			}
 
-			fmt.Fprintf(w, "%s\t%s\t%s\n", resource.Body.Label, rType, status)
+			fmt.Fprintf(w, "%s\t%s\t%s\t%s\n", resource.Body.Label, resource.Body.Name, rType, status)
 		}
 	}
 
@@ -261,7 +267,7 @@ func groupResources(ctx context.Context, client *api.API, resources []*models.Re
 		m[key] = list
 	}
 
-	// Assemble groups into a single list, sorting resources by label
+	// Assemble groups into a single list, sorting resources by name
 	var groups []resourceGroup
 	for k, v := range m {
 		sort.Slice(v, func(i, j int) bool {
@@ -271,7 +277,7 @@ func groupResources(ctx context.Context, client *api.API, resources []*models.Re
 		var owner string
 		var project string
 
-		// Find the correct owner, either a team label or the user email
+		// Find the correct owner, either a team name or the user email
 		if !k.user.IsEmpty() {
 			owner = email
 		} else {
@@ -282,7 +288,7 @@ func groupResources(ctx context.Context, client *api.API, resources []*models.Re
 			}
 		}
 
-		// Find the project label if any
+		// Find the project name if any
 		if !k.project.IsEmpty() {
 			list.totalProjects++
 			for _, p := range projects {
@@ -328,11 +334,16 @@ func userEmail(ctx context.Context) (string, error) {
 		return "", cli.NewExitError("Could not retrieve session: "+err.Error(), -1)
 	}
 
-	label := s.LabelInfo()
+	// If the session is not a user, we cannot return their identity
+	if !s.IsUser() {
+		return "", nil
+	}
 
-	if label == nil && len(*label) < 2 {
+	userDetail := s.LabelInfo()
+
+	if userDetail == nil && len(*userDetail) < 2 {
 		return "", cli.NewExitError("Could not retrieve user email", -1)
 	}
 
-	return (*label)[1], nil
+	return (*userDetail)[1], nil
 }

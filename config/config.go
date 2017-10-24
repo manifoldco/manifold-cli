@@ -9,6 +9,7 @@ import (
 	"path/filepath"
 
 	"github.com/go-ini/ini"
+	"github.com/manifoldco/go-manifold"
 	"github.com/stripe/stripe-go"
 	"gopkg.in/yaml.v2"
 )
@@ -58,6 +59,20 @@ var ErrExpectedFile = errors.New("Expected ~/.manifoldrc to be a file; found a d
 // If the file cannot be read, or it has the incorrect permissions an error is
 // returned.
 func Load() (*Config, error) {
+	return loadConfigurationCheckLegacy()
+}
+
+// LoadIgnoreLegacy checks if ~/.manifoldrc exists, if it does, it reads it from disk. This func ignores the legacy check.
+//
+// If it doesn't an empty config with the default values is returned.
+//
+// If the file cannot be read, or it has the incorrect permissions an error is
+// returned.
+func LoadIgnoreLegacy() (*Config, error) {
+	return loadConfiguration()
+}
+
+func loadConfiguration() (*Config, error) {
 	rcpath, err := RCPath()
 	if err != nil {
 		return nil, err
@@ -80,6 +95,20 @@ func Load() (*Config, error) {
 	}
 
 	err = ini.MapTo(cfg, rcpath)
+	if err != nil {
+		return nil, err
+	}
+
+	return cfg, nil
+}
+
+func loadConfigurationCheckLegacy() (*Config, error) {
+	cfg, err := loadConfiguration()
+	if err != nil {
+		return nil, err
+	}
+
+	err = cfg.IdentifyLegacyValues()
 	if err != nil {
 		return nil, err
 	}
@@ -125,7 +154,31 @@ type Config struct {
 	AuthToken       string `ini:"auth_token"`
 	TransportScheme string `ini:"scheme"`
 	Analytics       bool   `ini:"analytics"`
-	Team            string `ini:"team"`
+	LegacyTeam      string `ini:"team,omitempty"`
+	TeamTitle       string `ini:"team_title,omitempty"`
+	TeamName        string `ini:"team_name,omitempty"`
+	TeamID          string `ini:"team_id,omitempty"`
+}
+
+// IdentifyLegacyValues identifies if a user's config file is out of date
+// aiding migration, or suggesting a fix
+func (c *Config) IdentifyLegacyValues() error {
+	if c.LegacyTeam != "" {
+		// Team was moved into three parts: TeamTitle, TeamName and TeamID
+		_, err := manifold.DecodeIDFromString(c.LegacyTeam)
+		if err != nil {
+			return errors.New("Invalid configuration. Please run `manifold switch` to fix, then you may execute your command")
+		}
+
+		c.TeamID = c.LegacyTeam
+		c.LegacyTeam = ""
+		err = c.Write()
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 // Write writes the contents of the Config struct to ~/.manifoldrc and sets the

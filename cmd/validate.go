@@ -9,7 +9,7 @@ import (
 	"github.com/manifoldco/manifold-cli/errs"
 )
 
-func validateName(cliCtx *cli.Context, option string, typeName ...string) (string, error) {
+func validateTitle(cliCtx *cli.Context, option string, typeName ...string) (string, error) {
 	val := cliCtx.String(option)
 	if val == "" {
 		return val, nil
@@ -22,24 +22,24 @@ func validateName(cliCtx *cli.Context, option string, typeName ...string) (strin
 		typeName[0] = option
 	}
 
-	name := manifold.Name(val)
-	if err := name.Validate(nil); err != nil {
+	title := manifold.Name(val)
+	if err := title.Validate(nil); err != nil {
 		return "", errs.NewUsageExitError(cliCtx, cli.NewExitError(
-			fmt.Sprintf("You've provided an invalid %s name!", typeName[0]), -1,
+			fmt.Sprintf("You've provided an invalid %s title!", typeName[0]), -1,
 		))
 	}
 
 	return val, nil
 }
 
-func validateLabel(cliCtx *cli.Context, option string) (string, error) {
+func validateName(cliCtx *cli.Context, option string) (string, error) {
 	val := cliCtx.String(option)
 	if val == "" {
 		return val, nil
 	}
 
-	label := manifold.Label(val)
-	if err := label.Validate(nil); err != nil {
+	name := manifold.Label(val)
+	if err := name.Validate(nil); err != nil {
 		return "", errs.NewUsageExitError(cliCtx, cli.NewExitError(
 			fmt.Sprintf("You've provided an invalid %s!", option), -1,
 		))
@@ -48,7 +48,7 @@ func validateLabel(cliCtx *cli.Context, option string) (string, error) {
 	return val, nil
 }
 
-func requiredLabel(cliCtx *cli.Context, option string) (string, error) {
+func requiredName(cliCtx *cli.Context, option string) (string, error) {
 	val := cliCtx.String(option)
 	if val == "" {
 		return "", errs.NewUsageExitError(cliCtx, cli.NewExitError(
@@ -56,10 +56,26 @@ func requiredLabel(cliCtx *cli.Context, option string) (string, error) {
 		))
 	}
 
-	return validateLabel(cliCtx, option)
+	return validateName(cliCtx, option)
 }
 
-func optionalArgLabel(cliCtx *cli.Context, idx int, name string) (string, error) {
+func optionalArgID(cliCtx *cli.Context, idx int, name string) (*manifold.ID, error) {
+	args := cliCtx.Args()
+
+	if len(args) < idx+1 {
+		return nil, nil
+	}
+
+	val := args[idx]
+	id, err := manifold.DecodeIDFromString(val)
+	if err != nil {
+		return nil, cli.NewExitError(fmt.Sprintf("Invalid %s ID: %s", name, err), -1)
+	}
+
+	return &id, nil
+}
+
+func optionalArgTitle(cliCtx *cli.Context, idx int, title string) (string, error) {
 	args := cliCtx.Args()
 
 	if len(args) < idx+1 {
@@ -67,10 +83,10 @@ func optionalArgLabel(cliCtx *cli.Context, idx int, name string) (string, error)
 	}
 
 	val := args[idx]
-	l := manifold.Label(val)
+	l := manifold.Name(val)
 	if err := l.Validate(nil); err != nil {
 		return "", errs.NewUsageExitError(cliCtx, cli.NewExitError(
-			fmt.Sprintf("You've provided an invalid %s!", name), -1,
+			fmt.Sprintf("You've provided an invalid %s!", title), -1,
 		))
 	}
 
@@ -85,10 +101,10 @@ func optionalArgName(cliCtx *cli.Context, idx int, name string) (string, error) 
 	}
 
 	val := args[idx]
-	n := manifold.Name(val)
-	if err := n.Validate(nil); err != nil {
+	l := manifold.Label(val)
+	if err := l.Validate(nil); err != nil {
 		return "", errs.NewUsageExitError(cliCtx, cli.NewExitError(
-			fmt.Sprintf("You've provided an invalid %s name", name), -1,
+			fmt.Sprintf("You've provided an invalid %s!", name), -1,
 		))
 	}
 

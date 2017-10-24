@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"os"
 
 	"github.com/go-openapi/runtime"
 	httptransport "github.com/go-openapi/runtime/client"
@@ -20,6 +21,10 @@ import (
 )
 
 const defaultUserAgent = "manifold-cli"
+
+// EnvManifoldToken describes the environment variable name used to reference a
+// Manifold api token
+const EnvManifoldToken string = "MANIFOLD_API_TOKEN"
 
 // newRoundTripper applies a UserAgent header to the transport
 func newRoundTripper(next http.RoundTripper) http.RoundTripper {
@@ -58,8 +63,9 @@ func NewIdentity(cfg *config.Config) (*iClient.Identity, error) {
 	transport := httptransport.New(c.Host, c.BasePath, c.Schemes)
 	transport.Transport = newRoundTripper(transport.Transport)
 
-	if cfg.AuthToken != "" {
-		transport.DefaultAuthentication = NewBearerToken(cfg.AuthToken)
+	authToken := retrieveToken(cfg)
+	if authToken != "" {
+		transport.DefaultAuthentication = NewBearerToken(authToken)
 	}
 
 	return iClient.New(transport, strfmt.Default), nil
@@ -80,8 +86,9 @@ func NewMarketplace(cfg *config.Config) (*mClient.Marketplace, error) {
 	transport := httptransport.New(c.Host, c.BasePath, c.Schemes)
 	transport.Transport = newRoundTripper(transport.Transport)
 
-	if cfg.AuthToken != "" {
-		transport.DefaultAuthentication = NewBearerToken(cfg.AuthToken)
+	authToken := retrieveToken(cfg)
+	if authToken != "" {
+		transport.DefaultAuthentication = NewBearerToken(authToken)
 	}
 
 	return mClient.New(transport, strfmt.Default), nil
@@ -102,8 +109,9 @@ func NewBilling(cfg *config.Config) (*bClient.Billing, error) {
 
 	transport := httptransport.New(c.Host, c.BasePath, c.Schemes)
 
-	if cfg.AuthToken != "" {
-		transport.DefaultAuthentication = NewBearerToken(cfg.AuthToken)
+	authToken := retrieveToken(cfg)
+	if authToken != "" {
+		transport.DefaultAuthentication = NewBearerToken(authToken)
 	}
 
 	return bClient.New(transport, strfmt.Default), nil
@@ -125,8 +133,9 @@ func NewProvisioning(cfg *config.Config) (*pClient.Provisioning, error) {
 	transport := httptransport.New(c.Host, c.BasePath, c.Schemes)
 	transport.Transport = newRoundTripper(transport.Transport)
 
-	if cfg.AuthToken != "" {
-		transport.DefaultAuthentication = NewBearerToken(cfg.AuthToken)
+	authToken := retrieveToken(cfg)
+	if authToken != "" {
+		transport.DefaultAuthentication = NewBearerToken(authToken)
 	}
 
 	return pClient.New(transport, strfmt.Default), nil
@@ -147,8 +156,9 @@ func NewConnector(cfg *config.Config) (*conClient.Connector, error) {
 	transport := httptransport.New(c.Host, c.BasePath, c.Schemes)
 	transport.Transport = newRoundTripper(transport.Transport)
 
-	if cfg.AuthToken != "" {
-		transport.DefaultAuthentication = NewBearerToken(cfg.AuthToken)
+	authToken := retrieveToken(cfg)
+	if authToken != "" {
+		transport.DefaultAuthentication = NewBearerToken(authToken)
 	}
 
 	return conClient.New(transport, strfmt.Default), nil
@@ -175,11 +185,23 @@ func NewCatalog(cfg *config.Config) (*cClient.Catalog, error) {
 	transport := httptransport.New(c.Host, c.BasePath, c.Schemes)
 	transport.Transport = newRoundTripper(transport.Transport)
 
-	if cfg.AuthToken != "" {
-		transport.DefaultAuthentication = NewBearerToken(cfg.AuthToken)
+	authToken := retrieveToken(cfg)
+	if authToken != "" {
+		transport.DefaultAuthentication = NewBearerToken(authToken)
 	}
 
 	return cClient.New(transport, strfmt.Default), nil
+}
+
+func retrieveToken(cfg *config.Config) string {
+	if cfg.AuthToken != "" {
+		return cfg.AuthToken
+	}
+	apiToken := os.Getenv(EnvManifoldToken)
+	if apiToken != "" {
+		return apiToken
+	}
+	return ""
 }
 
 func deriveURL(cfg *config.Config, service string) (*url.URL, error) {

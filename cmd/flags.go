@@ -12,12 +12,12 @@ func formatFlag(defaultValue, description string) cli.Flag {
 	return placeholder.New("format, f", "FORMAT", description, defaultValue, "MANIFOLD_FORMAT", false)
 }
 
-func nameFlag() cli.Flag {
+func titleFlag() cli.Flag {
 	return cli.StringFlag{
-		Name:   "name, n",
-		Usage:  "Specify a name for a resource",
+		Name:   "title",
+		Usage:  "Specify a title to be used",
 		Value:  "",
-		EnvVar: "MANIFOLD_NAME",
+		EnvVar: "MANIFOLD_TITLE",
 	}
 }
 
@@ -98,6 +98,14 @@ func productFlag() cli.Flag {
 	return cli.StringFlag{
 		Name:  "product",
 		Usage: "Specify a product",
+	}
+}
+
+func yesFlag() cli.Flag {
+	return cli.BoolFlag{
+		Name:   "yes, y",
+		Usage:  "Automatically respond y to confirm prompts",
+		EnvVar: "MANIFOLD_NO_CONFIRM",
 	}
 }
 

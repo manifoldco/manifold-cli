@@ -24,20 +24,20 @@ func init() {
 			{
 				Name:      "providers",
 				Usage:     "List all providers",
-				ArgsUsage: "[label]",
+				ArgsUsage: "[provider-name]",
 				Action:    listProvidersCmd,
 			},
 			{
 				Name:      "products",
 				Usage:     "List all products. Specify a product to see its details",
-				ArgsUsage: "[label]",
+				ArgsUsage: "[product-name]",
 				Flags:     []cli.Flag{providerFlag()},
 				Action:    listProductsCmd,
 			},
 			{
 				Name:      "plans",
 				Usage:     "List all plans for a product. Specify a plan to see its details",
-				ArgsUsage: "[label]",
+				ArgsUsage: "[plan-name]",
 				Flags:     []cli.Flag{providerFlag(), productFlag()},
 				Action:    listPlansCmd,
 			},
@@ -57,20 +57,20 @@ func listProvidersCmd(cliCtx *cli.Context) error {
 		return err
 	}
 
-	providerLabel, err := optionalArgLabel(cliCtx, 0, "provider")
+	providerName, err := optionalArgName(cliCtx, 0, "provider")
 	if err != nil {
 		return err
 	}
 
 	var providers []*models.Provider
 
-	if providerLabel == "" {
+	if providerName == "" {
 		providers, err = client.FetchProviders()
 		if err != nil {
 			return cli.NewExitError(err, -1)
 		}
 	} else {
-		provider, err := client.FetchProvider(providerLabel)
+		provider, err := client.FetchProvider(providerName)
 		if err != nil {
 			return cli.NewExitError(err, -1)
 		}
@@ -84,17 +84,17 @@ func listProvidersCmd(cliCtx *cli.Context) error {
 	params := map[string]string{
 		"subcommand": "providers",
 	}
-	if providerLabel != "" {
-		params["provider_label"] = providerLabel
+	if providerName != "" {
+		params["provider_label"] = providerName
 	}
 
 	client.Analytics.Track(client.Context(), "Viewed Services", &params)
 	w := ansiterm.NewTabWriter(os.Stdout, 0, 0, 8, ' ', 0)
 
-	fmt.Fprintf(w, "Use `manifold services products --provider [label]` to view list of products\n\n")
+	fmt.Fprintf(w, "Use `manifold services products --provider [provider-name]` to view list of products\n\n")
 
 	w.SetForeground(ansiterm.Gray)
-	fmt.Fprintln(w, "Label\tName")
+	fmt.Fprintln(w, "Name\tTitle")
 	w.Reset()
 
 	for _, p := range providers {
@@ -109,13 +109,13 @@ func listProductsCmd(cliCtx *cli.Context) error {
 		return err
 	}
 
-	productLabel, err := optionalArgLabel(cliCtx, 0, "product")
+	productName, err := optionalArgName(cliCtx, 0, "product")
 	if err != nil {
 		return err
 	}
 
-	if productLabel != "" {
-		return viewProduct(cliCtx, productLabel)
+	if productName != "" {
+		return viewProduct(cliCtx, productName)
 	}
 
 	var products []*models.Product
@@ -127,12 +127,12 @@ func listProductsCmd(cliCtx *cli.Context) error {
 		return err
 	}
 
-	providerLabel, err := validateLabel(cliCtx, "provider")
+	providerName, err := validateName(cliCtx, "provider")
 	if err != nil {
 		return err
 	}
 
-	if providerLabel == "" {
+	if providerName == "" {
 		providers, err = client.FetchProviders()
 		if err != nil {
 			return cli.NewExitError(err, -1)
@@ -147,7 +147,7 @@ func listProductsCmd(cliCtx *cli.Context) error {
 			return cli.NewExitError(err, -1)
 		}
 	} else {
-		provider, err = client.FetchProvider(providerLabel)
+		provider, err = client.FetchProvider(providerName)
 		if err != nil {
 			return cli.NewExitError(err, -1)
 		}
@@ -160,13 +160,13 @@ func listProductsCmd(cliCtx *cli.Context) error {
 		providerID = provider.ID.String()
 	}
 
-	if productLabel == "" {
+	if productName == "" {
 		products, err = client.FetchProducts(providerID)
 		if err != nil {
 			return cli.NewExitError(err, -1)
 		}
 	} else {
-		product, err := client.FetchProduct(productLabel, providerID)
+		product, err := client.FetchProduct(productName, providerID)
 		if err != nil {
 			return cli.NewExitError(err, -1)
 		}
@@ -182,12 +182,12 @@ func listProductsCmd(cliCtx *cli.Context) error {
 		"subcommand": "products",
 	}
 
-	if providerLabel != "" {
-		params["provider_label"] = providerLabel
+	if providerName != "" {
+		params["provider_label"] = providerName
 	}
 
-	if productLabel != "" {
-		params["product_label"] = productLabel
+	if productName != "" {
+		params["product_label"] = productName
 	}
 
 	client.Analytics.Track(client.Context(), "Viewed Services", &params)
@@ -195,10 +195,10 @@ func listProductsCmd(cliCtx *cli.Context) error {
 	w := ansiterm.NewTabWriter(os.Stdout, 0, 0, 8, ' ', 0)
 
 	fmt.Fprintf(w, "%d products from %d providers\n", len(products), len(providers))
-	fmt.Fprintf(w, "Use `manifold services products [label] --provider [label]` to view product details\n\n")
+	fmt.Fprintf(w, "Use `manifold services products [product-name] --provider [provider-name]` to view product details\n\n")
 
 	w.SetForeground(ansiterm.Gray)
-	fmt.Fprintln(w, "Label\tName\tProvider\tTagline")
+	fmt.Fprintln(w, "Name\tTitle\tProvider\tTagline")
 	w.Reset()
 
 	for _, p := range products {
@@ -216,24 +216,24 @@ func listProductsCmd(cliCtx *cli.Context) error {
 	return w.Flush()
 }
 
-func viewProduct(cliCtx *cli.Context, productLabel string) error {
+func viewProduct(cliCtx *cli.Context, productName string) error {
 	client, err := api.New(api.Analytics, api.Catalog)
 	if err != nil {
 		return err
 	}
 
-	providerLabel, err := requiredLabel(cliCtx, "provider")
+	providerName, err := requiredName(cliCtx, "provider")
 	if err != nil {
 		return err
 	}
 
-	provider, err := client.FetchProvider(providerLabel)
+	provider, err := client.FetchProvider(providerName)
 	if err != nil {
 		return cli.NewExitError(err, -1)
 	}
 
 	providerID := provider.ID.String()
-	product, err := client.FetchProduct(productLabel, providerID)
+	product, err := client.FetchProduct(productName, providerID)
 	if err != nil {
 		return cli.NewExitError(err, -1)
 	}
@@ -248,10 +248,10 @@ func viewProduct(cliCtx *cli.Context, productLabel string) error {
 
 	w := ansiterm.NewTabWriter(os.Stdout, 0, 0, 8, ' ', 0)
 
-	fmt.Fprintf(w, "Use `manifold services plans --product [label] --provider [label]` to view product plans\n\n")
+	fmt.Fprintf(w, "Use `manifold services plans --product [product-name] --provider [provider-name]` to view product plans\n\n")
 	fmt.Fprintln(w, "Product\tProvider")
-	fmt.Fprintf(w, "%s (%s)\t%s (%s)\n\n", product.Body.Name, product.Body.Label,
-		provider.Body.Name, provider.Body.Label)
+	fmt.Fprintf(w, "%s (%s)\t%s (%s)\n\n", product.Body.Label, color.Faint(product.Body.Name),
+		provider.Body.Label, color.Faint(provider.Body.Name))
 	fmt.Fprintf(w, "%s\n\n", product.Body.Tagline)
 	fmt.Fprintf(w, "%s\t%s\n", color.Faint("Support"), product.Body.SupportEmail)
 	if product.Body.DocumentationURL != nil {
@@ -281,13 +281,13 @@ func listPlansCmd(cliCtx *cli.Context) error {
 		return err
 	}
 
-	planLabel, err := optionalArgLabel(cliCtx, 0, "plan")
+	planName, err := optionalArgName(cliCtx, 0, "plan")
 	if err != nil {
 		return err
 	}
 
-	if planLabel != "" {
-		return viewPlan(cliCtx, planLabel)
+	if planName != "" {
+		return viewPlan(cliCtx, planName)
 	}
 
 	client, err := api.New(api.Analytics, api.Catalog)
@@ -295,12 +295,12 @@ func listPlansCmd(cliCtx *cli.Context) error {
 		return err
 	}
 
-	providerLabel, err := validateLabel(cliCtx, "provider")
+	providerName, err := validateName(cliCtx, "provider")
 	if err != nil {
 		return err
 	}
 
-	productLabel, err := validateLabel(cliCtx, "product")
+	productName, err := validateName(cliCtx, "product")
 	if err != nil {
 		return err
 	}
@@ -308,8 +308,8 @@ func listPlansCmd(cliCtx *cli.Context) error {
 	var product *models.Product
 	var provider *models.Provider
 
-	if providerLabel != "" {
-		provider, err = client.FetchProvider(providerLabel)
+	if providerName != "" {
+		provider, err = client.FetchProvider(providerName)
 		if err != nil {
 			return cli.NewExitError(err, -1)
 		}
@@ -335,8 +335,8 @@ func listPlansCmd(cliCtx *cli.Context) error {
 		providerID = provider.ID.String()
 	}
 
-	if productLabel != "" {
-		product, err = client.FetchProduct(productLabel, providerID)
+	if productName != "" {
+		product, err = client.FetchProduct(productName, providerID)
 		if err != nil {
 			return cli.NewExitError(err, -1)
 		}
@@ -376,10 +376,10 @@ func listPlansCmd(cliCtx *cli.Context) error {
 	client.Analytics.Track(client.Context(), "Viewed Services", &params)
 
 	w := ansiterm.NewTabWriter(os.Stdout, 0, 0, 8, ' ', 0)
-	fmt.Fprintf(w, "Use `manifold services plans label --product [label] --provider [label]` to view plan details\n\n")
+	fmt.Fprintf(w, "Use `manifold services plans [plan-name] --product [product-name] --provider [provider-name]` to view plan details\n\n")
 
 	w.SetForeground(ansiterm.Gray)
-	fmt.Fprintln(w, "Label\tName\tCost")
+	fmt.Fprintln(w, "Name\tTitle\tCost")
 	w.Reset()
 
 	for _, p := range plans {
@@ -395,33 +395,33 @@ func listPlansCmd(cliCtx *cli.Context) error {
 	return w.Flush()
 }
 
-func viewPlan(cliCtx *cli.Context, planLabel string) error {
+func viewPlan(cliCtx *cli.Context, planName string) error {
 	client, err := api.New(api.Analytics, api.Catalog)
 	if err != nil {
 		return err
 	}
 
-	providerLabel, err := validateLabel(cliCtx, "provider")
+	providerName, err := validateName(cliCtx, "provider")
 	if err != nil {
 		return err
 	}
 
-	productLabel, err := validateLabel(cliCtx, "product")
+	productName, err := validateName(cliCtx, "product")
 	if err != nil {
 		return err
 	}
 
-	provider, err := client.FetchProvider(providerLabel)
+	provider, err := client.FetchProvider(providerName)
 	if err != nil {
 		return cli.NewExitError(err, -1)
 	}
 
-	product, err := client.FetchProduct(productLabel, provider.ID.String())
+	product, err := client.FetchProduct(productName, provider.ID.String())
 	if err != nil {
 		return cli.NewExitError(err, -1)
 	}
 
-	plan, err := client.FetchPlan(planLabel, product.ID.String())
+	plan, err := client.FetchPlan(planName, product.ID.String())
 	if err != nil {
 		return cli.NewExitError(err, -1)
 	}
@@ -442,9 +442,9 @@ func viewPlan(cliCtx *cli.Context, planLabel string) error {
 	w := ansiterm.NewTabWriter(os.Stdout, 0, 0, 8, ' ', 0)
 
 	fmt.Fprintln(w, "Plan\tProduct\tProvider")
-	fmt.Fprintf(w, "%s (%s)\t%s (%s)\t%s (%s)\n\n", plan.Body.Name,
-		color.Faint(plan.Body.Label), product.Body.Name, product.Body.Label,
-		provider.Body.Name, provider.Body.Label)
+	fmt.Fprintf(w, "%s (%s)\t%s (%s)\t%s (%s)\n\n", plan.Body.Label,
+		color.Faint(plan.Body.Name), product.Body.Label, color.Faint(product.Body.Name),
+		provider.Body.Label, color.Faint(provider.Body.Name))
 
 	price := *plan.Body.Cost
 	cost := "Free"

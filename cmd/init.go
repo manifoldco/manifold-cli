@@ -37,7 +37,7 @@ func init() {
 
 func initDir(cliCtx *cli.Context) error {
 	ctx := context.Background()
-	projectLabel := cliCtx.String("project")
+	projectName := cliCtx.String("project")
 
 	teamID, err := validateTeamID(cliCtx)
 	if err != nil {
@@ -66,22 +66,22 @@ func initDir(cliCtx *cli.Context) error {
 		return errs.ErrNoProjects
 	}
 
-	pIdx, _, err := prompts.SelectProject(ps, projectLabel, true)
+	pIdx, _, err := prompts.SelectProject(ps, projectName, true)
 	if err != nil {
 		return prompts.HandleSelectError(err, "Could not select project.")
 	}
 	if pIdx == -1 {
-		projectLabel = ""
+		projectName = ""
 	} else {
-		projectLabel = string(ps[pIdx].Body.Label)
+		projectName = string(ps[pIdx].Body.Label)
 	}
 
 	cwd, err := os.Getwd()
 	if err != nil {
 		return err
 	}
-	oldLabel := mYaml.Project
-	mYaml.Project = projectLabel
+	oldName := mYaml.Project
+	mYaml.Project = projectName
 	mYaml.Path = filepath.Join(cwd, config.YamlFilename)
 
 	err = mYaml.Save()
@@ -93,11 +93,11 @@ func initDir(cliCtx *cli.Context) error {
 
 	if mYaml.Project == "" {
 		fmt.Println("\nThis directory and its subdirectories have been unlinked from:")
-		fmt.Fprintf(w, "Project:\t%s\n", oldLabel)
+		fmt.Fprintf(w, "Project:\t%s\n", oldName)
 	} else {
 		// Display the output
 		fmt.Println("\nThis directory and its subdirectories have been linked to:")
-		fmt.Fprintf(w, "Project:\t%s\n", projectLabel)
+		fmt.Fprintf(w, "Project:\t%s\n", projectName)
 	}
 
 	return w.Flush()
