@@ -61,6 +61,13 @@ var ResourceSelect = &promptui.SelectTemplates{
 	Selected: `{{"✔" | green }} Resource: {{ if .Project }}{{ .Project }}/{{end}}{{ .Name | blue }} ({{ .Title }})`,
 }
 
+var ProjectSelect = &promptui.SelectTemplates{
+	FuncMap:  funcMap,
+	Active:   `▸ {{.Name | blue | bold }}{{ if .Title}} ({{ .Title }}){{end}}`,
+	Inactive: `  {{.Name | blue }}{{if .Title}} ({{ .Title }}){{end}}`,
+	Selected: `{{"✔" | green }} Project: {{.Name | blue}}{{if .Title}} ({{ .Title }}){{end}}`,
+}
+
 func price(value *int64) string {
 	price := *value
 	if price == 0 {

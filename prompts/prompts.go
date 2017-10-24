@@ -210,15 +210,21 @@ func SelectRegion(regions []*cModels.Region) (int, string, error) {
 }
 
 // SelectProject prompts the user to select a project from the given list.
-func SelectProject(projects []*mModels.Project, label string, emptyOption bool) (int, string, error) {
-	line := func(p *mModels.Project) string {
-		return fmt.Sprintf("%s (%s)", p.Body.Name, p.Body.Label)
+func SelectProject(mProjects []*mModels.Project, label string, emptyOption bool) (int, string, error) {
+	type project struct {
+		Name  manifold.Label
+		Title manifold.Name
+	}
+
+	projects := make([]project, len(mProjects))
+	for i, p := range mProjects {
+		projects[i] = project{Name: p.Body.Label, Title: p.Body.Name}
 	}
 
 	var idx int
 	if label != "" {
 		found := false
-		for i, p := range projects {
+		for i, p := range mProjects {
 			if string(p.Body.Label) == label {
 				idx = i
 				found = true
@@ -226,29 +232,23 @@ func SelectProject(projects []*mModels.Project, label string, emptyOption bool) 
 			}
 		}
 
-		p := projects[idx]
-
 		if !found {
 			fmt.Println(promptui.FailedValue("Select Project", label))
 			return 0, "", errs.ErrProjectNotFound
 		}
 
-		fmt.Println(promptui.SuccessfulValue("Select Project", line(p)))
+		fmt.Println(promptui.SuccessfulValue("Select Project", label)) //FIXME
 		return idx, label, nil
 	}
 
-	labels := make([]string, len(projects))
-	for i, p := range projects {
-		labels[i] = line(p)
-	}
-
 	if emptyOption {
-		labels = append([]string{"No Project"}, labels...)
+		projects = append([]project{{Name: "No Project"}}, projects...)
 	}
 
 	prompt := promptui.Select{
-		Label: "Select Project",
-		Items: labels,
+		Label:     "Select Project",
+		Items:     projects,
+		Templates: ProjectSelect,
 	}
 
 	projectIdx, name, err := prompt.Run()
