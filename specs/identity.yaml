@@ -228,6 +228,9 @@ paths:
           description: A user object.
           schema:
             $ref: '#/definitions/User'
+        400:
+          description: Bad request
+          schema: { $ref: '#/definitions/Error' }
         401:
           description: Unknown token, or token not owned the the requester
           schema:

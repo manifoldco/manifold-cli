@@ -182,6 +182,9 @@ func deleteResource(ctx context.Context, cfg *config.Config, teamID *manifold.ID
 	op.Body.SetCreatedAt(&curTime)
 	op.Body.SetUpdatedAt(&curTime)
 	if teamID == nil {
+		if !s.IsUser() {
+			return errUserActionAsTeam
+		}
 		op.Body.SetUserID(&s.User().ID)
 	} else {
 		op.Body.SetTeamID(teamID)

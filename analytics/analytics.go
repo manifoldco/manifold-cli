@@ -25,6 +25,9 @@ type Analytics struct {
 
 // Track submits an event to the identity service
 func (a *Analytics) Track(ctx context.Context, name string, params *map[string]string) error {
+	if !a.session.IsUser() {
+		return nil
+	}
 	if !a.session.Authenticated() {
 		return errs.ErrMustLogin
 	}

@@ -265,6 +265,9 @@ func createResource(ctx context.Context, cfg *config.Config, teamID *manifold.ID
 	op.Body.SetCreatedAt(&curTime)
 	op.Body.SetUpdatedAt(&curTime)
 	if teamID == nil {
+		if !s.IsUser() {
+			return nil, errUserActionAsTeam
+		}
 		op.Body.SetUserID(&s.User().ID)
 	} else {
 		op.Body.SetTeamID(teamID)
