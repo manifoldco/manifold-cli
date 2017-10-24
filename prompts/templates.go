@@ -29,7 +29,7 @@ var ProductSelect = &promptui.SelectTemplates{
 	Selected: fmt.Sprintf(selected, "Product"),
 	Details: `
 Product:	{{.Body.Label | blue}} ({{ .Body.Label }})
-Tagline	{{ .Body.Tagline }}
+Tagline:	{{ .Body.Tagline }}
 Features:
 {{- range $i, $el := .Body.ValueProps }}
 {{- if lt $i 3 }}
