@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
 
+## [0.8.1] - 2017-10-24
+
 ### Added
 - `manifold teams members` can list members of a team
 - `manifold teams invite` now supports Role selection
