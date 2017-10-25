@@ -33,7 +33,7 @@ func SelectProduct(list []*cModels.Product, name string) (int, string, error) {
 			return 0, "", errs.ErrProductNotFound
 		}
 
-		msg := templates.PromptSuccess(tpls, products[idx])
+		msg := templates.SelectSuccess(tpls, products[idx])
 		fmt.Println(msg)
 		return idx, name, nil
 	}
@@ -69,7 +69,7 @@ func SelectPlan(list []*cModels.Plan, name string) (int, string, error) {
 			return 0, "", errs.ErrPlanNotFound
 		}
 
-		msg := templates.PromptSuccess(tpls, plans[idx])
+		msg := templates.SelectSuccess(tpls, plans[idx])
 		fmt.Println(msg)
 		return idx, name, nil
 	}
@@ -106,7 +106,7 @@ func SelectResource(list []*mModels.Resource, projects []*mModels.Project,
 			return 0, "", errs.ErrResourceNotFound
 		}
 
-		msg := templates.PromptSuccess(tpls, resources[idx])
+		msg := templates.SelectSuccess(tpls, resources[idx])
 		fmt.Println(msg)
 
 		return idx, name, nil
@@ -138,7 +138,7 @@ func SelectRegion(list []*cModels.Region) (int, string, error) {
 
 	// TODO: Build "auto" resolve into promptui in case of only one item
 	if len(regions) == 1 {
-		msg := templates.PromptSuccess(tpls, regions[0])
+		msg := templates.SelectSuccess(tpls, regions[0])
 		fmt.Println(msg)
 
 		return 0, string(regions[0].Name), nil
@@ -175,7 +175,7 @@ func SelectProject(list []*mModels.Project, name string, emptyOption bool) (int,
 			return 0, "", errs.ErrProjectNotFound
 		}
 
-		msg := templates.PromptSuccess(tpls, projects[idx])
+		msg := templates.SelectSuccess(tpls, projects[idx])
 		fmt.Println(msg)
 
 		return idx, name, nil
@@ -237,7 +237,7 @@ func selectTeam(list []*iModels.Team, label, name string, userTuple *[]string) (
 			return 0, "", errs.ErrTeamNotFound
 		}
 
-		msg := templates.PromptSuccess(tpls, teams[idx])
+		msg := templates.SelectSuccess(tpls, teams[idx])
 		fmt.Println(msg)
 
 		return idx, name, nil

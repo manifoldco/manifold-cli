@@ -29,7 +29,7 @@ func title(v interface{}) string {
 	return strings.Title(val)
 }
 
-func PromptSuccess(tpls *promptui.SelectTemplates, data interface{}) string {
+func SelectSuccess(tpls *promptui.SelectTemplates, data interface{}) string {
 	tpl, err := template.New("").Funcs(funcMap()).Parse(tpls.Selected)
 	if err != nil {
 		return fmt.Sprintf("%+v", data)
@@ -43,15 +43,19 @@ func PromptSuccess(tpls *promptui.SelectTemplates, data interface{}) string {
 	return buf.String()
 }
 
-func PromptFailure(label, data interface{}) string {
-	txt := fmt.Sprintf(failure, label)
-	tpl, err := template.New("").Funcs(funcMap()).Parse(txt)
-	if err != nil {
-		return fmt.Sprintf("%s: %+v", label, data)
-	}
+func PromptSuccess(label, value string) string {
+	data := input{Label: label, Value: value}
+	return render(tplSuccess, data)
+}
 
+func PromptFailure(label, value string) string {
+	data := input{Label: label, Value: value}
+	return render(tplFailure, data)
+}
+
+func render(tpl *template.Template, data interface{}) string {
 	var buf bytes.Buffer
-	err = tpl.Execute(&buf, data)
+	err := tpl.Execute(&buf, data)
 	if err != nil {
 		return fmt.Sprintf("%+v", data)
 	}

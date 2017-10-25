@@ -12,6 +12,7 @@ import (
 	"github.com/stripe/stripe-go/token"
 
 	"github.com/manifoldco/manifold-cli/errs"
+	"github.com/manifoldco/manifold-cli/prompts/templates"
 )
 
 const (
@@ -46,9 +47,9 @@ func ResourceTitle(defaultValue string, autoSelect bool) (string, error) {
 	if autoSelect {
 		err := validate(defaultValue)
 		if err != nil {
-			fmt.Println(promptui.FailedValue(label, defaultValue))
+			fmt.Println(templates.PromptFailure(label, defaultValue))
 		} else {
-			fmt.Println(promptui.SuccessfulValue(label, defaultValue))
+			fmt.Println(templates.PromptSuccess(label, defaultValue))
 		}
 		return defaultValue, err
 	}
@@ -82,9 +83,9 @@ func ResourceName(defaultValue string, autoSelect bool) (string, error) {
 	if autoSelect {
 		err := validate(defaultValue)
 		if err != nil {
-			fmt.Println(promptui.FailedValue(label, defaultValue))
+			fmt.Println(templates.PromptFailure(label, defaultValue))
 		} else {
-			fmt.Println(promptui.SuccessfulValue(label, defaultValue))
+			fmt.Println(templates.PromptSuccess(label, defaultValue))
 		}
 
 		return defaultValue, err
@@ -119,9 +120,9 @@ func TeamTitle(defaultValue string, autoSelect bool) (string, error) {
 	if autoSelect {
 		err := validate(defaultValue)
 		if err != nil {
-			fmt.Println(promptui.FailedValue(label, defaultValue))
+			fmt.Println(templates.PromptFailure(label, defaultValue))
 		} else {
-			fmt.Println(promptui.SuccessfulValue(label, defaultValue))
+			fmt.Println(templates.PromptSuccess(label, defaultValue))
 		}
 		return defaultValue, err
 	}
@@ -155,9 +156,9 @@ func ProjectTitle(defaultValue string, autoSelect bool) (string, error) {
 	if autoSelect {
 		err := validate(defaultValue)
 		if err != nil {
-			fmt.Println(promptui.FailedValue(label, defaultValue))
+			fmt.Println(templates.PromptFailure(label, defaultValue))
 		} else {
-			fmt.Println(promptui.SuccessfulValue(label, defaultValue))
+			fmt.Println(templates.PromptSuccess(label, defaultValue))
 		}
 		return defaultValue, err
 	}
@@ -185,7 +186,7 @@ func ProjectDescription(defaultValue string, autoSelect bool) (string, error) {
 	label := "Project Description"
 
 	if autoSelect && defaultValue != "" {
-		fmt.Println(promptui.SuccessfulValue(label, defaultValue))
+		fmt.Println(templates.PromptSuccess(label, defaultValue))
 		return defaultValue, nil
 	}
 

@@ -2,6 +2,7 @@ package templates
 
 import (
 	"fmt"
+	"text/template"
 
 	"github.com/manifoldco/promptui"
 )
@@ -10,8 +11,24 @@ const (
 	active   = `▸ {{ .Name | blue | bold }}{{ if .Title }} ({{ .Title }}){{end}}`
 	inactive = `  {{ .Name | blue }}{{ if .Title }} ({{ .Title }}){{end}}`
 	Selected = `{{ "✔" | green }} %s: {{ .Name | blue}}{{ if .Title }} ({{ .Title }}){{end}}`
-	failure  = `{{ "✗" | red }} %s: {{ . }}`
+	success  = `{{ "✔" | green }} {{ .Label }}: {{ .Value }}`
+	failure  = `{{ "✗" | red }} {{ .Label }}: {{ .Value }}`
 )
+
+type input struct {
+	Label string
+	Value string
+}
+
+var (
+	tplSuccess *template.Template
+	tplFailure *template.Template
+)
+
+func init() {
+	tplSuccess = template.Must(template.New("").Funcs(funcMap()).Parse(success))
+	tplFailure = template.Must(template.New("").Funcs(funcMap()).Parse(failure))
+}
 
 var TplProvider = &promptui.SelectTemplates{
 	FuncMap:  funcMap(),
