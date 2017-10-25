@@ -1,9 +1,6 @@
 package templates
 
 import (
-	"sort"
-	"strings"
-
 	cModels "github.com/manifoldco/manifold-cli/generated/catalog/models"
 	iModels "github.com/manifoldco/manifold-cli/generated/identity/models"
 	mModels "github.com/manifoldco/manifold-cli/generated/marketplace/models"
@@ -75,12 +72,6 @@ func Resources(list []*mModels.Resource, projects []*mModels.Project) []Resource
 		resources[i] = r
 	}
 
-	sort.Slice(resources, func(i, j int) bool {
-		a := string(resources[i].Name)
-		b := string(resources[j].Name)
-		return strings.ToLower(a) < strings.ToLower(b)
-	})
-
 	return resources
 }
 
@@ -94,12 +85,6 @@ func Providers(list []*cModels.Provider) []Provider {
 		}
 		providers[i] = p
 	}
-
-	sort.Slice(providers, func(i, j int) bool {
-		a := string(providers[i].Name)
-		b := string(providers[j].Name)
-		return strings.ToLower(a) < strings.ToLower(b)
-	})
 
 	return providers
 }
@@ -115,12 +100,6 @@ func Teams(list []*iModels.Team) []Team {
 		teams[i] = t
 	}
 
-	sort.Slice(teams, func(i, j int) bool {
-		a := string(teams[i].Name)
-		b := string(teams[j].Name)
-		return strings.ToLower(a) < strings.ToLower(b)
-	})
-
 	return teams
 }
 
@@ -134,12 +113,6 @@ func Projects(list []*mModels.Project) []Project {
 		}
 		projects[i] = p
 	}
-
-	sort.Slice(projects, func(i, j int) bool {
-		a := string(projects[i].Name)
-		b := string(projects[j].Name)
-		return strings.ToLower(a) < strings.ToLower(b)
-	})
 
 	return projects
 }
@@ -159,12 +132,6 @@ func Products(list []*cModels.Product) []Product {
 
 		products[i] = p
 	}
-
-	sort.Slice(products, func(i, j int) bool {
-		a := string(products[i].Name)
-		b := string(products[j].Name)
-		return strings.ToLower(a) < strings.ToLower(b)
-	})
 
 	return products
 }
