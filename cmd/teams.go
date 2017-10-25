@@ -582,10 +582,18 @@ func setRoleCmd(cliCtx *cli.Context) error {
 	ctx := context.Background()
 	args := cliCtx.Args()
 
+	// Use the current context to determine the team to use
+	teamID, err := validateTeamID(cliCtx)
+	if err != nil {
+		return err
+	}
+	if teamID == nil {
+		return cli.NewExitError("Can't view members for a non-team. Use `manifold switch` to select a team.", -1)
+	}
+
 	// Only allow args if exactly two are supplied
 	// otherwise prompt for both values
 	var roleLabel, email string
-	var err error
 	if len(args) > 0 {
 		email, err = optionalArgEmail(cliCtx, 0, "email")
 		if err != nil {
@@ -605,15 +613,6 @@ func setRoleCmd(cliCtx *cli.Context) error {
 		if err != nil {
 			return prompts.HandleSelectError(err, "Could not select role")
 		}
-	}
-
-	// Use the current context to determine the team to use
-	teamID, err := validateTeamID(cliCtx)
-	if err != nil {
-		return err
-	}
-	if teamID == nil {
-		return cli.NewExitError("Can't view members for a non-team. Use `manifold switch` to select a team.", -1)
 	}
 
 	client, err := api.New(api.Identity)
