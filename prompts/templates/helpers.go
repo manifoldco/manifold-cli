@@ -16,12 +16,11 @@ func funcMap() template.FuncMap {
 	return fn
 }
 
-func price(value *int64) string {
-	price := *value
+func price(price int) string {
 	if price == 0 {
 		return "Free"
 	}
-	return money.New(price, "USD").Display() + "/month"
+	return money.New(int64(price), "USD").Display() + "/month"
 }
 
 func title(v interface{}) string {

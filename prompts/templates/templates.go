@@ -10,11 +10,6 @@ const (
 	Active   = `▸ {{.Name | blue | bold }}{{ if .Title }} ({{ .Title }}){{end}}`
 	Inactive = `  {{.Name | blue }}{{ if .Title }} ({{ .Title }}){{end}}`
 	Selected = `{{"✔" | green }} %s: {{.Name | blue}}{{ if .Title }} ({{ .Title }}){{end}}`
-
-	// TODO: remove legacy format
-	active   = `▸ {{.Body.Label | blue | bold }} ({{ .Body.Name }})`
-	inactive = `  {{.Body.Label | blue }} ({{ .Body.Name }})`
-	selected = `{{"✔" | green }} %s: {{.Body.Label | blue}} ({{ .Body.Name }})`
 )
 
 var TplProvider = &promptui.SelectTemplates{
@@ -26,31 +21,31 @@ var TplProvider = &promptui.SelectTemplates{
 
 var TplProduct = &promptui.SelectTemplates{
 	FuncMap:  funcMap(),
-	Active:   active,
-	Inactive: inactive,
-	Selected: fmt.Sprintf(selected, "Product"),
+	Active:   Active,
+	Inactive: Inactive,
+	Selected: fmt.Sprintf(Selected, "Product"),
 	Details: `
-Product:	{{.Body.Label | blue}} ({{ .Body.Label }})
-Tagline:	{{ .Body.Tagline }}
+Product:	{{ .Name | blue}} ({{ .Title }})
+Tagline:	{{ .Tagline }}
 Features:
-{{- range $i, $el := .Body.ValueProps }}
+{{- range $i, $el := .Features }}
 {{- if lt $i 3 }}
- {{ $el.Header -}}
+  {{ $el -}}
 {{- end -}}
 {{- end -}}`,
 }
 
 var TplPlan = &promptui.SelectTemplates{
 	FuncMap:  funcMap(),
-	Active:   active,
-	Inactive: inactive,
-	Selected: fmt.Sprintf(selected, "Plan"),
+	Active:   Active,
+	Inactive: Inactive,
+	Selected: fmt.Sprintf(Selected, "Plan"),
 	Details: `
-Plan:	{{.Body.Label | blue}} ({{ .Body.Label }})
-Price:	{{ .Body.Cost | price }}
-{{- range $i, $el := .Body.Features }}
+Plan:	{{ .Name | blue}} ({{ .Title }})
+Price:	{{ .Cost | price }}
+{{- range $i, $el := .Features }}
 {{- if lt $i 3 }}
-{{ $el.Feature | title }}:	{{ $el.Value -}}
+{{ $el.Name | title }}:	{{ $el.Description -}}
 {{- end -}}
 {{- end -}}`,
 }
@@ -64,8 +59,8 @@ var TplResource = &promptui.SelectTemplates{
 
 var TplProject = &promptui.SelectTemplates{
 	FuncMap:  funcMap(),
-	Active:   `▸ {{.Name | blue | bold }}{{ if .Title }} ({{ .Title }}){{end}}`,
-	Inactive: `  {{.Name | blue }}{{if .Title }} ({{ .Title }}){{end}}`,
+	Active:   `▸ {{ .Name | blue | bold }}{{ if .Title }} ({{ .Title }}){{end}}`,
+	Inactive: `  {{ .Name | blue }}{{ if .Title }} ({{ .Title }}){{end}}`,
 	Selected: fmt.Sprintf(Selected, "Project"),
 }
 

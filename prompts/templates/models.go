@@ -14,6 +14,25 @@ type Provider struct {
 	Title string
 }
 
+type Product struct {
+	Name     string
+	Title    string
+	Tagline  string
+	Features []string
+}
+
+type Plan struct {
+	Name     string
+	Title    string
+	Cost     int
+	Features []Feature
+}
+
+type Feature struct {
+	Name        string
+	Description string
+}
+
 type Resource struct {
 	Name    string
 	Title   string
@@ -117,4 +136,65 @@ func Projects(list []*mModels.Project) []Project {
 	})
 
 	return projects
+}
+
+func Products(list []*cModels.Product) []Product {
+	products := make([]Product, len(list))
+
+	for i, m := range list {
+		p := Product{
+			Name:    string(m.Body.Label),
+			Title:   string(m.Body.Name),
+			Tagline: m.Body.Tagline,
+		}
+		for _, v := range m.Body.ValueProps {
+			p.Features = append(p.Features, v.Header)
+		}
+
+		products[i] = p
+	}
+
+	sort.Slice(products, func(i, j int) bool {
+		a := string(products[i].Name)
+		b := string(products[j].Name)
+		return strings.ToLower(a) < strings.ToLower(b)
+	})
+
+	return products
+}
+
+func Plans(list []*cModels.Plan) []Plan {
+	plans := make([]Plan, len(list))
+
+	for i, m := range list {
+		p := Plan{
+			Name:  string(m.Body.Label),
+			Title: string(m.Body.Name),
+			Cost:  int(*m.Body.Cost),
+		}
+
+		for _, v := range m.Body.Features {
+			f := Feature{
+				Name: string(v.Feature),
+			}
+			if v.Value != nil {
+				f.Description = *v.Value
+			}
+			p.Features = append(p.Features, f)
+		}
+
+		plans[i] = p
+	}
+
+	sort.Slice(plans, func(i, j int) bool {
+		a := plans[i]
+		b := plans[j]
+
+		if a.Cost == b.Cost {
+			return strings.ToLower(a.Name) < strings.ToLower(b.Name)
+		}
+		return a.Cost < b.Cost
+	})
+
+	return plans
 }

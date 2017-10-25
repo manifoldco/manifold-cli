@@ -2,8 +2,6 @@ package prompts
 
 import (
 	"fmt"
-	"sort"
-	"strings"
 
 	"github.com/manifoldco/manifold-cli/errs"
 	cModels "github.com/manifoldco/manifold-cli/generated/catalog/models"
@@ -35,15 +33,9 @@ func SelectProduct(products []*cModels.Product, label string) (int, string, erro
 		return idx, label, nil
 	}
 
-	sort.Slice(products, func(i, j int) bool {
-		a := string(products[i].Body.Name)
-		b := string(products[j].Body.Name)
-		return strings.ToLower(a) < strings.ToLower(b)
-	})
-
 	prompt := promptui.Select{
 		Label:     "Select Product",
-		Items:     products,
+		Items:     templates.Products(products),
 		Templates: templates.TplProduct,
 	}
 
@@ -72,20 +64,9 @@ func SelectPlan(plans []*cModels.Plan, label string) (int, string, error) {
 		return idx, label, nil
 	}
 
-	sort.Slice(plans, func(i, j int) bool {
-		a := plans[i]
-		b := plans[j]
-
-		if *a.Body.Cost == *b.Body.Cost {
-			return strings.ToLower(string(a.Body.Name)) <
-				strings.ToLower(string(b.Body.Name))
-		}
-		return *a.Body.Cost < *b.Body.Cost
-	})
-
 	prompt := promptui.Select{
 		Label:     "Select Plan",
-		Items:     plans,
+		Items:     templates.Plans(plans),
 		Templates: templates.TplPlan,
 	}
 
