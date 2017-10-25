@@ -47,7 +47,10 @@ func contextLookup(cliCtx *cli.Context) error {
 
 	var me bool
 	var teamName string
-	var s session.Session
+	s, err := session.Retrieve(ctx, cfg)
+	if err != nil {
+		return err
+	}
 
 	if teamID != nil {
 		teamName = cfg.TeamName
@@ -60,12 +63,7 @@ func contextLookup(cliCtx *cli.Context) error {
 			return errUserActionAsTeam
 		}
 	}
-	if !cliCtx.Bool("short") || me {
-		s, err = session.Retrieve(ctx, cfg)
-		if err != nil {
-			return err
-		}
-	}
+	usr := s.User()
 
 	switch cliCtx.Bool("short") {
 	case true:
@@ -75,8 +73,6 @@ func contextLookup(cliCtx *cli.Context) error {
 			fmt.Println(teamName)
 		}
 	default:
-		usr := s.User()
-
 		fmt.Println("Use `manifold switch` to change contexts")
 		fmt.Println("")
 		var ctxValue, ctxType string
