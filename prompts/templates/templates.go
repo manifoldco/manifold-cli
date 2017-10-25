@@ -77,15 +77,15 @@ var TplRegion = &promptui.SelectTemplates{
 
 var TplResource = &promptui.SelectTemplates{
 	FuncMap:  funcMap(),
-	Active:   `▸ {{ if .Project }}{{ .Project | bold }}/{{end}}{{ .Name | blue | bold }} ({{ .Title }})`,
-	Inactive: `  {{ if .Project }}{{ .Project }}/{{end}}{{ .Name | blue }} ({{ .Title }})`,
-	Selected: `{{"✔" | green }} Resource: {{ if .Project }}{{ .Project }}/{{end}}{{ .Name | blue }} ({{ .Title }})`,
+	Active:   `▸ {{ if .Project }}{{ .Project | bold }}/{{ end }}{{ .Name | blue | bold }} ({{ .Title }})`,
+	Inactive: `  {{ if .Project }}{{ .Project }}/{{ end }}{{ .Name | blue }} ({{ .Title }})`,
+	Selected: `{{"✔" | green }} Resource: {{ if .Project }}{{ .Project }}/{{ end }}{{ .Name | blue }} ({{ .Title }})`,
 }
 
 var TplProject = &promptui.SelectTemplates{
 	FuncMap:  funcMap(),
-	Active:   `▸ {{ .Name | blue | bold }}{{ if .Title }} ({{ .Title }}){{end}}`,
-	Inactive: `  {{ .Name | blue }}{{ if .Title }} ({{ .Title }}){{end}}`,
+	Active:   active,
+	Inactive: inactive,
 	Selected: fmt.Sprintf(Selected, "Project"),
 }
 
