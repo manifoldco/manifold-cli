@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
 
+### Fixed
+- Project create failure due to Name/Title change
+- Set-role should error before prompts
+- Context would panic due to missing session
+
 ## [0.8.1] - 2017-10-24
 
 ### Added
