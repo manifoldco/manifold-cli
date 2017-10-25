@@ -1,30 +1,31 @@
-package prompts
+package templates
 
 import (
 	"fmt"
-	"strings"
-	"text/template"
 
 	"github.com/manifoldco/promptui"
-	money "github.com/rhymond/go-money"
 )
 
 const (
+	Active   = `▸ {{.Name | blue | bold }}{{ if .Title }} ({{ .Title }}){{end}}`
+	Inactive = `  {{.Name | blue }}{{ if .Title }} ({{ .Title }}){{end}}`
+	Selected = `{{"✔" | green }} %s: {{.Name | blue}}{{ if .Title }} ({{ .Title }}){{end}}`
+
+	// TODO: remove legacy format
 	active   = `▸ {{.Body.Label | blue | bold }} ({{ .Body.Name }})`
 	inactive = `  {{.Body.Label | blue }} ({{ .Body.Name }})`
 	selected = `{{"✔" | green }} %s: {{.Body.Label | blue}} ({{ .Body.Name }})`
 )
 
-var funcMap template.FuncMap
-
-func init() {
-	funcMap = promptui.FuncMap
-	funcMap["price"] = price
-	funcMap["title"] = title
+var TplProvider = &promptui.SelectTemplates{
+	FuncMap:  funcMap(),
+	Active:   Active,
+	Inactive: Inactive,
+	Selected: fmt.Sprintf(Selected, "Provider"),
 }
 
-var ProductSelect = &promptui.SelectTemplates{
-	FuncMap:  funcMap,
+var TplProduct = &promptui.SelectTemplates{
+	FuncMap:  funcMap(),
 	Active:   active,
 	Inactive: inactive,
 	Selected: fmt.Sprintf(selected, "Product"),
@@ -39,8 +40,8 @@ Features:
 {{- end -}}`,
 }
 
-var PlanSelect = &promptui.SelectTemplates{
-	FuncMap:  funcMap,
+var TplPlan = &promptui.SelectTemplates{
+	FuncMap:  funcMap(),
 	Active:   active,
 	Inactive: inactive,
 	Selected: fmt.Sprintf(selected, "Plan"),
@@ -54,29 +55,23 @@ Price:	{{ .Body.Cost | price }}
 {{- end -}}`,
 }
 
-var ResourceSelect = &promptui.SelectTemplates{
-	FuncMap:  funcMap,
+var TplResource = &promptui.SelectTemplates{
+	FuncMap:  funcMap(),
 	Active:   `▸ {{ if .Project }}{{ .Project | bold }}/{{end}}{{ .Name | blue | bold }} ({{ .Title }})`,
 	Inactive: `  {{ if .Project }}{{ .Project }}/{{end}}{{ .Name | blue }} ({{ .Title }})`,
 	Selected: `{{"✔" | green }} Resource: {{ if .Project }}{{ .Project }}/{{end}}{{ .Name | blue }} ({{ .Title }})`,
 }
 
-var ProjectSelect = &promptui.SelectTemplates{
-	FuncMap:  funcMap,
-	Active:   `▸ {{.Name | blue | bold }}{{ if .Title}} ({{ .Title }}){{end}}`,
-	Inactive: `  {{.Name | blue }}{{if .Title}} ({{ .Title }}){{end}}`,
-	Selected: `{{"✔" | green }} Project: {{.Name | blue}}{{if .Title}} ({{ .Title }}){{end}}`,
+var TplProject = &promptui.SelectTemplates{
+	FuncMap:  funcMap(),
+	Active:   `▸ {{.Name | blue | bold }}{{ if .Title }} ({{ .Title }}){{end}}`,
+	Inactive: `  {{.Name | blue }}{{if .Title }} ({{ .Title }}){{end}}`,
+	Selected: fmt.Sprintf(Selected, "Project"),
 }
 
-func price(value *int64) string {
-	price := *value
-	if price == 0 {
-		return "Free"
-	}
-	return money.New(price, "USD").Display() + "/month"
-}
-
-func title(v interface{}) string {
-	val := fmt.Sprintf("%v", v)
-	return strings.Title(val)
+var TplTeam = &promptui.SelectTemplates{
+	FuncMap:  funcMap(),
+	Active:   Active,
+	Inactive: Inactive,
+	Selected: Selected, // Selected label can vary
 }

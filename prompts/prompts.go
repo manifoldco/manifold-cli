@@ -14,6 +14,7 @@ import (
 	"github.com/stripe/stripe-go/token"
 
 	"github.com/manifoldco/manifold-cli/errs"
+	"github.com/manifoldco/manifold-cli/prompts/templates"
 
 	cModels "github.com/manifoldco/manifold-cli/generated/catalog/models"
 	iModels "github.com/manifoldco/manifold-cli/generated/identity/models"
@@ -62,7 +63,7 @@ func SelectProduct(products []*cModels.Product, label string) (int, string, erro
 	prompt := promptui.Select{
 		Label:     "Select Product",
 		Items:     products,
-		Templates: ProductSelect,
+		Templates: templates.TplProduct,
 	}
 
 	return prompt.Run()
@@ -104,45 +105,20 @@ func SelectPlan(plans []*cModels.Plan, label string) (int, string, error) {
 	prompt := promptui.Select{
 		Label:     "Select Plan",
 		Items:     plans,
-		Templates: PlanSelect,
+		Templates: templates.TplPlan,
 	}
 
 	return prompt.Run()
 }
 
 // SelectResource promps the user to select a provisioned resource from the given list
-func SelectResource(mResources []*mModels.Resource, projects []*mModels.Project,
+func SelectResource(resources []*mModels.Resource, projects []*mModels.Project,
 	label string) (int, string, error) {
-
-	type resource struct {
-		Name    manifold.Label
-		Title   manifold.Name
-		Project manifold.Label
-	}
-
-	resources := make([]resource, len(mResources))
-
-	for i, m := range mResources {
-		r := resource{
-			Name:  m.Body.Label,
-			Title: m.Body.Name,
-		}
-
-		if m.Body.ProjectID != nil {
-			for _, p := range projects {
-				if *m.Body.ProjectID == p.ID {
-					r.Project = p.Body.Label
-				}
-			}
-		}
-
-		resources[i] = r
-	}
 
 	var idx int
 	if label != "" {
 		found := false
-		for i, p := range mResources {
+		for i, p := range resources {
 			if string(p.Body.Label) == label {
 				idx = i
 				found = true
@@ -159,16 +135,10 @@ func SelectResource(mResources []*mModels.Resource, projects []*mModels.Project,
 		return idx, label, nil
 	}
 
-	sort.Slice(resources, func(i, j int) bool {
-		a := string(resources[i].Name)
-		b := string(resources[j].Name)
-		return strings.ToLower(a) < strings.ToLower(b)
-	})
-
 	prompt := promptui.Select{
 		Label:     "Select Resource",
-		Items:     resources,
-		Templates: ResourceSelect,
+		Items:     templates.Resources(resources, projects),
+		Templates: templates.TplResource,
 	}
 
 	return prompt.Run()
@@ -211,14 +181,9 @@ func SelectRegion(regions []*cModels.Region) (int, string, error) {
 
 // SelectProject prompts the user to select a project from the given list.
 func SelectProject(mProjects []*mModels.Project, label string, emptyOption bool) (int, string, error) {
-	type project struct {
-		Name  manifold.Label
-		Title manifold.Name
-	}
-
-	projects := make([]project, len(mProjects))
+	projects := make([]templates.Project, len(mProjects))
 	for i, p := range mProjects {
-		projects[i] = project{Name: p.Body.Label, Title: p.Body.Name}
+		projects[i] = templates.Project{Name: p.Body.Label, Title: p.Body.Name}
 	}
 
 	var idx int
@@ -242,13 +207,13 @@ func SelectProject(mProjects []*mModels.Project, label string, emptyOption bool)
 	}
 
 	if emptyOption {
-		projects = append([]project{{Name: "No Project"}}, projects...)
+		projects = append([]templates.Project{{Name: "No Project"}}, projects...)
 	}
 
 	prompt := promptui.Select{
 		Label:     "Select Project",
 		Items:     projects,
-		Templates: ProjectSelect,
+		Templates: templates.TplProject,
 	}
 
 	projectIdx, name, err := prompt.Run()
@@ -271,10 +236,7 @@ func SelectTeam(teams []*iModels.Team, label string, userTuple *[]string) (int, 
 	return selectTeam(teams, "Select Team", label, userTuple)
 }
 
-func selectTeam(teams []*iModels.Team, prefix, label string, userTuple *[]string) (int, string, error) {
-	line := func(t *iModels.Team) string {
-		return fmt.Sprintf("%s (%s)", t.Body.Name, t.Body.Label)
-	}
+func selectTeam(mTeams []*iModels.Team, prefix, label string, userTuple *[]string) (int, string, error) {
 	if prefix == "" {
 		prefix = "Select Team"
 	}
@@ -282,7 +244,7 @@ func selectTeam(teams []*iModels.Team, prefix, label string, userTuple *[]string
 	var idx int
 	if label != "" {
 		found := false
-		for i, t := range teams {
+		for i, t := range mTeams {
 			if string(t.Body.Label) == label {
 				idx = i
 				found = true
@@ -290,32 +252,35 @@ func selectTeam(teams []*iModels.Team, prefix, label string, userTuple *[]string
 			}
 		}
 
-		t := teams[idx]
-
 		if !found {
 			fmt.Println(promptui.FailedValue("Team", label))
 			return 0, "", errs.ErrTeamNotFound
 		}
 
-		fmt.Println(promptui.SuccessfulValue("Team", line(t)))
+		fmt.Println(promptui.SuccessfulValue("Team", label)) // FIXME
 		return idx, label, nil
 	}
 
-	labels := make([]string, len(teams))
-	for i, t := range teams {
-		labels[i] = line(t)
-	}
+	teams := templates.Teams(mTeams)
 
 	if userTuple != nil {
-		usr := *userTuple
-		name := usr[0]
-		email := usr[1]
-		labels = append([]string{fmt.Sprintf("%s (%s)", name, email)}, labels...)
+		u := *userTuple
+		user := templates.Team{
+			Name:  u[0],
+			Title: u[1],
+		}
+
+		// treat user as a team for display purposes
+		teams = append([]templates.Team{user}, teams...)
 	}
 
+	tpl := templates.TplTeam
+	tpl.Selected = fmt.Sprintf(tpl.Selected, prefix)
+
 	prompt := promptui.Select{
-		Label: prefix,
-		Items: labels,
+		Label:     prefix,
+		Items:     teams,
+		Templates: tpl,
 	}
 
 	teamIdx, name, err := prompt.Run()
@@ -693,16 +658,16 @@ func CreditCard() (*stripe.Token, error) {
 
 // SelectProvider prompts the user to select a provider resource from the given
 // list.
-func SelectProvider(providers []*cModels.Provider) (*cModels.Provider, error) {
-	labels := []string{"All Providers"}
+func SelectProvider(mProviders []*cModels.Provider) (*cModels.Provider, error) {
+	providers := templates.Providers(mProviders)
 
-	for _, p := range providers {
-		labels = append(labels, fmt.Sprintf("%s - %s", p.Body.Label, p.Body.Name))
-	}
+	label := templates.Provider{Name: "All Providers"}
+	providers = append([]templates.Provider{label}, providers...)
 
 	prompt := promptui.Select{
-		Label: "Select Provider",
-		Items: labels,
+		Label:     "Select Provider",
+		Items:     providers,
+		Templates: templates.TplProvider,
 	}
 
 	idx, _, err := prompt.Run()
@@ -714,7 +679,7 @@ func SelectProvider(providers []*cModels.Provider) (*cModels.Provider, error) {
 		return nil, nil
 	}
 
-	return providers[idx-1], nil
+	return mProviders[idx-1], nil
 }
 
 // SelectAPIToken prompts the user to choose from a list of tokens
