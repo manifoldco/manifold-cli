@@ -39,7 +39,7 @@ vendor/bin/$(notdir $(1)): vendor/$(1) | vendor
 	go build -o $$@ ./vendor/$(1)
 VENDOR_BINS += vendor/bin/$(notdir $(1))
 vendor/$(1): Gopkg.lock
-	dep ensure
+	dep ensure -vendor-only
 endef
 
 $(foreach cmd_pkg,$(CMD_PKGS),$(eval $(call VENDOR_BIN_TMPL,$(cmd_pkg))))
