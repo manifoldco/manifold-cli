@@ -12,12 +12,15 @@ import (
 )
 
 // SelectProduct prompts the user to select a product from the given list.
-func SelectProduct(products []*cModels.Product, label string) (int, string, error) {
+func SelectProduct(list []*cModels.Product, name string) (int, string, error) {
+	products := templates.Products(list)
+	tpls := templates.TplProduct
+
 	var idx int
-	if label != "" {
+	if name != "" {
 		found := false
 		for i, p := range products {
-			if string(p.Body.Label) == label {
+			if p.Name == name {
 				idx = i
 				found = true
 				break
@@ -25,30 +28,35 @@ func SelectProduct(products []*cModels.Product, label string) (int, string, erro
 		}
 
 		if !found {
-			fmt.Println(promptui.FailedValue("Product", label))
+			msg := templates.PromptFailure("Product", name)
+			fmt.Println(msg)
 			return 0, "", errs.ErrProductNotFound
 		}
 
-		fmt.Println(promptui.SuccessfulValue("Product", label)) // FIXME
-		return idx, label, nil
+		msg := templates.PromptSuccess(tpls, products[idx])
+		fmt.Println(msg)
+		return idx, name, nil
 	}
 
 	prompt := promptui.Select{
 		Label:     "Select Product",
-		Items:     templates.Products(products),
-		Templates: templates.TplProduct,
+		Items:     products,
+		Templates: tpls,
 	}
 
 	return prompt.Run()
 }
 
 // SelectPlan prompts the user to select a plan from the given list.
-func SelectPlan(plans []*cModels.Plan, label string) (int, string, error) {
+func SelectPlan(list []*cModels.Plan, name string) (int, string, error) {
+	plans := templates.Plans(list)
+	tpls := templates.TplPlan
+
 	var idx int
-	if label != "" {
+	if name != "" {
 		found := false
 		for i, p := range plans {
-			if string(p.Body.Label) == label {
+			if p.Name == name {
 				idx = i
 				found = true
 				break
@@ -56,32 +64,36 @@ func SelectPlan(plans []*cModels.Plan, label string) (int, string, error) {
 		}
 
 		if !found {
-			fmt.Println(promptui.FailedValue("Plan", label))
+			msg := templates.PromptFailure("Plan", name)
+			fmt.Println(msg)
 			return 0, "", errs.ErrPlanNotFound
 		}
 
-		fmt.Println(promptui.SuccessfulValue("Plan", label)) //FIXME
-		return idx, label, nil
+		msg := templates.PromptSuccess(tpls, plans[idx])
+		fmt.Println(msg)
+		return idx, name, nil
 	}
 
 	prompt := promptui.Select{
 		Label:     "Select Plan",
-		Items:     templates.Plans(plans),
-		Templates: templates.TplPlan,
+		Items:     plans,
+		Templates: tpls,
 	}
 
 	return prompt.Run()
 }
 
 // SelectResource promps the user to select a provisioned resource from the given list
-func SelectResource(resources []*mModels.Resource, projects []*mModels.Project,
-	label string) (int, string, error) {
+func SelectResource(list []*mModels.Resource, projects []*mModels.Project,
+	name string) (int, string, error) {
+	resources := templates.Resources(list, projects)
+	tpls := templates.TplResource
 
 	var idx int
-	if label != "" {
+	if name != "" {
 		found := false
-		for i, p := range resources {
-			if string(p.Body.Label) == label {
+		for i, r := range resources {
+			if r.Name == name {
 				idx = i
 				found = true
 				break
@@ -89,18 +101,21 @@ func SelectResource(resources []*mModels.Resource, projects []*mModels.Project,
 		}
 
 		if !found {
-			fmt.Println(promptui.FailedValue("Resource", label))
+			msg := templates.PromptFailure("Resource", name)
+			fmt.Println(msg)
 			return 0, "", errs.ErrResourceNotFound
 		}
 
-		fmt.Println(promptui.SuccessfulValue("Resource", label)) //FIXME
-		return idx, label, nil
+		msg := templates.PromptSuccess(tpls, resources[idx])
+		fmt.Println(msg)
+
+		return idx, name, nil
 	}
 
 	prompt := promptui.Select{
 		Label:     "Select Resource",
-		Items:     templates.Resources(resources, projects),
-		Templates: templates.TplResource,
+		Items:     resources,
+		Templates: tpls,
 	}
 
 	return prompt.Run()
@@ -117,31 +132,37 @@ func SelectRole() (string, error) {
 }
 
 // SelectRegion prompts the user to select a region from the given list.
-func SelectRegion(regions []*cModels.Region) (int, string, error) {
+func SelectRegion(list []*cModels.Region) (int, string, error) {
+	regions := templates.Regions(list)
+	tpls := templates.TplRegion
+
 	// TODO: Build "auto" resolve into promptui in case of only one item
 	if len(regions) == 1 {
-		fmt.Println(promptui.SuccessfulValue("Region", "Region")) // FIXME
-		return 0, string(regions[0].Body.Name), nil
+		msg := templates.PromptSuccess(tpls, regions[0])
+		fmt.Println(msg)
+
+		return 0, string(regions[0].Name), nil
 	}
 
 	prompt := promptui.Select{
 		Label:     "Select Region",
-		Items:     templates.Regions(regions),
-		Templates: templates.TplRegion,
+		Items:     regions,
+		Templates: tpls,
 	}
 
 	return prompt.Run()
 }
 
 // SelectProject prompts the user to select a project from the given list.
-func SelectProject(mProjects []*mModels.Project, label string, emptyOption bool) (int, string, error) {
-	projects := templates.Projects(mProjects)
+func SelectProject(list []*mModels.Project, name string, emptyOption bool) (int, string, error) {
+	projects := templates.Projects(list)
+	tpls := templates.TplProject
 
 	var idx int
-	if label != "" {
+	if name != "" {
 		found := false
-		for i, p := range mProjects {
-			if string(p.Body.Label) == label {
+		for i, p := range projects {
+			if p.Name == name {
 				idx = i
 				found = true
 				break
@@ -149,12 +170,15 @@ func SelectProject(mProjects []*mModels.Project, label string, emptyOption bool)
 		}
 
 		if !found {
-			fmt.Println(promptui.FailedValue("Select Project", label))
+			msg := templates.PromptFailure("Project", name)
+			fmt.Println(msg)
 			return 0, "", errs.ErrProjectNotFound
 		}
 
-		fmt.Println(promptui.SuccessfulValue("Select Project", label)) //FIXME
-		return idx, label, nil
+		msg := templates.PromptSuccess(tpls, projects[idx])
+		fmt.Println(msg)
+
+		return idx, name, nil
 	}
 
 	if emptyOption {
@@ -164,39 +188,43 @@ func SelectProject(mProjects []*mModels.Project, label string, emptyOption bool)
 	prompt := promptui.Select{
 		Label:     "Select Project",
 		Items:     projects,
-		Templates: templates.TplProject,
+		Templates: tpls,
 	}
 
-	projectIdx, name, err := prompt.Run()
+	projectIdx, pname, err := prompt.Run()
 
 	if emptyOption {
-		return projectIdx - 1, name, err
+		return projectIdx - 1, pname, err
 	}
 
-	return projectIdx, name, err
+	return projectIdx, pname, err
 }
 
 // SelectContext runs a SelectTeam for context purposes
-func SelectContext(teams []*iModels.Team, label string, userTuple *[]string) (int, string, error) {
-	return selectTeam(teams, "Switch To", label, userTuple)
+func SelectContext(teams []*iModels.Team, name string, userTuple *[]string) (int, string, error) {
+	return selectTeam(teams, "Switch To", name, userTuple)
 }
 
 // SelectTeam prompts the user to select a team from the given list. -1 as the first return value
 // indicates no team has been selected
-func SelectTeam(teams []*iModels.Team, label string, userTuple *[]string) (int, string, error) {
-	return selectTeam(teams, "Select Team", label, userTuple)
+func SelectTeam(teams []*iModels.Team, name string, userTuple *[]string) (int, string, error) {
+	return selectTeam(teams, "Select Team", name, userTuple)
 }
 
-func selectTeam(mTeams []*iModels.Team, prefix, label string, userTuple *[]string) (int, string, error) {
-	if prefix == "" {
-		prefix = "Select Team"
+func selectTeam(list []*iModels.Team, label, name string, userTuple *[]string) (int, string, error) {
+	if label == "" {
+		label = "Select Team"
 	}
 
+	teams := templates.Teams(list)
+	tpls := templates.TplTeam
+	tpls.Selected = fmt.Sprintf(tpls.Selected, label)
+
 	var idx int
-	if label != "" {
+	if name != "" {
 		found := false
-		for i, t := range mTeams {
-			if string(t.Body.Label) == label {
+		for i, t := range teams {
+			if t.Name == name {
 				idx = i
 				found = true
 				break
@@ -204,15 +232,16 @@ func selectTeam(mTeams []*iModels.Team, prefix, label string, userTuple *[]strin
 		}
 
 		if !found {
-			fmt.Println(promptui.FailedValue("Team", label))
+			msg := templates.PromptFailure("Team", name)
+			fmt.Println(msg)
 			return 0, "", errs.ErrTeamNotFound
 		}
 
-		fmt.Println(promptui.SuccessfulValue("Team", label)) // FIXME
-		return idx, label, nil
-	}
+		msg := templates.PromptSuccess(tpls, teams[idx])
+		fmt.Println(msg)
 
-	teams := templates.Teams(mTeams)
+		return idx, name, nil
+	}
 
 	if userTuple != nil {
 		u := *userTuple
@@ -225,28 +254,25 @@ func selectTeam(mTeams []*iModels.Team, prefix, label string, userTuple *[]strin
 		teams = append([]templates.Team{user}, teams...)
 	}
 
-	tpl := templates.TplTeam
-	tpl.Selected = fmt.Sprintf(tpl.Selected, prefix)
-
 	prompt := promptui.Select{
-		Label:     prefix,
+		Label:     label,
 		Items:     teams,
-		Templates: tpl,
+		Templates: tpls,
 	}
 
-	teamIdx, name, err := prompt.Run()
+	teamIdx, tname, err := prompt.Run()
 
 	if userTuple != nil {
-		return teamIdx - 1, name, err
+		return teamIdx - 1, tname, err
 	}
 
-	return teamIdx, name, err
+	return teamIdx, tname, err
 }
 
 // SelectProvider prompts the user to select a provider resource from the given
 // list.
-func SelectProvider(mProviders []*cModels.Provider) (*cModels.Provider, error) {
-	providers := templates.Providers(mProviders)
+func SelectProvider(list []*cModels.Provider) (*cModels.Provider, error) {
+	providers := templates.Providers(list)
 
 	label := templates.Provider{Name: "All Providers"}
 	providers = append([]templates.Provider{label}, providers...)
@@ -266,7 +292,7 @@ func SelectProvider(mProviders []*cModels.Provider) (*cModels.Provider, error) {
 		return nil, nil
 	}
 
-	return mProviders[idx-1], nil
+	return list[idx-1], nil
 }
 
 // SelectAPIToken prompts the user to choose from a list of tokens

@@ -7,22 +7,23 @@ import (
 )
 
 const (
-	Active   = `▸ {{.Name | blue | bold }}{{ if .Title }} ({{ .Title }}){{end}}`
-	Inactive = `  {{.Name | blue }}{{ if .Title }} ({{ .Title }}){{end}}`
-	Selected = `{{"✔" | green }} %s: {{.Name | blue}}{{ if .Title }} ({{ .Title }}){{end}}`
+	active   = `▸ {{ .Name | blue | bold }}{{ if .Title }} ({{ .Title }}){{end}}`
+	inactive = `  {{ .Name | blue }}{{ if .Title }} ({{ .Title }}){{end}}`
+	Selected = `{{ "✔" | green }} %s: {{ .Name | blue}}{{ if .Title }} ({{ .Title }}){{end}}`
+	failure  = `{{ "✗" | red }} %s: {{ . }}`
 )
 
 var TplProvider = &promptui.SelectTemplates{
 	FuncMap:  funcMap(),
-	Active:   Active,
-	Inactive: Inactive,
+	Active:   active,
+	Inactive: inactive,
 	Selected: fmt.Sprintf(Selected, "Provider"),
 }
 
 var TplProduct = &promptui.SelectTemplates{
 	FuncMap:  funcMap(),
-	Active:   Active,
-	Inactive: Inactive,
+	Active:   active,
+	Inactive: inactive,
 	Selected: fmt.Sprintf(Selected, "Product"),
 	Details: `
 Product:	{{ .Name | blue}} ({{ .Title }})
@@ -37,8 +38,8 @@ Features:
 
 var TplPlan = &promptui.SelectTemplates{
 	FuncMap:  funcMap(),
-	Active:   Active,
-	Inactive: Inactive,
+	Active:   active,
+	Inactive: inactive,
 	Selected: fmt.Sprintf(Selected, "Plan"),
 	Details: `
 Plan:	{{ .Name | blue}} ({{ .Title }})
@@ -73,7 +74,7 @@ var TplProject = &promptui.SelectTemplates{
 
 var TplTeam = &promptui.SelectTemplates{
 	FuncMap:  funcMap(),
-	Active:   Active,
-	Inactive: Inactive,
+	Active:   active,
+	Inactive: inactive,
 	Selected: Selected, // Selected label can vary
 }

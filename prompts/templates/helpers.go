@@ -1,6 +1,7 @@
 package templates
 
 import (
+	"bytes"
 	"fmt"
 	"strings"
 	"text/template"
@@ -26,4 +27,33 @@ func price(price int) string {
 func title(v interface{}) string {
 	val := fmt.Sprintf("%v", v)
 	return strings.Title(val)
+}
+
+func PromptSuccess(tpls *promptui.SelectTemplates, data interface{}) string {
+	tpl, err := template.New("").Funcs(funcMap()).Parse(tpls.Selected)
+	if err != nil {
+		return fmt.Sprintf("%+v", data)
+	}
+
+	var buf bytes.Buffer
+	err = tpl.Execute(&buf, data)
+	if err != nil {
+		return fmt.Sprintf("%+v", data)
+	}
+	return buf.String()
+}
+
+func PromptFailure(label, data interface{}) string {
+	txt := fmt.Sprintf(failure, label)
+	tpl, err := template.New("").Funcs(funcMap()).Parse(txt)
+	if err != nil {
+		return fmt.Sprintf("%s: %+v", label, data)
+	}
+
+	var buf bytes.Buffer
+	err = tpl.Execute(&buf, data)
+	if err != nil {
+		return fmt.Sprintf("%+v", data)
+	}
+	return buf.String()
 }
