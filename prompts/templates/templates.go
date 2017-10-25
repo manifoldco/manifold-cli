@@ -50,6 +50,13 @@ Price:	{{ .Cost | price }}
 {{- end -}}`,
 }
 
+var TplRegion = &promptui.SelectTemplates{
+	FuncMap:  funcMap(),
+	Active:   `▸ {{ .Name | blue | bold }} ({{ .Platform }}::{{ .Location }})`,
+	Inactive: `  {{ .Name | blue }} ({{ .Platform }}::{{ .Location }})`,
+	Selected: `{{"✔" | green }} Region: {{ .Name | blue }} ({{ .Platform }}::{{ .Location }})`,
+}
+
 var TplResource = &promptui.SelectTemplates{
 	FuncMap:  funcMap(),
 	Active:   `▸ {{ if .Project }}{{ .Project | bold }}/{{end}}{{ .Name | blue | bold }} ({{ .Title }})`,

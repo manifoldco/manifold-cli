@@ -33,6 +33,12 @@ type Feature struct {
 	Description string
 }
 
+type Region struct {
+	Name     string
+	Platform string
+	Location string
+}
+
 type Resource struct {
 	Name    string
 	Title   string
@@ -170,31 +176,49 @@ func Plans(list []*cModels.Plan) []Plan {
 		p := Plan{
 			Name:  string(m.Body.Label),
 			Title: string(m.Body.Name),
-			Cost:  int(*m.Body.Cost),
 		}
 
-		for _, v := range m.Body.Features {
+		if m.Body.Cost != nil {
+			p.Cost = int(*m.Body.Cost)
+		}
+
+		features := make([]Feature, len(m.Body.Features))
+
+		for j, v := range m.Body.Features {
 			f := Feature{
 				Name: string(v.Feature),
 			}
 			if v.Value != nil {
 				f.Description = *v.Value
 			}
-			p.Features = append(p.Features, f)
+			features[j] = f
 		}
 
+		p.Features = features
 		plans[i] = p
 	}
 
-	sort.Slice(plans, func(i, j int) bool {
-		a := plans[i]
-		b := plans[j]
-
-		if a.Cost == b.Cost {
-			return strings.ToLower(a.Name) < strings.ToLower(b.Name)
-		}
-		return a.Cost < b.Cost
-	})
-
 	return plans
+}
+
+func Regions(list []*cModels.Region) []Region {
+	regions := make([]Region, len(list))
+
+	for i, m := range list {
+		r := Region{
+			Name: string(m.Body.Name),
+		}
+
+		if m.Body.Location != nil {
+			r.Location = *m.Body.Location
+		}
+
+		if m.Body.Platform != nil {
+			r.Platform = *m.Body.Platform
+		}
+
+		regions[i] = r
+	}
+
+	return regions
 }

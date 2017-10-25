@@ -118,24 +118,16 @@ func SelectRole() (string, error) {
 
 // SelectRegion prompts the user to select a region from the given list.
 func SelectRegion(regions []*cModels.Region) (int, string, error) {
-	line := func(r *cModels.Region) string {
-		return fmt.Sprintf("%s (%s::%s)", r.Body.Name, *r.Body.Platform, *r.Body.Location)
-	}
-
-	labels := make([]string, len(regions))
-	for i, r := range regions {
-		labels[i] = line(r)
-	}
-
 	// TODO: Build "auto" resolve into promptui in case of only one item
 	if len(regions) == 1 {
-		fmt.Println(promptui.SuccessfulValue("Region", line(regions[0])))
+		fmt.Println(promptui.SuccessfulValue("Region", "Region")) // FIXME
 		return 0, string(regions[0].Body.Name), nil
 	}
 
 	prompt := promptui.Select{
-		Label: "Select Region",
-		Items: labels,
+		Label:     "Select Region",
+		Items:     templates.Regions(regions),
+		Templates: templates.TplRegion,
 	}
 
 	return prompt.Run()
