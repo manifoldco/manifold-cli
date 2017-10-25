@@ -72,7 +72,7 @@ var TplRegion = &promptui.SelectTemplates{
 	FuncMap:  funcMap(),
 	Active:   `▸ {{ .Name | blue | bold }} ({{ .Platform }}::{{ .Location }})`,
 	Inactive: `  {{ .Name | blue }} ({{ .Platform }}::{{ .Location }})`,
-	Selected: `{{"✔" | green }} Region: {{ .Name | blue }} ({{ .Platform }}::{{ .Location }})`,
+	Selected: `{{"✔" | green }} Region: {{ .Name }} ({{ .Platform }}::{{ .Location }})`,
 }
 
 var TplResource = &promptui.SelectTemplates{
