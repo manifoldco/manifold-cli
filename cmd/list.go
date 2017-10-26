@@ -130,8 +130,12 @@ func list(cliCtx *cli.Context) error {
 				}
 				plan, err := catalog.GetPlan(*resource.Body.PlanID)
 				if err != nil {
-					return cli.NewExitError("Plan referenced by resource does not exist: "+
-						err.Error(), -1)
+					// Try and get unlisted plan not in local cache
+					plan, err = catalog.FetchPlanById(ctx, *resource.Body.PlanID)
+					if err != nil {
+						return cli.NewExitError("Plan referenced by resource does not exist: "+
+							err.Error(), -1)
+					}
 				}
 				if plan == nil {
 					return cli.NewExitError("Product not found", -1)
