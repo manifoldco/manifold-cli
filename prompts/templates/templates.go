@@ -8,9 +8,9 @@ import (
 )
 
 const (
-	active   = `▸ {{ .Name | blue | bold }}{{ if .Title }} ({{ .Title }}){{end}}`
-	inactive = `  {{ .Name | blue }}{{ if .Title }} ({{ .Title }}){{end}}`
-	Selected = `{{ "✔" | green }} %s: {{ .Name | blue}}{{ if .Title }} ({{ .Title }}){{end}}`
+	active   = `▸ {{ .Name | cyan | bold }}{{ if .Title }} ({{ .Title }}){{end}}`
+	inactive = `  {{ .Name | cyan }}{{ if .Title }} ({{ .Title }}){{end}}`
+	Selected = `{{ "✔" | green }} %s: {{ .Name | cyan }}{{ if .Title }} ({{ .Title }}){{end}}`
 	success  = `{{ "✔" | green }} {{ .Label }}: {{ .Value }}`
 	failure  = `{{ "✗" | red }} {{ .Label }}: {{ .Value }}`
 )
@@ -43,7 +43,7 @@ var TplProduct = &promptui.SelectTemplates{
 	Inactive: inactive,
 	Selected: fmt.Sprintf(Selected, "Product"),
 	Details: `
-Product:	{{ .Name | blue}} ({{ .Title }})
+Product:	{{ .Name | cyan }} ({{ .Title }})
 Tagline:	{{ .Tagline }}
 Features:
 {{- range $i, $el := .Features }}
@@ -59,7 +59,7 @@ var TplPlan = &promptui.SelectTemplates{
 	Inactive: inactive,
 	Selected: fmt.Sprintf(Selected, "Plan"),
 	Details: `
-Plan:	{{ .Name | blue}} ({{ .Title }})
+Plan:	{{ .Name | cyan }} ({{ .Title }})
 Price:	{{ .Cost | price }}
 {{- range $i, $el := .Features }}
 {{- if lt $i 3 }}
@@ -70,16 +70,16 @@ Price:	{{ .Cost | price }}
 
 var TplRegion = &promptui.SelectTemplates{
 	FuncMap:  funcMap(),
-	Active:   `▸ {{ .Name | blue | bold }} ({{ .Platform }}::{{ .Location }})`,
-	Inactive: `  {{ .Name | blue }} ({{ .Platform }}::{{ .Location }})`,
+	Active:   `▸ {{ .Name | cyan | bold }} ({{ .Platform }}::{{ .Location }})`,
+	Inactive: `  {{ .Name | cyan }} ({{ .Platform }}::{{ .Location }})`,
 	Selected: `{{"✔" | green }} Region: {{ .Name }} ({{ .Platform }}::{{ .Location }})`,
 }
 
 var TplResource = &promptui.SelectTemplates{
 	FuncMap:  funcMap(),
-	Active:   `▸ {{ if .Project }}{{ .Project | bold }}/{{ end }}{{ .Name | blue | bold }} ({{ .Title }})`,
-	Inactive: `  {{ if .Project }}{{ .Project }}/{{ end }}{{ .Name | blue }} ({{ .Title }})`,
-	Selected: `{{"✔" | green }} Resource: {{ if .Project }}{{ .Project }}/{{ end }}{{ .Name | blue }} ({{ .Title }})`,
+	Active:   `▸ {{ if .Project }}{{ .Project | bold }}/{{ end }}{{ .Name | cyan | bold }} ({{ .Title }})`,
+	Inactive: `  {{ if .Project }}{{ .Project }}/{{ end }}{{ .Name | cyan }} ({{ .Title }})`,
+	Selected: `{{"✔" | green }} Resource: {{ if .Project }}{{ .Project }}/{{ end }}{{ .Name | cyan }} ({{ .Title }})`,
 }
 
 var TplProject = &promptui.SelectTemplates{
