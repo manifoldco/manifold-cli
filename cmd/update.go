@@ -96,22 +96,18 @@ func updateResourceCmd(cliCtx *cli.Context) error {
 		resource = resources[idx]
 	}
 
-	newTitle := cliCtx.String("title")
-	title := string(resource.Body.Name)
-	autoSelect := false
-	if newTitle != "" {
-		title = newTitle
-		autoSelect = true
+	providedTitle := cliCtx.String("title")
+	if providedTitle == "" {
+		providedTitle = string(resource.Body.Name)
 	}
-
-	newTitle, err = prompts.ResourceName(title, autoSelect)
+	newName, newTitle, err := createNameAndTitle(cliCtx, "resource", string(resource.Body.Label), providedTitle, true, false, false)
 	if err != nil {
 		cli.NewExitError(fmt.Sprintf("Could not rename the resource: %s", err), -1)
 	}
 
 	prompts.SpinStart(fmt.Sprintf("Updating resource %q", resource.Body.Label))
 
-	mrb, err := updateResource(ctx, resource, client.Marketplace, newTitle)
+	mrb, err := updateResource(ctx, resource, client.Marketplace, newName, newTitle)
 	if err != nil {
 		return cli.NewExitError(fmt.Sprintf("Failed to update resource: %s", err), -1)
 	}
@@ -137,11 +133,11 @@ func pickResourcesByName(resources []*models.Resource, name string) (*models.Res
 }
 
 func updateResource(ctx context.Context, r *models.Resource,
-	marketplaceClient *client.Marketplace, resourceName string) (*models.Resource, error) {
+	marketplaceClient *client.Marketplace, resourceName string, resourceTitle string) (*models.Resource, error) {
 	rename := &models.PublicUpdateResource{
 		Body: &models.PublicUpdateResourceBody{
-			Name:  manifold.Name(resourceName),
-			Label: generateName(resourceName),
+			Name:  manifold.Name(resourceTitle),
+			Label: manifold.Label(resourceName),
 		},
 	}
 

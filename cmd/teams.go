@@ -101,7 +101,7 @@ func createTeamCmd(cliCtx *cli.Context) error {
 		return err
 	}
 
-	teamTitle, err := optionalArgTitle(cliCtx, 0, "team")
+	teamName, teamTitle, err := promptNameAndTitle(cliCtx, "team", true, false)
 	if err != nil {
 		return err
 	}
@@ -111,13 +111,7 @@ func createTeamCmd(cliCtx *cli.Context) error {
 		return err
 	}
 
-	autoSelect := teamTitle != ""
-	teamTitle, err = prompts.TeamTitle(teamTitle, autoSelect)
-	if err != nil {
-		return prompts.HandleSelectError(err, "Failed to name team")
-	}
-
-	if err := createTeam(ctx, teamTitle, client.Identity); err != nil {
+	if err := createTeam(ctx, teamName, teamTitle, client.Identity); err != nil {
 		return cli.NewExitError(fmt.Sprintf("Could not create team: %s", err), -1)
 	}
 
@@ -137,11 +131,6 @@ func updateTeamCmd(cliCtx *cli.Context) error {
 		return err
 	}
 
-	newTeamTitle, err := validateTitle(cliCtx, "title", "team")
-	if err != nil {
-		return err
-	}
-
 	client, err := api.New(api.Identity)
 	if err != nil {
 		return err
@@ -152,17 +141,20 @@ func updateTeamCmd(cliCtx *cli.Context) error {
 		return err
 	}
 
-	autoSelect := newTeamTitle != ""
-	newTeamTitle, err = prompts.TeamTitle(newTeamTitle, autoSelect)
+	providedTitle := cliCtx.String("title")
+	if providedTitle == "" {
+		providedTitle = string(team.Body.Name)
+	}
+	newName, newTitle, err := createNameAndTitle(cliCtx, "team", string(team.Body.Label), providedTitle, true, false, false)
 	if err != nil {
-		return prompts.HandleSelectError(err, "Could not validate name")
+		return err
 	}
 
-	if err := updateTeam(ctx, team, newTeamTitle, client.Identity); err != nil {
+	if err := updateTeam(ctx, team, newName, newTitle, client.Identity); err != nil {
 		return cli.NewExitError(fmt.Sprintf("Could not update team: %s", err), -1)
 	}
 
-	fmt.Printf("Your team \"%s\" has been updated\n", newTeamTitle)
+	fmt.Printf("Your team \"%s\" has been updated\n", newTitle)
 	return nil
 }
 
@@ -302,7 +294,7 @@ func listTeamCmd(cliCtx *cli.Context) error {
 	})
 
 	for _, team := range teams {
-		fmt.Fprintf(w, "%s\t%d\n", team.Name, team.Members)
+		fmt.Fprintf(w, "%s (%s)\t%d\n", team.Name, color.Faint(team.Title), team.Members)
 	}
 	return w.Flush()
 }
@@ -354,11 +346,11 @@ func leaveTeamCmd(cliCtx *cli.Context) error {
 	return nil
 }
 
-func createTeam(ctx context.Context, teamTitle string, identityClient *client.Identity) error {
+func createTeam(ctx context.Context, teamName, teamTitle string, identityClient *client.Identity) error {
 	createTeam := &models.CreateTeam{
 		Body: &models.CreateTeamBody{
 			Name:  manifold.Name(teamTitle),
-			Label: generateName(teamTitle),
+			Label: manifold.Label(teamName),
 		},
 	}
 
@@ -385,11 +377,11 @@ func createTeam(ctx context.Context, teamTitle string, identityClient *client.Id
 	return nil
 }
 
-func updateTeam(ctx context.Context, team *models.Team, teamTitle string, identityClient *client.Identity) error {
+func updateTeam(ctx context.Context, team *models.Team, teamName, teamTitle string, identityClient *client.Identity) error {
 	updateTeam := &models.UpdateTeam{
 		Body: &models.UpdateTeamBody{
 			Name:  manifold.Name(teamTitle),
-			Label: generateName(teamTitle),
+			Label: manifold.Label(teamName),
 		},
 	}
 

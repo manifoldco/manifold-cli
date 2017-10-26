@@ -26,23 +26,24 @@ const NumberMask = '#'
 
 var errBad = errors.New("Bad Value")
 
-// ResourceTitle prompts the user to provide a resource title or to accept empty
-// to let the system generate one.
-func ResourceTitle(defaultValue string, autoSelect bool) (string, error) {
+// Title prompts the user to provide a Title value
+func Title(field, defaultValue string, autoSelect, allowEmpty bool) (string, error) {
+	field = strings.Title(field)
+
 	validate := func(input string) error {
-		if len(input) == 0 {
+		if allowEmpty && len(input) == 0 {
 			return nil
 		}
 
 		t := manifold.Name(input)
 		if err := t.Validate(nil); err != nil {
-			return errors.New("Please provide a valid resource title")
+			return fmt.Errorf("Please provide a valid %s title", field)
 		}
 
 		return nil
 	}
 
-	label := "Resource Title (one will be generated if left blank)"
+	label := fmt.Sprintf("New %s Title", field)
 
 	if autoSelect {
 		err := validate(defaultValue)
@@ -63,22 +64,24 @@ func ResourceTitle(defaultValue string, autoSelect bool) (string, error) {
 	return p.Run()
 }
 
-// ResourceName prompts the user to provide a label name
-func ResourceName(defaultValue string, autoSelect bool) (string, error) {
+// Name prompts the user to provide a Name value
+func Name(field, defaultValue string, autoSelect, allowEmpty bool) (string, error) {
+	field = strings.Title(field)
+
 	validate := func(input string) error {
 		if len(input) == 0 {
-			return errors.New("Please provide a resource name")
+			return fmt.Errorf("Please provide a %s name", field)
 		}
 
 		l := manifold.Label(input)
 		if err := l.Validate(nil); err != nil {
-			return errors.New("Please provide a valid resource name")
+			return fmt.Errorf("Please provide a valid %s name", field)
 		}
 
 		return nil
 	}
 
-	label := "Resource Name"
+	label := fmt.Sprintf("New %s Name", field)
 
 	if autoSelect {
 		err := validate(defaultValue)
@@ -98,78 +101,27 @@ func ResourceName(defaultValue string, autoSelect bool) (string, error) {
 	}
 
 	return p.Run()
+}
+
+// ResourceTitle prompts the user to provide a resource title or to accept empty
+// to let the system generate one.
+func ResourceTitle(defaultValue string, autoSelect bool) (string, error) {
+	return Title("resource", defaultValue, autoSelect, true)
+}
+
+// ResourceName prompts the user to provide a label name
+func ResourceName(defaultValue string, autoSelect bool) (string, error) {
+	return Name("resource", defaultValue, autoSelect, false)
 }
 
 // TeamTitle prompts the user to enter a new Team title
 func TeamTitle(defaultValue string, autoSelect bool) (string, error) {
-	validate := func(input string) error {
-		if len(input) == 0 {
-			return errors.New("Please provide a valid team title")
-		}
-
-		l := manifold.Name(input)
-		if err := l.Validate(nil); err != nil {
-			return errors.New("Please provide a valid team title")
-		}
-
-		return nil
-	}
-
-	label := "Team Title"
-
-	if autoSelect {
-		err := validate(defaultValue)
-		if err != nil {
-			fmt.Println(templates.PromptFailure(label, defaultValue))
-		} else {
-			fmt.Println(templates.PromptSuccess(label, defaultValue))
-		}
-		return defaultValue, err
-	}
-
-	p := promptui.Prompt{
-		Label:    label,
-		Default:  defaultValue,
-		Validate: validate,
-	}
-
-	return p.Run()
+	return Title("team", defaultValue, autoSelect, false)
 }
 
 // ProjectTitle prompts the user to enter a new project title
 func ProjectTitle(defaultValue string, autoSelect bool) (string, error) {
-	validate := func(input string) error {
-		if len(input) == 0 {
-			return errors.New("Please provide a valid project title")
-		}
-
-		l := manifold.Name(input)
-		if err := l.Validate(nil); err != nil {
-			return errors.New("Please provide a valid project title")
-		}
-
-		return nil
-	}
-
-	label := "Project Title"
-
-	if autoSelect {
-		err := validate(defaultValue)
-		if err != nil {
-			fmt.Println(templates.PromptFailure(label, defaultValue))
-		} else {
-			fmt.Println(templates.PromptSuccess(label, defaultValue))
-		}
-		return defaultValue, err
-	}
-
-	p := promptui.Prompt{
-		Label:    label,
-		Default:  defaultValue,
-		Validate: validate,
-	}
-
-	return p.Run()
+	return Title("project", defaultValue, autoSelect, false)
 }
 
 // TokenDescription prompts the user to enter a token description

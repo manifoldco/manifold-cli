@@ -66,7 +66,7 @@ func initDir(cliCtx *cli.Context) error {
 		return errs.ErrNoProjects
 	}
 
-	pIdx, _, err := prompts.SelectProject(ps, projectName, true)
+	pIdx, _, err := prompts.SelectProject(ps, projectName, true, true)
 	if err != nil {
 		return prompts.HandleSelectError(err, "Could not select project.")
 	}

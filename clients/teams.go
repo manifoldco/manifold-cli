@@ -12,6 +12,7 @@ import (
 // TeamMembersCount groups a team name with the amount of members the team has
 type TeamMembersCount struct {
 	Name    string
+	Title   string
 	Members int
 }
 
@@ -62,7 +63,8 @@ func FetchTeamsMembersCount(ctx context.Context, c *iClient.Identity) ([]TeamMem
 
 	for _, t := range teams {
 		id := t.ID.String()
-		name := string(t.Body.Name)
+		name := string(t.Body.Label)
+		title := string(t.Body.Name)
 
 		go func() {
 			members, err := FetchTeamMembers(ctx, id, c)
@@ -74,6 +76,7 @@ func FetchTeamsMembersCount(ctx context.Context, c *iClient.Identity) ([]TeamMem
 
 			res <- TeamMembersCount{
 				Name:    name,
+				Title:   title,
 				Members: len(members),
 			}
 		}()

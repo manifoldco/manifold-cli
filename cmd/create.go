@@ -40,6 +40,7 @@ func init() {
 			projectFlag(),
 			planFlag(),
 			regionFlag(),
+			titleFlag(),
 			cli.StringFlag{
 				Name:  "product",
 				Usage: "Create a resource for this product",
@@ -62,7 +63,7 @@ func create(cliCtx *cli.Context) error {
 		return err
 	}
 
-	resourceTitle, err := optionalArgTitle(cliCtx, 0, "resource")
+	resourceName, resourceTitle, err := promptNameAndTitle(cliCtx, "resource", true, true)
 	if err != nil {
 		return err
 	}
@@ -156,7 +157,7 @@ func create(cliCtx *cli.Context) error {
 	var project *mModels.Project
 
 	if len(projects) > 0 {
-		pidx, _, err := prompts.SelectProject(projects, projectName, true)
+		pidx, _, err := prompts.SelectProject(projects, projectName, true, true)
 		if err != nil {
 			return prompts.HandleSelectError(err, "Could not select project.")
 		}
@@ -164,11 +165,6 @@ func create(cliCtx *cli.Context) error {
 		if pidx > -1 {
 			project = projects[pidx]
 		}
-	}
-
-	resourceTitle, err = prompts.ResourceTitle(resourceTitle, false)
-	if err != nil {
-		return cli.NewExitError("Could not name the resource: "+err.Error(), -1)
 	}
 
 	descriptor := "a custom resource"
@@ -182,7 +178,7 @@ func create(cliCtx *cli.Context) error {
 	}
 
 	op, err := createResource(ctx, cfg, teamID, s, client.Provisioning, custom, product, plan, region,
-		project, resourceTitle, dontWait)
+		project, resourceName, resourceTitle, dontWait)
 	if err != nil {
 		return cli.NewExitError("Could not create resource: "+err.Error(), -1)
 	}
@@ -206,7 +202,7 @@ func create(cliCtx *cli.Context) error {
 
 func createResource(ctx context.Context, cfg *config.Config, teamID *manifold.ID, s session.Session,
 	pClient *provisioning.Provisioning, custom bool, product *cModels.Product, plan *cModels.Plan,
-	region *cModels.Region, project *mModels.Project, resourceTitle string, dontWait bool) (*pModels.Operation, error) {
+	region *cModels.Region, project *mModels.Project, resourceName, resourceTitle string, dontWait bool) (*pModels.Operation, error) {
 
 	a, err := analytics.New(cfg, s)
 	if err != nil {
@@ -243,7 +239,6 @@ func createResource(ctx context.Context, cfg *config.Config, teamID *manifold.ID
 	typeStr := "operation"
 	version := int64(1)
 	state := "provision"
-	empty := ""
 	curTime := strfmt.DateTime(time.Now())
 	op := &pModels.Operation{
 		ID:      ID,
@@ -251,7 +246,7 @@ func createResource(ctx context.Context, cfg *config.Config, teamID *manifold.ID
 		Version: &version,
 		Body: &pModels.Provision{
 			ResourceID: resourceID,
-			Label:      &empty,
+			Label:      &resourceName,
 			Name:       &resourceTitle,
 			Source:     &source,
 			PlanID:     planID,

@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - Project create failure due to Name/Title change
 - Set-role should error before prompts
 - Context would panic due to missing session
+- Change logic for inferring object title from name
 
 ## [0.8.1] - 2017-10-24
 
