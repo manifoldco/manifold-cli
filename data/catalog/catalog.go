@@ -3,6 +3,8 @@ package catalog
 import (
 	"context"
 	"errors"
+	"sort"
+	"strings"
 
 	"github.com/manifoldco/go-manifold"
 	hierr "github.com/reconquest/hierr-go"
@@ -54,6 +56,17 @@ func (c *Catalog) Plans() []*catalogModels.Plan {
 		plans = append(plans, p)
 	}
 
+	sort.Slice(plans, func(i, j int) bool {
+		a := plans[i]
+		b := plans[j]
+
+		if *a.Body.Cost == *b.Body.Cost {
+			return strings.ToLower(string(a.Body.Label)) <
+				strings.ToLower(string(b.Body.Label))
+		}
+		return *a.Body.Cost < *b.Body.Cost
+	})
+
 	return plans
 }
 
@@ -64,6 +77,12 @@ func (c *Catalog) Products() []*catalogModels.Product {
 		products = append(products, p)
 	}
 
+	sort.Slice(products, func(i, j int) bool {
+		a := string(products[i].Body.Label)
+		b := string(products[j].Body.Label)
+		return strings.ToLower(a) < strings.ToLower(b)
+	})
+
 	return products
 }
 
@@ -73,6 +92,12 @@ func (c *Catalog) Regions() []*catalogModels.Region {
 	for _, r := range c.regions {
 		regions = append(regions, r)
 	}
+
+	sort.Slice(regions, func(i, j int) bool {
+		a := regions[i]
+		b := regions[j]
+		return strings.ToLower(string(a.Body.Name)) < strings.ToLower(string(b.Body.Name))
+	})
 
 	return regions
 }

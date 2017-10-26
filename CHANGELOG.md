@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
 
+### Add
+- Improved visuals for select boxes
+
 ### Fixed
 - Project create failure due to Name/Title change
 - Set-role should error before prompts
