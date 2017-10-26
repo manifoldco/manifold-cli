@@ -11,6 +11,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Fixed
 
+
+## [0.9.1] - 2017-10-27
+
+### Fixed
+- Install script version has been updated
+
 ## [0.9.0] - 2017-10-26
 
 ### Added
