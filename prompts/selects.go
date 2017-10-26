@@ -154,7 +154,7 @@ func SelectRegion(list []*cModels.Region) (int, string, error) {
 }
 
 // SelectProject prompts the user to select a project from the given list.
-func SelectProject(list []*mModels.Project, name string, emptyOption bool) (int, string, error) {
+func SelectProject(list []*mModels.Project, name string, emptyOption, showResult bool) (int, string, error) {
 	projects := templates.Projects(list)
 	tpls := templates.TplProject
 
@@ -175,8 +175,10 @@ func SelectProject(list []*mModels.Project, name string, emptyOption bool) (int,
 			return 0, "", errs.ErrProjectNotFound
 		}
 
-		msg := templates.SelectSuccess(tpls, projects[idx])
-		fmt.Println(msg)
+		if showResult {
+			msg := templates.SelectSuccess(tpls, projects[idx])
+			fmt.Println(msg)
+		}
 
 		return idx, name, nil
 	}

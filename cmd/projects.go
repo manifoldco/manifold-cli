@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"os"
-	"strings"
 
 	"time"
 
@@ -38,8 +37,8 @@ func init() {
 			{
 				Name:      "create",
 				Usage:     "Create a new project",
-				Flags:     teamFlags,
-				ArgsUsage: "[project-title]",
+				Flags:     append(teamFlags, titleFlag()),
+				ArgsUsage: "[project-name]",
 				Action: middleware.Chain(middleware.EnsureSession,
 					middleware.LoadTeamPrefs, createProjectCmd),
 			},
@@ -117,21 +116,15 @@ func createProjectCmd(cliCtx *cli.Context) error {
 		return errUserActionAsTeam
 	}
 
-	projectTitle, err := optionalArgTitle(cliCtx, 0, "title")
+	projectName, projectTitle, err := promptNameAndTitle(cliCtx, "project", true, false)
 	if err != nil {
 		return err
-	}
-
-	autoSelect := projectTitle != ""
-	projectTitle, err = prompts.ProjectTitle(projectTitle, autoSelect)
-	if err != nil {
-		return prompts.HandleSelectError(err, "Failed to select project title")
 	}
 
 	params := projectClient.NewPostProjectsParamsWithContext(ctx)
 	body := &mModels.CreateProjectBody{
 		Name:  manifold.Name(projectTitle),
-		Label: generateName(projectTitle),
+		Label: manifold.Label(projectName),
 	}
 
 	if teamID == nil {
@@ -189,7 +182,7 @@ func listProjectsCmd(cliCtx *cli.Context) error {
 	fmt.Fprintf(w, "%s\n\n", color.Bold("Project"))
 
 	for _, project := range projects {
-		fmt.Fprintf(w, "%s\n", project.Body.Label)
+		fmt.Fprintf(w, "%s (%s)\n", project.Body.Label, color.Faint(project.Body.Name))
 	}
 	return w.Flush()
 }
@@ -201,40 +194,40 @@ func updateProjectCmd(cliCtx *cli.Context) error {
 		return err
 	}
 
-	teamID, err := validateTeamID(cliCtx)
-	if err != nil {
-		return err
-	}
-
 	projectName, err := optionalArgName(cliCtx, 0, "project")
 	if err != nil {
 		return err
 	}
 
-	newProjectTitle, err := validateTitle(cliCtx, "title", "project")
+	teamID, err := validateTeamID(cliCtx)
 	if err != nil {
 		return err
 	}
-
-	projectDescription := cliCtx.String("description")
 
 	client, err := api.New(api.Marketplace)
 	if err != nil {
 		return err
 	}
 
-	p, err := selectProject(ctx, projectName, teamID, client.Marketplace)
+	p, err := selectProject(ctx, projectName, teamID, client.Marketplace, false)
 	if err != nil {
 		return err
 	}
 
-	autoSelectTitle := newProjectTitle != ""
-	newProjectTitle, err = prompts.ProjectTitle(newProjectTitle, autoSelectTitle)
+	providedTitle := cliCtx.String("title")
+	if providedTitle == "" {
+		providedTitle = string(p.Body.Name)
+	}
+	newName, newTitle, err := createNameAndTitle(cliCtx, "project", string(p.Body.Label), providedTitle, true, false, false)
 	if err != nil {
-		return prompts.HandleSelectError(err, "Could not select project")
+		return err
 	}
 
+	projectDescription := cliCtx.String("description")
 	autoSelectDescription := projectDescription != ""
+	if projectDescription == "" {
+		projectDescription = p.Body.Description
+	}
 	projectDescription, err = prompts.ProjectDescription(projectDescription, autoSelectDescription)
 	if err != nil {
 		return prompts.HandleSelectError(err, "Could not add description to project")
@@ -242,8 +235,8 @@ func updateProjectCmd(cliCtx *cli.Context) error {
 
 	params := projectClient.NewPatchProjectsIDParamsWithContext(ctx)
 	body := &mModels.PublicUpdateProjectBody{
-		Name:  manifold.Name(newProjectTitle),
-		Label: generateName(newProjectTitle),
+		Name:  manifold.Name(newTitle),
+		Label: manifold.Label(newName),
 	}
 
 	if projectDescription != "" {
@@ -264,7 +257,7 @@ func updateProjectCmd(cliCtx *cli.Context) error {
 	}
 
 	spin.Stop()
-	fmt.Printf("\nYour project \"%s\" has been updated\n", newProjectTitle)
+	fmt.Printf("\nYour project \"%s\" has been updated\n", newTitle)
 	return nil
 }
 
@@ -295,7 +288,7 @@ func deleteProjectCmd(cliCtx *cli.Context) error {
 		return err
 	}
 
-	p, err := selectProject(ctx, projectName, teamID, client.Marketplace)
+	p, err := selectProject(ctx, projectName, teamID, client.Marketplace, true)
 	if err != nil {
 		return err
 	}
@@ -398,7 +391,7 @@ func addProjectCmd(cliCtx *cli.Context) error {
 		return cli.NewExitError(fmt.Sprintf("Failed to fetch projects list: %s", err), -1)
 	}
 
-	p, err := selectProject(ctx, projectName, teamID, client.Marketplace)
+	p, err := selectProject(ctx, projectName, teamID, client.Marketplace, true)
 	if err != nil {
 		return err
 	}
@@ -637,7 +630,7 @@ func updateResourceProject(ctx context.Context, uid, tid *manifold.ID, r *mModel
 }
 
 // selectProject prompts a user to select a project (if selects the one provided automatically)
-func selectProject(ctx context.Context, projectName string, teamID *manifold.ID, marketplaceClient *mClient.Marketplace) (*mModels.Project, error) {
+func selectProject(ctx context.Context, projectName string, teamID *manifold.ID, marketplaceClient *mClient.Marketplace, showResult bool) (*mModels.Project, error) {
 	projects, err := clients.FetchProjects(ctx, marketplaceClient, teamID)
 	if err != nil {
 		return nil, cli.NewExitError(fmt.Sprintf("Failed to fetch list of projects: %s", err), -1)
@@ -647,17 +640,11 @@ func selectProject(ctx context.Context, projectName string, teamID *manifold.ID,
 		return nil, errs.ErrNoProjects
 	}
 
-	idx, _, err := prompts.SelectProject(projects, projectName, false)
+	idx, _, err := prompts.SelectProject(projects, projectName, false, showResult)
 	if err != nil {
 		return nil, prompts.HandleSelectError(err, "Could not select project")
 	}
 
 	p := projects[idx]
 	return p, nil
-}
-
-// generateName makes a title lowercase and replace spaces with dashes
-func generateName(title string) manifold.Label {
-	name := strings.Replace(strings.ToLower(title), " ", "-", -1)
-	return manifold.Label(name)
 }
