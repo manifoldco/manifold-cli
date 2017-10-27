@@ -8,9 +8,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ## Unreleased
 
 ### Added
+- Support for creating and viewing resources from unlisted plans
 
 ### Fixed
-
+- Resize will no longer crash due to uninitialized Analytics
 
 ## [0.9.1] - 2017-10-27
 

@@ -132,20 +132,31 @@ func create(cliCtx *cli.Context) error {
 			return prompts.HandleSelectError(err, "Could not select product.")
 		}
 
-		plans := filterPlansByProductID(catalog.Plans(), products[productIdx].ID)
-		planIdx, _, err := prompts.SelectPlan(plans, planName)
-		if err != nil {
-			return prompts.HandleSelectError(err, "Could not select plan.")
+		if planName != "" {
+			plan, err = catalog.FetchPlanByLabel(ctx, products[productIdx].ID, planName)
+			if err != nil {
+				return prompts.HandleSelectError(err, "Plan does not exist.")
+			}
+			_, _, err = prompts.SelectPlan([]*cModels.Plan{plan}, planName)
+			if err != nil {
+				return prompts.HandleSelectError(err, "Could not select plan.")
+			}
+		} else {
+			plans := filterPlansByProductID(catalog.Plans(), products[productIdx].ID)
+			planIdx, _, err := prompts.SelectPlan(plans, planName)
+			if err != nil {
+				return prompts.HandleSelectError(err, "Could not select plan.")
+			}
+			plan = plans[planIdx]
 		}
 
-		regions := filterRegionsForPlan(catalog.Regions(), plans[planIdx].Body.Regions)
+		regions := filterRegionsForPlan(catalog.Regions(), plan.Body.Regions)
 		regionIdx, _, err := prompts.SelectRegion(regions)
 		if err != nil {
 			return prompts.HandleSelectError(err, "Could not select region.")
 		}
 
 		product = products[productIdx]
-		plan = plans[planIdx]
 		region = regions[regionIdx]
 	}
 

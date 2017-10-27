@@ -68,7 +68,7 @@ func resizeResourceCmd(cliCtx *cli.Context) error {
 	dontWait := cliCtx.Bool("no-wait")
 	planName := cliCtx.String("plan")
 
-	client, err := api.New(api.Catalog, api.Marketplace, api.Provisioning)
+	client, err := api.New(api.Analytics, api.Catalog, api.Marketplace, api.Provisioning)
 	if err != nil {
 		return err
 	}
