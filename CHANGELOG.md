@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ### Fixed
 - Resize will no longer crash due to uninitialized Analytics
 - Ask for resource name/title after resource settings has been selected
+- Disable spinner animation when piping output
 
 ## [0.9.1] - 2017-10-27
 
