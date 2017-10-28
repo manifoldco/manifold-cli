@@ -63,11 +63,6 @@ func create(cliCtx *cli.Context) error {
 		return err
 	}
 
-	resourceName, resourceTitle, err := promptNameAndTitle(cliCtx, "resource", true, true)
-	if err != nil {
-		return err
-	}
-
 	teamID, err := validateTeamID(cliCtx)
 	if err != nil {
 		return err
@@ -182,6 +177,12 @@ func create(cliCtx *cli.Context) error {
 	if !custom {
 		descriptor = "an instance of " + string(product.Body.Name)
 	}
+
+	resourceName, resourceTitle, err := promptNameAndTitle(cliCtx, "resource", true, true)
+	if err != nil {
+		return err
+	}
+
 	spin := prompts.NewSpinner(fmt.Sprintf("Creating %s", descriptor))
 	if !dontWait {
 		spin.Start()
