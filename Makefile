@@ -48,7 +48,7 @@ $(patsubst %,%-bin,$(filter-out gofmt vet,$(LINTERS))): %-bin: vendor/bin/%
 gofmt-bin vet-bin:
 
 bootstrap:
-	go get github.com/golang/dep/cmd/dep
+	which dep || go get github.com/golang/dep/cmd/dep
 
 vendor: Gopkg.lock
 	dep ensure
