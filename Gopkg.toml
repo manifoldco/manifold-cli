@@ -80,3 +80,7 @@ required=[
 [[constraint]]
   name = "github.com/go-swagger/go-swagger"
   version = "0.10.0"
+
+[[constraint]]
+  branch = "master"
+  name = "github.com/chzyer/readline"
