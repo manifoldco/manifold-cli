@@ -11,6 +11,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Fixed
 
+## [0.9.3] - 2017-10-30
+
+### Fixed
+- Travis builds not picking up new versions
+
 ## [0.9.2] - 2017-10-30
 
 ### Added
