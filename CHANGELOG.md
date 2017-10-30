@@ -8,6 +8,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ## Unreleased
 
 ### Added
+
+### Fixed
+
+## [0.9.2] - 2017-10-30
+
+### Added
 - Support for creating and viewing resources from unlisted plans
 
 ### Fixed
