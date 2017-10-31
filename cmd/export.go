@@ -80,7 +80,7 @@ func export(cliCtx *cli.Context) error {
 		return resources[i].Body.Name < resources[j].Body.Name
 	})
 
-	cMap, err := fetchCredentials(ctx, client.Marketplace, resources)
+	cMap, err := fetchCredentials(ctx, client.Marketplace, resources, true)
 	if err != nil {
 		return cli.NewExitError("Could not retrieve credentials: "+err.Error(), -1)
 	}
@@ -185,13 +185,17 @@ func indexResources(resources []*models.Resource) map[manifold.ID]*models.Resour
 	return index
 }
 
-func fetchCredentials(ctx context.Context, m *mClient.Marketplace, resources []*models.Resource) (map[manifold.ID][]*models.Credential, error) {
+func fetchCredentials(ctx context.Context, m *mClient.Marketplace, resources []*models.Resource, customNames bool) (map[manifold.ID][]*models.Credential, error) {
 	// XXX: Reduce this into a single HTTP Call
 	//
 	// Issue: https://www.github.com/manifoldco/engineering#2536
 	cMap := make(map[manifold.ID][]*models.Credential)
 	for _, r := range resources {
 		p := credential.NewGetCredentialsParamsWithContext(ctx).WithResourceID([]string{r.ID.String()})
+		if customNames == false {
+			noCustomNames := "false"
+			p.SetCustomNames(&noCustomNames)
+		}
 		c, err := m.Credential.GetCredentials(p, nil)
 		if err != nil {
 			return nil, err

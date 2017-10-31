@@ -84,7 +84,7 @@ func updateResourceCmd(cliCtx *cli.Context) error {
 	var resource *models.Resource
 	if name != "" {
 		var err error
-		resource, err = pickResourcesByName(resources, name)
+		resource, err = pickResourcesByName(resources, projects, name)
 		if err != nil {
 			return cli.NewExitError(fmt.Sprintf("Failed to fetch resource: %s", err), -1)
 		}
@@ -118,18 +118,15 @@ func updateResourceCmd(cliCtx *cli.Context) error {
 	return nil
 }
 
-func pickResourcesByName(resources []*models.Resource, name string) (*models.Resource, error) {
+func pickResourcesByName(resources []*models.Resource, projects []*models.Project, name string) (*models.Resource, error) {
 	if name == "" {
 		return nil, errs.ErrResourceNotFound
 	}
-
-	for _, resource := range resources {
-		if string(resource.Body.Label) == name {
-			return resource, nil
-		}
+	idx, _, err := prompts.SelectResource(resources, projects, name)
+	if err != nil {
+		return nil, err
 	}
-
-	return nil, errs.ErrResourceNotFound
+	return resources[idx], nil
 }
 
 func updateResource(ctx context.Context, r *models.Resource,

@@ -3,6 +3,7 @@ package prompts
 import (
 	"errors"
 	"fmt"
+	"regexp"
 	"strings"
 
 	"github.com/asaskevich/govalidator"
@@ -13,6 +14,8 @@ import (
 
 	"github.com/manifoldco/manifold-cli/errs"
 	"github.com/manifoldco/manifold-cli/prompts/templates"
+
+	mModels "github.com/manifoldco/manifold-cli/generated/marketplace/models"
 )
 
 const (
@@ -327,4 +330,32 @@ func CreditCard() (*stripe.Token, error) {
 	}
 
 	return tkn, nil
+}
+
+var configKeyRegexp = regexp.MustCompile(`^[a-zA-Z][a-zA-Z0-9_]{0,1000}$`)
+
+// CredentialAlias asks the user to supply a new alias for the given cred
+func CredentialAlias(creds []*mModels.Credential) (*mModels.Credential, string, string, error) {
+	c, originalName, err := SelectCredential(creds)
+	if err != nil {
+		return nil, "", "", err
+	}
+
+	fmt.Printf("Creating alias for `%s`\n", originalName)
+
+	p := promptui.Prompt{
+		Label: "Alias Name",
+		Validate: func(input string) error {
+			if !configKeyRegexp.MatchString(input) {
+				return errors.New("Please provide a valid alias")
+			}
+			return nil
+		},
+	}
+	newName, err := p.Run()
+	if err != nil {
+		return nil, "", "", err
+	}
+
+	return c, originalName, newName, nil
 }

@@ -63,7 +63,7 @@ func run(cliCtx *cli.Context) error {
 		return cli.NewExitError("Could not retrieve resources: "+err.Error(), -1)
 	}
 
-	cMap, err := fetchCredentials(ctx, client.Marketplace, rs)
+	cMap, err := fetchCredentials(ctx, client.Marketplace, rs, true)
 	if err != nil {
 		return cli.NewExitError("Could not retrieve credentials: "+err.Error(), -1)
 	}
