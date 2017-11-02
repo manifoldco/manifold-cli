@@ -178,7 +178,12 @@ func create(cliCtx *cli.Context) error {
 		descriptor = "an instance of " + string(product.Body.Name)
 	}
 
-	resourceName, resourceTitle, err := promptNameAndTitle(cliCtx, "resource", true, true)
+	resourceID, err := manifold.NewID(idtype.Resource)
+	if err != nil {
+		return cli.NewExitError("Could not create resource: "+err.Error(), -1)
+	}
+
+	resourceName, resourceTitle, err := promptNameAndTitle(cliCtx, &resourceID, "resource", true, true)
 	if err != nil {
 		return err
 	}
@@ -189,8 +194,8 @@ func create(cliCtx *cli.Context) error {
 		defer spin.Stop()
 	}
 
-	op, err := createResource(ctx, cfg, teamID, s, client.Provisioning, custom, product, plan, region,
-		project, resourceName, resourceTitle, dontWait)
+	op, err := createResource(ctx, cfg, &resourceID, teamID, s, client.Provisioning,
+		custom, product, plan, region, project, resourceName, resourceTitle, dontWait)
 	if err != nil {
 		return cli.NewExitError("Could not create resource: "+err.Error(), -1)
 	}
@@ -212,7 +217,7 @@ func create(cliCtx *cli.Context) error {
 	return nil
 }
 
-func createResource(ctx context.Context, cfg *config.Config, teamID *manifold.ID, s session.Session,
+func createResource(ctx context.Context, cfg *config.Config, resourceID, teamID *manifold.ID, s session.Session,
 	pClient *provisioning.Provisioning, custom bool, product *cModels.Product, plan *cModels.Plan,
 	region *cModels.Region, project *mModels.Project, resourceName, resourceTitle string, dontWait bool) (*pModels.Operation, error) {
 
@@ -222,11 +227,6 @@ func createResource(ctx context.Context, cfg *config.Config, teamID *manifold.ID
 	}
 
 	ID, err := manifold.NewID(idtype.Operation)
-	if err != nil {
-		return nil, err
-	}
-
-	resourceID, err := manifold.NewID(idtype.Resource)
 	if err != nil {
 		return nil, err
 	}
@@ -257,7 +257,7 @@ func createResource(ctx context.Context, cfg *config.Config, teamID *manifold.ID
 		Type:    &typeStr,
 		Version: &version,
 		Body: &pModels.Provision{
-			ResourceID: resourceID,
+			ResourceID: *resourceID,
 			Label:      &resourceName,
 			Name:       &resourceTitle,
 			Source:     &source,

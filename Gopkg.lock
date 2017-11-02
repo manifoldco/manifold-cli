@@ -28,8 +28,8 @@
 [[projects]]
   name = "github.com/asaskevich/govalidator"
   packages = ["."]
-  revision = "73945b6115bfbbcc57d89b7316e28109364124e1"
-  version = "v7"
+  revision = "7b3beb6df3c42abd3509abfc3bcacc0fbfb7c877"
+  version = "v5"
 
 [[projects]]
   name = "github.com/briandowns/spinner"
@@ -231,9 +231,9 @@
 
 [[projects]]
   name = "github.com/manifoldco/go-manifold"
-  packages = [".","errors","idtype"]
-  revision = "d7f843e17a66eb40fcdaafa36896f086cbbc214b"
-  version = "v0.7.2"
+  packages = [".","errors","idtype","names","names/data"]
+  revision = "f258c6580c0df9df59e763d439da5691956c70da"
+  version = "v0.8.7"
 
 [[projects]]
   branch = "master"
@@ -406,6 +406,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "11d707a07722179b5a751203abefe88dc02d86f0d4b5210428155fd6d0cba0c3"
+  inputs-digest = "414ff3231d6c2006c12d45736caa85889d1d94e2088491b45ff5f9c4eac4d52c"
   solver-name = "gps-cdcl"
   solver-version = 1

@@ -101,7 +101,7 @@ func createTeamCmd(cliCtx *cli.Context) error {
 		return err
 	}
 
-	teamName, teamTitle, err := promptNameAndTitle(cliCtx, "team", true, false)
+	teamName, teamTitle, err := promptNameAndTitle(cliCtx, nil, "team", true, false)
 	if err != nil {
 		return err
 	}
