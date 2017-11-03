@@ -8,10 +8,14 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ## Unreleased
 
 ### Added
-- Client-side name generation to `manifold create`
-- `manifold alias` can rename configuration keys on a per-resource basis
 
 ### Fixed
+
+## [0.10.0] - 2017-11-03
+
+### Added
+- Client-side name generation to `manifold create`
+- `manifold alias` can rename configuration keys on a per-resource basis
 
 ## [0.9.3] - 2017-10-30
 
