@@ -1,7 +1,7 @@
 VERSION?=$(shell git describe --tags --dirty | sed 's/^v//')
 PKG=github.com/manifoldco/manifold-cli
 STRIPE_PKEY=${STRIPE_PUBLISHABLE_KEY}
-GO_BUILD=CGO_ENABLED=0 go build -i --ldflags="-w -X $(PKG)/config.Version=$(VERSION) -X $(PKG)/config.StripePublishableKey=$(STRIPE_PKEY)"
+GO_BUILD=CGO_ENABLED=0 go build -i --ldflags="-w -X $(PKG)/config.Version=$(VERSION) -X $(PKG)/config.StripePublishableKey=$(STRIPE_PKEY) -X $(PKG)/config.GitHubClientID=$(GITHUB_CLIENT_ID)"
 
 PROMULGATE_VERSION=0.0.8
 

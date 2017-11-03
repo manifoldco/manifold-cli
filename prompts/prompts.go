@@ -247,6 +247,43 @@ func Password() (string, error) {
 	return prompt.Run()
 }
 
+// Hidden prompts the user to enter text into a masked prompt (with no validation rules like
+// Password()
+func Hidden(label string) (string, error) {
+	prompt := promptui.Prompt{
+		Label: label,
+		Mask:  PasswordMask,
+	}
+
+	return prompt.Run()
+}
+
+// Username prompts the user to input a username
+func Username() (string, error) {
+	p := promptui.Prompt{
+		Label:   "Username",
+		Default: "",
+	}
+
+	return p.Run()
+}
+
+// OTP prompts the user to input a one-time password for 2-factor authentication
+func OTP() (string, error) {
+	prompt := promptui.Prompt{
+		Label: "2-factor Authentication Token",
+		Validate: func(input string) error {
+			if len(input) != 6 {
+				return errors.New("2-factor Authentication Tokens should be 6 characters")
+			}
+
+			return nil
+		},
+	}
+
+	return prompt.Run()
+}
+
 // Confirm is a confirmation prompt
 func Confirm(msg string) (string, error) {
 	p := promptui.Prompt{

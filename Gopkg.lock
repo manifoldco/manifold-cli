@@ -153,6 +153,12 @@
 
 [[projects]]
   branch = "master"
+  name = "github.com/golang/protobuf"
+  packages = ["proto"]
+  revision = "1643683e1b54a9e88ad26d98f81400c8c9d9f4f9"
+
+[[projects]]
+  branch = "master"
   name = "github.com/google/shlex"
   packages = ["."]
   revision = "6f45313302b9c56850fc17f99e40caebce98c716"
@@ -363,6 +369,12 @@
 
 [[projects]]
   branch = "master"
+  name = "golang.org/x/oauth2"
+  packages = [".","github","internal"]
+  revision = "bb50c06baba3d0c76f9d125c0719093e315b5b44"
+
+[[projects]]
+  branch = "master"
   name = "golang.org/x/sys"
   packages = ["unix"]
   revision = "8dbc5d05d6edcc104950cc299a1ce6641235bc86"
@@ -378,6 +390,12 @@
   name = "golang.org/x/tools"
   packages = ["go/ast/astutil","go/buildutil","go/gcexportdata","go/gcimporter15","go/loader","go/types/typeutil","imports"]
   revision = "9bd2f442688b66c5289262d70f537c2ecf81d7de"
+
+[[projects]]
+  name = "google.golang.org/appengine"
+  packages = ["internal","internal/base","internal/datastore","internal/log","internal/remote_api","internal/urlfetch","urlfetch"]
+  revision = "150dc57a1b433e64154302bdc40b6bb8aefa313a"
+  version = "v1.0.0"
 
 [[projects]]
   branch = "v3-unstable"
@@ -406,6 +424,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "2a44e3fa6c4b523091a3fe8d03d832cc199ebcce7edf2b6fe6742100fee28c69"
+  inputs-digest = "dca896c1f3d74ecc4760acc96e009843955871436c8670d892cb408ee7948a96"
   solver-name = "gps-cdcl"
   solver-version = 1

@@ -18,14 +18,16 @@ func init() {
 		Name:     "login",
 		Usage:    "Log in to your account",
 		Category: "ADMINISTRATIVE",
+		Flags:    githubAuthFlags(),
 		Action:   login,
 	}
 
 	cmds = append(cmds, loginCmd)
 }
 
-func login(_ *cli.Context) error {
+func login(cliCtx *cli.Context) error {
 	ctx := context.Background()
+
 	cfg, err := config.Load()
 	if err != nil {
 		return cli.NewExitError("Could not load config: "+err.Error(), -1)
@@ -45,6 +47,52 @@ func login(_ *cli.Context) error {
 		return errs.ErrAlreadyLoggedIn
 	}
 
+	a, err := analytics.New(cfg, s)
+	if err != nil {
+		return cli.NewExitError("A problem occurred: "+err.Error(), -1)
+	}
+
+	oAuth := false
+	if cliCtx.NumFlags() > 0 {
+		if cliCtx.Bool("github") {
+			err := githubWithCallback(ctx, cfg, a, createOAuthAuth)
+			if err != nil {
+				return cli.NewExitError(err, -1)
+			}
+
+			oAuth = true
+		}
+
+		if cliCtx.Bool("github-user") {
+			err := githubWithUser(ctx, cfg, a, createOAuthAuth)
+			if err != nil {
+				return cli.NewExitError(fmt.Sprintf("Unable to log in: %s", err), -1)
+			}
+
+			oAuth = true
+		}
+
+		if cliCtx.IsSet("github-token") {
+			token := cliCtx.String("github-token")
+			err := githubWithToken(ctx, cfg, a, token, createOAuthAuth)
+			if err != nil {
+				return cli.NewExitError(fmt.Sprintf("Unable to log in: %s", err), -1)
+			}
+
+			oAuth = true
+		}
+	}
+
+	if oAuth {
+		fmt.Println("You are logged in, hooray!")
+	} else {
+		return loginWithEmail(ctx, cfg, s)
+	}
+
+	return nil
+}
+
+func loginWithEmail(ctx context.Context, cfg *config.Config, s session.Session) error {
 	email, err := prompts.Email("")
 	if err != nil {
 		return err
@@ -60,13 +108,5 @@ func login(_ *cli.Context) error {
 		return cli.NewExitError("Are you sure the password and email match? "+err.Error(), -1)
 	}
 
-	a, err := analytics.New(cfg, s)
-	if err != nil {
-		return cli.NewExitError("A problem occurred: "+err.Error(), -1)
-	}
-
-	a.Track(ctx, "Logged In", nil)
-
-	fmt.Printf("You are logged in, hooray!\n")
 	return nil
 }

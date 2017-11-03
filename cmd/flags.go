@@ -131,3 +131,21 @@ func roleFlag() cli.Flag {
 		Usage: "Specify a team role to be used",
 	}
 }
+
+func githubAuthFlags() []cli.Flag {
+	return []cli.Flag{
+		cli.BoolFlag{
+			Name:  "github",
+			Usage: "--github",
+		},
+		cli.BoolFlag{
+			Name:  "github-user",
+			Usage: "--github-user",
+		},
+		cli.StringFlag{
+			Name:   "github-token",
+			Usage:  "--github-token",
+			EnvVar: "MANIFOLD_GITHUB_TOKEN",
+		},
+	}
+}

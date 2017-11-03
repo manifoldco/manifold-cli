@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ## [0.12.0] - 2017-11-30
 
 ### Added
+- GitHub login flow
 
 - Get available roles from the server
 

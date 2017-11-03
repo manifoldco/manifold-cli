@@ -21,6 +21,10 @@ var Version = "dev"
 // StripePublishableKey facilitates secure transmission of payment values
 var StripePublishableKey = "pk_live_A6qSWh1v4SrNnrWSftgDcKFQ"
 
+// GitHubClientID facilitates logins with GitHub
+var GitHubClientID = ""
+var GitHubHost = "https://api.github.com" // todo: might make sense in the on-file config for GH enterprise users?
+
 func init() {
 	stripe.LogLevel = 0
 	stripe.Key = StripePublishableKey

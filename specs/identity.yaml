@@ -55,6 +55,36 @@ paths:
           description: Request failed due to an internal server error.
           schema:
             $ref: '#/definitions/Error'
+  /tokens/oauth:
+    post:
+      summary: Exchange a user's GitHub token for an authorization token
+      security: []
+      parameters:
+        - name: body
+          in: body
+          description: |
+            GitHub token authorization request
+          required: true
+          schema: { $ref: '#/definitions/OAuthAuthenticationRequest' }
+      tags:
+        - Authentication
+      responses:
+        201:
+          description: A login token.
+          schema:
+            $ref: '#/definitions/AuthToken'
+        400:
+          description: Invalid token request supplied
+          schema:
+            $ref: '#/definitions/Error'
+        500:
+          description: Request failed due to an internal server error.
+          schema:
+            $ref: '#/definitions/Error'
+        default:
+          description: Unexpected error
+          schema:
+            $ref: '#/definitions/Error'
   /tokens/auth:
     post:
       summary: Exchange a login token for a general use auth token
@@ -402,6 +432,34 @@ paths:
             $ref: '#/definitions/User'
         400:
           description: Validation failed for request
+          schema:
+            $ref: '#/definitions/Error'
+        500:
+          description: Request failed due to an internal server error.
+          schema:
+            $ref: '#/definitions/Error'
+        default:
+          description: Unexpected error
+          schema:
+            $ref: '#/definitions/Error'
+  /users/link/oauth:
+    post:
+      summary: Exchange a third-party OAuth token, linking the user to that account
+      parameters:
+        - name: body
+          in: body
+          description: |
+            OAuth token authorization request
+          required: true
+          schema:
+            $ref: '#/definitions/OAuthAuthenticationRequest'
+      tags:
+        - User
+      responses:
+        204:
+          description: An empty response
+        400:
+          description: Invalid token request supplied
           schema:
             $ref: '#/definitions/Error'
         500:
@@ -1513,3 +1571,15 @@ definitions:
       - id
       - version
       - type
+  OAuthAuthenticationRequest:
+    type: object
+    properties:
+      code:
+        type: string
+        description: Authentication Token for service
+      source:
+        type: string
+        enum: ['github', 'github-token']
+    required:
+      - code
+      - source
