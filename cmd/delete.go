@@ -97,7 +97,7 @@ func deleteCmd(cliCtx *cli.Context) error {
 
 	var resource *mModels.Resource
 	if resourceName != "" {
-		resource, err = pickResourcesByName(resources, resourceName)
+		resource, err = pickResourcesByName(resources, projects, resourceName)
 		if err != nil {
 			return cli.NewExitError(
 				fmt.Sprintf("Failed to find resource \"%s\": %s", resourceName, err), -1)

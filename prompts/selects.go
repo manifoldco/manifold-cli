@@ -317,3 +317,36 @@ func SelectAPIToken(tokens []*iModels.APIToken) (*iModels.APIToken, error) {
 
 	return tokens[idx], nil
 }
+
+// SelectCredential prompts the user to choose from a list of credentials
+func SelectCredential(creds []*mModels.Credential) (*mModels.Credential, string, error) {
+	var labels []string
+	var keyNames []string
+	var items []*mModels.Credential
+
+	for _, c := range creds {
+		for k := range c.Body.Values {
+			value := k
+			if c.Body.CustomNames != nil {
+				if alias, ok := c.Body.CustomNames[k]; ok {
+					value = fmt.Sprintf("%s (%s)", value, alias)
+				}
+			}
+			keyNames = append(keyNames, k)
+			labels = append(labels, value)
+			items = append(items, c)
+		}
+	}
+
+	prompt := promptui.Select{
+		Label: "Select Credential",
+		Items: labels,
+	}
+
+	idx, _, err := prompt.Run()
+	if err != nil {
+		return nil, "", err
+	}
+
+	return items[idx], keyNames[idx], nil
+}

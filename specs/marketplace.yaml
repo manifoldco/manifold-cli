@@ -250,6 +250,11 @@ paths:
     get:
       summary: List credentials
       parameters:
+      - name: custom_names
+        in: query
+        description: Setting this to false disabled CustomNames application
+        type: string
+        required: false
       - name: resource_id
         in: query
         description: |
@@ -278,6 +283,34 @@ paths:
           $ref: '#/responses/InternalServerError'
         default:
           $ref: '#/responses/Unexpected'
+  /credentials/{id}:
+    patch:
+      summary: Update credential metadata
+      parameters:
+        - name: id
+          in: path
+          description: |
+            ID of the Credential to update, stored as a base32 encoded 18 byte
+            identifier.
+          required: true
+          type: string
+          pattern: '^[0-9abcdefghjkmnpqrtuvwxyz]{29}$'
+          format: base32ID
+        - name: body
+          in: body
+          description: Credential update request
+          required: true
+          schema: { $ref: '#/definitions/UpdateCredential' }
+      tags:
+        - Credential
+      responses:
+        200:
+          description: Credential object
+          schema: { $ref: '#/definitions/Credential' }
+        400: { $ref: "#/responses/BadRequest" }
+        401: { $ref: "#/responses/Unauthorized" }
+        500: { $ref: "#/responses/InternalServerError" }
+        default: { $ref: "#/responses/Unexpected" }
   /projects:
     get:
       summary: List all provisioned projects
@@ -553,6 +586,19 @@ definitions:
     additionalProperties: false
     required:
     - body
+  UpdateCredential:
+    type: object
+    properties:
+      body:
+        type: object
+        properties:
+          custom_names:
+            type: object
+            description: Map of configuration variable aliases to original names
+        additionalProperties: false
+    additionalProperties: false
+    required:
+      - body
   CreateCredential:
     type: object
     properties:
@@ -606,6 +652,10 @@ definitions:
         properties:
           resource_id:
             $ref: '#/definitions/ID'
+          custom_names:
+            type: object
+            description: Map of configuration variable aliases to original names
+            additionalProperties: { type: string }
           values:
             type: object
             description: |

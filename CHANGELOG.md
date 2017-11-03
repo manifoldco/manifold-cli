@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Added
 - Client-side name generation to `manifold create`
+- `manifold alias` can rename configuration keys on a per-resource basis
 
 ### Fixed
 

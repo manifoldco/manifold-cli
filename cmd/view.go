@@ -94,7 +94,7 @@ func view(cliCtx *cli.Context) error {
 
 	var resource *models.Resource
 	if resourceName != "" {
-		resource, err = pickResourcesByName(resources, resourceName)
+		resource, err = pickResourcesByName(resources, projects, resourceName)
 		if err != nil {
 			return cli.NewExitError(
 				fmt.Sprintf("Failed to find resource \"%s\": %s", resourceName, err), -1)

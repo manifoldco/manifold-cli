@@ -232,8 +232,8 @@
 [[projects]]
   name = "github.com/manifoldco/go-manifold"
   packages = [".","errors","idtype","names","names/data"]
-  revision = "f258c6580c0df9df59e763d439da5691956c70da"
-  version = "v0.8.7"
+  revision = "cb49cbb371ec70ebe71a9092993b94f99a6ea858"
+  version = "v0.8.8"
 
 [[projects]]
   branch = "master"
@@ -406,6 +406,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "414ff3231d6c2006c12d45736caa85889d1d94e2088491b45ff5f9c4eac4d52c"
+  inputs-digest = "7df8f288a4e495ec85f4b83fb1542fb65287fb1e468e2879edcb425bf36a6dfa"
   solver-name = "gps-cdcl"
   solver-version = 1
