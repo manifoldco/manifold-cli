@@ -8,6 +8,7 @@ import (
 	"github.com/urfave/cli"
 
 	"github.com/manifoldco/go-manifold"
+	"github.com/manifoldco/go-manifold/names"
 	"github.com/manifoldco/manifold-cli/config"
 	"github.com/manifoldco/manifold-cli/plugins"
 	"github.com/manifoldco/manifold-cli/prompts"
@@ -71,12 +72,6 @@ var helpCommand = cli.Command{
 	},
 }
 
-// generateName makes a title lowercase and replace spaces with dashes
-func generateName(title string) manifold.Label {
-	name := strings.Replace(strings.ToLower(title), " ", "-", -1)
-	return manifold.Label(name)
-}
-
 // generateTitle makes a name capitalized and replace dashes with spaaces
 func generateTitle(name string) manifold.Name {
 	title := strings.Title(strings.Replace(name, "-", " ", -1))
@@ -86,18 +81,26 @@ func generateTitle(name string) manifold.Name {
 // promptNameAndTitle encapsulates the logic for accepting a name as the first
 // positional argument (optionally), and a title flag (optionally)
 // returning generated values accepted by the user
-func promptNameAndTitle(ctx *cli.Context, objectName string, shouldInferTitle, allowEmpty bool) (string, string, error) {
+func promptNameAndTitle(ctx *cli.Context, optionalID *manifold.ID, objectName string, shouldInferTitle, allowEmpty bool) (string, string, error) {
 	// The user may supply a name value as the first positional arg
 	argName, err := optionalArgName(ctx, 0, "name")
 	if err != nil {
 		return "", "", err
+	}
+	shouldAccept := true
+	if optionalID != nil {
+		_, name := names.New(*optionalID)
+		if argName == "" {
+			argName = string(name)
+		}
+		shouldAccept = false
 	}
 
 	// The user may supply a title value from a flag, validate it
 	flagTitle := ctx.String("title")
 
 	// Create the title based on the name argument
-	return createNameAndTitle(ctx, objectName, argName, flagTitle, shouldInferTitle, true, allowEmpty)
+	return createNameAndTitle(ctx, objectName, argName, flagTitle, shouldInferTitle, shouldAccept, allowEmpty)
 }
 
 func createNameAndTitle(ctx *cli.Context, objectName, argName, flagTitle string, shouldInferTitle, shouldAccept, allowEmpty bool) (string, string, error) {

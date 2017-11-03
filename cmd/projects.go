@@ -116,7 +116,7 @@ func createProjectCmd(cliCtx *cli.Context) error {
 		return errUserActionAsTeam
 	}
 
-	projectName, projectTitle, err := promptNameAndTitle(cliCtx, "project", true, false)
+	projectName, projectTitle, err := promptNameAndTitle(cliCtx, nil, "project", true, false)
 	if err != nil {
 		return err
 	}
