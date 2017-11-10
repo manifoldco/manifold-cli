@@ -3,13 +3,12 @@ package search
 import (
 	"testing"
 
-	manifold "github.com/manifoldco/go-manifold"
-	"github.com/manifoldco/manifold-cli/generated/catalog/models"
+	"github.com/manifoldco/manifold-cli/prompts/templates"
 )
 
 func TestProductSearch(t *testing.T) {
-	products := []*models.Product{
-		{Body: &models.ProductBody{Label: manifold.Label("jawsmysql")}},
+	products := []templates.Product{
+		{Name: "jawsdb-mysql"},
 	}
 
 	tcs := []struct {
@@ -44,10 +43,10 @@ func TestProductSearch(t *testing.T) {
 		t.Run(tc.scenario, func(t *testing.T) {
 			match := search(tc.input, tc.idx)
 			product := products[tc.idx]
-			label := string(product.Body.Label)
+			name := product.Name
 
 			if match != tc.match {
-				t.Errorf("Expected %q to match %v", tc.input, productTags[label])
+				t.Errorf("Expected %q to match %v", tc.input, productTags[name])
 			}
 		})
 	}

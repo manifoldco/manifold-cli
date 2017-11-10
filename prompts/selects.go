@@ -7,6 +7,7 @@ import (
 	cModels "github.com/manifoldco/manifold-cli/generated/catalog/models"
 	iModels "github.com/manifoldco/manifold-cli/generated/identity/models"
 	mModels "github.com/manifoldco/manifold-cli/generated/marketplace/models"
+	"github.com/manifoldco/manifold-cli/prompts/search"
 	"github.com/manifoldco/manifold-cli/prompts/templates"
 	"github.com/manifoldco/promptui"
 )
@@ -42,6 +43,7 @@ func SelectProduct(list []*cModels.Product, name string) (int, string, error) {
 		Label:     "Select Product",
 		Items:     products,
 		Templates: tpls,
+		Searcher:  search.ProductSearch(products),
 	}
 
 	return prompt.Run()
