@@ -7,7 +7,6 @@ import (
 	"net/url"
 	"os"
 	"os/exec"
-	"os/user"
 	"path"
 	"runtime"
 	"strings"
@@ -27,24 +26,16 @@ const (
 // ErrFailedToRead is returned when you the plugins directory cannot be read
 var ErrFailedToRead = errors.New("Failed to read plugins directory")
 
-// ErrMissingHomeDir represents an error when a home directory could not be found
-var ErrMissingHomeDir = errors.New("Could not find Home Directory")
-
 // ErrBadPluginRepository represents an error when the plugin url is invalidu
 var ErrBadPluginRepository = errors.New("Invalid repository URL")
 
 // Path returns the plugin directory's path
 func Path() (string, error) {
-	u, err := user.Current()
+	home, err := config.UserHome()
 	if err != nil {
 		return "", err
 	}
-
-	if u.HomeDir == "" {
-		return "", ErrMissingHomeDir
-	}
-
-	return path.Join(u.HomeDir, directory), nil
+	return path.Join(home, directory), nil
 }
 
 // Executable returns the executable path
