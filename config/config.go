@@ -135,16 +135,11 @@ func checkPermissions(path string) error {
 
 // RCPath returns the absolute path to the ~/.manifoldrc file
 func RCPath() (string, error) {
-	u, err := user.Current()
+	home, err := UserHome()
 	if err != nil {
 		return "", err
 	}
-
-	if u.HomeDir == "" {
-		return "", ErrMissingHomeDir
-	}
-
-	return path.Join(u.HomeDir, rcFilename), nil
+	return path.Join(home, rcFilename), nil
 }
 
 // Config represents the configuration which is stored inside a ~/.manifoldrc
@@ -333,4 +328,21 @@ func isSystemRoot(path string) bool {
 	}
 
 	return os.PathSeparator == path[rootPathLength-1]
+}
+
+func UserHome() (string, error) {
+	home := os.Getenv("HOME")
+	if home != "" {
+		return home, nil
+	}
+	u, err := user.Current()
+	if err != nil {
+		return "", err
+	}
+
+	if u.HomeDir == "" {
+		return "", ErrMissingHomeDir
+	}
+
+	return u.HomeDir, nil
 }

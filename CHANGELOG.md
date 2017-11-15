@@ -11,6 +11,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Fixed
 
+## [0.10.1] - 2017-11-15
+
+### Fixed
+
+- `os/user.Current` when cgo is disabled
+
 ## [0.10.0] - 2017-11-03
 
 ### Added
