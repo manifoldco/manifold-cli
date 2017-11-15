@@ -265,6 +265,7 @@ definitions:
     - message
     - created_at
     - updated_at
+
   provision:
     type: object
     allOf:
@@ -317,6 +318,24 @@ definitions:
       - label
       - source
       - resource_id
+
+  transfer:
+    type: object
+    allOf:
+      - { $ref: '#/definitions/OperationBody' }
+      - type: object
+        properties:
+          resource_id: { $ref: '#/definitions/ID' }
+          state:
+            description: State must be specified as creating on a PUT operation
+            type: string
+            enum: ['transfer', 'billing', 'commit', 'error', 'done']
+          new_owner_id: { $ref: '#/definitions/OptionalID' }
+        additionalProperties: false
+        required:
+          - state
+          - new_owner_id
+
   resize:
     type: object
     allOf:
