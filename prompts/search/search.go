@@ -38,3 +38,21 @@ func ProductSearch(products []templates.Product) func(string, int) bool {
 		return false
 	}
 }
+
+// PlanSearch returns a search function to filter by plan name.
+func PlanSearch(plans []templates.Plan) func(string, int) bool {
+	return func(input string, idx int) bool {
+		plan := plans[idx]
+		name := string(plan.Name)
+		return strings.Contains(name, input)
+	}
+}
+
+// RegionSearch returns a search function to filter by region name.
+func RegionSearch(regions []templates.Region) func(string, int) bool {
+	return func(input string, idx int) bool {
+		region := regions[idx]
+		name := strings.ToLower(string(region.Name))
+		return strings.Contains(name, input)
+	}
+}

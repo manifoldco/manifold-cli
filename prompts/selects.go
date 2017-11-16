@@ -80,6 +80,7 @@ func SelectPlan(list []*cModels.Plan, name string) (int, string, error) {
 		Label:     "Select Plan",
 		Items:     plans,
 		Templates: tpls,
+		Searcher:  search.PlanSearch(plans),
 	}
 
 	return prompt.Run()
@@ -150,6 +151,7 @@ func SelectRegion(list []*cModels.Region) (int, string, error) {
 		Label:     "Select Region",
 		Items:     regions,
 		Templates: tpls,
+		Searcher:  search.RegionSearch(regions),
 	}
 
 	return prompt.Run()
