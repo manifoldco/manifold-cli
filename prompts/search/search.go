@@ -11,9 +11,13 @@ var productTags map[string][]string
 func init() {
 	// FIXME bootstrap product tags while isn't supported by the backend.
 	productTags = map[string][]string{
-		"jawsdb-mysql":    []string{"database"},
-		"jawsdb-maria":    []string{"database"},
-		"jawsdb-postgres": []string{"database"},
+		"jawsdb-mysql":     []string{"database"},
+		"jawsdb-maria":     []string{"database"},
+		"jawsdb-postgres":  []string{"database"},
+		"mailgun":          []string{"email"},
+		"cloudamqp":        []string{"rabbitmq"},
+		"memcachier-cache": []string{"memcache"},
+		"scoutapp":         []string{"memory leak", "monitoring", "ruby", "elixir"},
 	}
 }
 
