@@ -18,7 +18,7 @@ LINTERS=\
 
 all: ci
 
-ci: $(LINTERS) cover build
+ci: generated-clients $(LINTERS) cover build
 
 .PHONY: all ci
 

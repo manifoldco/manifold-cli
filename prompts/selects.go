@@ -7,6 +7,7 @@ import (
 	cModels "github.com/manifoldco/manifold-cli/generated/catalog/models"
 	iModels "github.com/manifoldco/manifold-cli/generated/identity/models"
 	mModels "github.com/manifoldco/manifold-cli/generated/marketplace/models"
+	"github.com/manifoldco/manifold-cli/prompts/search"
 	"github.com/manifoldco/manifold-cli/prompts/templates"
 	"github.com/manifoldco/promptui"
 )
@@ -42,6 +43,7 @@ func SelectProduct(list []*cModels.Product, name string) (int, string, error) {
 		Label:     "Select Product",
 		Items:     products,
 		Templates: tpls,
+		Searcher:  search.ProductSearch(products),
 	}
 
 	return prompt.Run()
@@ -78,6 +80,7 @@ func SelectPlan(list []*cModels.Plan, name string) (int, string, error) {
 		Label:     "Select Plan",
 		Items:     plans,
 		Templates: tpls,
+		Searcher:  search.PlanSearch(plans),
 	}
 
 	return prompt.Run()
@@ -148,6 +151,7 @@ func SelectRegion(list []*cModels.Region) (int, string, error) {
 		Label:     "Select Region",
 		Items:     regions,
 		Templates: tpls,
+		Searcher:  search.RegionSearch(regions),
 	}
 
 	return prompt.Run()

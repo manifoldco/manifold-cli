@@ -239,7 +239,7 @@
   branch = "master"
   name = "github.com/manifoldco/promptui"
   packages = [".","list","screenbuf"]
-  revision = "ec3d3b6d896f047545120a282951f24815db552c"
+  revision = "ab0f0c69544bac5d397734f74b765118b3d0c97b"
 
 [[projects]]
   name = "github.com/mattn/go-colorable"
