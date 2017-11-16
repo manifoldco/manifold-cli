@@ -58,7 +58,7 @@ func init() {
 				Name:      "invite",
 				ArgsUsage: "[email] [display-name]",
 				Usage:     "Invite a user to join a team",
-				Flags:     teamFlags,
+				Flags:     append(teamFlags, roleFlag()),
 				Action: middleware.Chain(middleware.LoadDirPrefs, middleware.EnsureSession,
 					middleware.LoadTeamPrefs, inviteToTeamCmd),
 			},
@@ -199,9 +199,13 @@ func inviteToTeamCmd(cliCtx *cli.Context) error {
 		}
 	}
 
-	role, err := prompts.SelectRole()
-	if err != nil {
-		return prompts.HandleSelectError(err, "Could not select role")
+	role := cliCtx.String("role")
+
+	if role == "" {
+		role, err = prompts.SelectRole()
+		if err != nil {
+			return prompts.HandleSelectError(err, "Could not select role")
+		}
 	}
 
 	if err := inviteToTeam(ctx, team, email, name, role, client.Identity); err != nil {

@@ -124,3 +124,10 @@ func openFlag() cli.Flag {
 		EnvVar: "MANIFOLD_OPEN_BROWSER",
 	}
 }
+
+func roleFlag() cli.Flag {
+	return cli.StringFlag{
+		Name:  "role",
+		Usage: "Specify a team role to be used",
+	}
+}
