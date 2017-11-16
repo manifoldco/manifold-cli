@@ -58,7 +58,7 @@ func init() {
 				Name:      "invite",
 				ArgsUsage: "[email] [display-name]",
 				Usage:     "Invite a user to join a team",
-				Flags:     teamFlags,
+				Flags:     append(teamFlags, roleFlag()),
 				Action: middleware.Chain(middleware.LoadDirPrefs, middleware.EnsureSession,
 					middleware.LoadTeamPrefs, inviteToTeamCmd),
 			},
@@ -73,6 +73,13 @@ func init() {
 				Name:   "list",
 				Usage:  "List all your teams",
 				Action: middleware.Chain(middleware.EnsureSession, listTeamCmd),
+			},
+			{
+				Name:      "join",
+				ArgsUsage: "[token]",
+				Usage:     "Join a team using an invitation token",
+				Flags:     teamFlags,
+				Action:    middleware.Chain(middleware.EnsureSession, joinTeamCmd),
 			},
 			{
 				Name:      "leave",
@@ -199,9 +206,13 @@ func inviteToTeamCmd(cliCtx *cli.Context) error {
 		}
 	}
 
-	role, err := prompts.SelectRole()
-	if err != nil {
-		return prompts.HandleSelectError(err, "Could not select role")
+	role := cliCtx.String("role")
+
+	if role == "" {
+		role, err = prompts.SelectRole()
+		if err != nil {
+			return prompts.HandleSelectError(err, "Could not select role")
+		}
 	}
 
 	if err := inviteToTeam(ctx, team, email, name, role, client.Identity); err != nil {
@@ -297,6 +308,35 @@ func listTeamCmd(cliCtx *cli.Context) error {
 		fmt.Fprintf(w, "%s (%s)\t%d\n", team.Name, color.Faint(team.Title), team.Members)
 	}
 	return w.Flush()
+}
+
+func joinTeamCmd(cliCtx *cli.Context) error {
+	if err := maxOptionalArgsLength(cliCtx, 1); err != nil {
+		return err
+	}
+
+	token, err := optionalArgName(cliCtx, 0, "token")
+	if err != nil {
+		return err
+	}
+
+	token, err = prompts.InvitationCode(token)
+	if err != nil {
+		return err
+	}
+
+	client, err := api.New(api.Identity)
+	if err != nil {
+		return err
+	}
+
+	err = client.AcceptInvite(token)
+	if err != nil {
+		return cli.NewExitError(fmt.Sprintf("Failed to accept team invitation: %s", err), -1)
+	}
+
+	fmt.Println("You have joined the team")
+	return nil
 }
 
 func leaveTeamCmd(cliCtx *cli.Context) error {

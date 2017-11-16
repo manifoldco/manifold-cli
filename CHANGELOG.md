@@ -9,7 +9,16 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Added
 
+- `--role` flag to `teams invite`
+- `teams join` using an invitation token
+
 ### Fixed
+
+## [0.10.1] - 2017-11-15
+
+### Fixed
+
+- `os/user.Current` when cgo is disabled
 
 ## [0.10.0] - 2017-11-03
 
