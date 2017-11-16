@@ -19,9 +19,10 @@ import (
 )
 
 const (
-	namePattern   = "^[a-zA-Z\\s,\\.'\\-pL]{1,64}$"
-	couponPattern = "^[0-9A-Z]{1,128}$"
-	codePattern   = "^[0-9abcdefghjkmnpqrtuvwxyz]{16}$"
+	namePattern        = "^[a-zA-Z\\s,\\.'\\-pL]{1,64}$"
+	couponPattern      = "^[0-9A-Z]{1,128}$"
+	codePattern        = "^[0-9abcdefghjkmnpqrtuvwxyz]{16}$"
+	inviteTokenPattern = "^[a-zA-Z0-9_-]{52}$"
 )
 
 // NumberMask is the character used to mask number inputs
@@ -358,4 +359,32 @@ func CredentialAlias(creds []*mModels.Credential) (*mModels.Credential, string, 
 	}
 
 	return c, originalName, newName, nil
+}
+
+// InvitationCode prompts the user to input an invitation token to join a team.
+func InvitationCode(defaultValue string) (string, error) {
+	label := "Token"
+	validate := func(input string) error {
+		if govalidator.StringMatches(input, inviteTokenPattern) {
+			return nil
+		}
+		return errors.New("Please enter a valid invitation token")
+	}
+
+	if defaultValue != "" {
+		err := validate(defaultValue)
+		if err != nil {
+			fmt.Println(templates.PromptFailure(label, defaultValue))
+		} else {
+			fmt.Println(templates.PromptSuccess(label, defaultValue))
+		}
+		return defaultValue, err
+	}
+
+	p := promptui.Prompt{
+		Label:    label,
+		Validate: validate,
+	}
+
+	return p.Run()
 }

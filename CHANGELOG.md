@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Added
 
+- `teams join` using an invitation token
+
 ### Fixed
 
 ## [0.10.1] - 2017-11-15

@@ -75,6 +75,13 @@ func init() {
 				Action: middleware.Chain(middleware.EnsureSession, listTeamCmd),
 			},
 			{
+				Name:      "join",
+				ArgsUsage: "[token]",
+				Usage:     "Join a team using an invitation token",
+				Flags:     teamFlags,
+				Action:    middleware.Chain(middleware.EnsureSession, joinTeamCmd),
+			},
+			{
 				Name:      "leave",
 				ArgsUsage: "[team-name]",
 				Usage:     "Remove yourself from a team",
@@ -297,6 +304,37 @@ func listTeamCmd(cliCtx *cli.Context) error {
 		fmt.Fprintf(w, "%s (%s)\t%d\n", team.Name, color.Faint(team.Title), team.Members)
 	}
 	return w.Flush()
+}
+
+func joinTeamCmd(cliCtx *cli.Context) error {
+	ctx := context.Background()
+
+	if err := maxOptionalArgsLength(cliCtx, 1); err != nil {
+		return err
+	}
+
+	token, err := optionalArgName(cliCtx, 0, "token")
+	if err != nil {
+		return err
+	}
+
+	token, err = prompts.InvitationCode(token)
+	if err != nil {
+		return err
+	}
+
+	client, err := api.New(api.Identity)
+	if err != nil {
+		return err
+	}
+
+	err = clients.AcceptInvite(ctx, token, client.Identity)
+	if err != nil {
+		return cli.NewExitError(fmt.Sprintf("Failed to accept team invitation: %s", err), -1)
+	}
+
+	fmt.Println("You have joined the team")
+	return nil
 }
 
 func leaveTeamCmd(cliCtx *cli.Context) error {
