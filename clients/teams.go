@@ -112,14 +112,3 @@ func FetchMemberships(ctx context.Context, c *iClient.Identity) ([]iModels.TeamM
 
 	return results, nil
 }
-
-// AcceptInvite accepts an invitation to join a team. A nil error means the
-// invitation was accepted correctly.
-func AcceptInvite(ctx context.Context, token string, c *iClient.Identity) error {
-	params := invite.NewPostInvitesAcceptParamsWithContext(ctx)
-	t := iModels.LimitedLifeTokenBase32(token)
-	params.SetBody(&iModels.AcceptInvite{Token: t})
-
-	_, err := c.Invite.PostInvitesAccept(params, nil)
-	return err
-}

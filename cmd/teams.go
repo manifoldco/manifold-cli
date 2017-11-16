@@ -307,8 +307,6 @@ func listTeamCmd(cliCtx *cli.Context) error {
 }
 
 func joinTeamCmd(cliCtx *cli.Context) error {
-	ctx := context.Background()
-
 	if err := maxOptionalArgsLength(cliCtx, 1); err != nil {
 		return err
 	}
@@ -328,7 +326,7 @@ func joinTeamCmd(cliCtx *cli.Context) error {
 		return err
 	}
 
-	err = clients.AcceptInvite(ctx, token, client.Identity)
+	err = client.AcceptInvite(token)
 	if err != nil {
 		return cli.NewExitError(fmt.Sprintf("Failed to accept team invitation: %s", err), -1)
 	}
