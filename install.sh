@@ -11,29 +11,41 @@
   }
 
   error_exit() {
-    tput sgr0
-    tput setaf 1
-    echo "ERROR: $1"
-    tput sgr0
+    if is_installed tput; then
+      tput sgr0
+      tput setaf 1
+      echo "ERROR: $1"
+      tput sgr0
+    else
+      echo "ERROR: $1"
+    fi
     exit 1
   }
 
   success_msg() {
-    command printf "["
-    tput sgr0
-    tput setaf 2
-    command printf "OK"
-    tput sgr0
-    command printf "] ${1}\\n"
+    if is_installed tput; then
+      command printf "["
+      tput sgr0
+      tput setaf 2
+      command printf "OK"
+      tput sgr0
+      command printf "] ${1}\\n"
+    else
+      echo "[OK]: $1"
+    fi
   }
 
   warning_msg() {
-    command printf "["
-    tput sgr0
-    tput setaf 3
-    command printf "!!"
-    tput sgr0
-    command printf "] ${1}\\n"
+    if is_installed tput; then
+      command printf "["
+      tput sgr0
+      tput setaf 3
+      command printf "!!"
+      tput sgr0
+      command printf "] ${1}\\n"
+    else
+      echo "[!!]: $1"
+    fi
   }
 
   try_profile() {
@@ -106,7 +118,7 @@
   REPO="https://github.com/manifoldco/manifold-cli"
 
   if [ -z "$MANIFOLD_VERSION" ]; then
-    MANIFOLD_VERSION="0.10.0"
+    MANIFOLD_VERSION="0.10.1"
   fi
 
   if [ -z "$MANIFOLD_DIR" ]; then
@@ -115,7 +127,9 @@
 
   mkdir -p $MANIFOLD_DIR
 
-  pushd $MANIFOLD_DIR > /dev/null
+  CURRENT_DIR=`pwd`
+
+  cd $MANIFOLD_DIR
 
   # Create filename accordingly to manifoldco/promulgate structure
   FILENAME="manifold-cli_${MANIFOLD_VERSION}_${OS}_amd64.tar.gz"
@@ -129,11 +143,11 @@
 
   rm $FILENAME
 
-  popd > /dev/null
+  cd $CURRENT_DIR
 
   if is_installed manifold; then
     PREVIOUS_INSTALLATION=`which manifold`
-    if [ "$PREVIOUS_INSTALLATION" == "$MANIFOLD_DIR/manifold" ]; then
+    if [ "$PREVIOUS_INSTALLATION" = "$MANIFOLD_DIR/manifold" ]; then
       success_msg "Binary updated at $MANIFOLD_DIR"
     else
       success_msg "Binary installed at $MANIFOLD_DIR"
@@ -148,9 +162,9 @@
 
   PATH_CHANGE="export PATH=\"\$PATH:$MANIFOLD_DIR\""
 
-  if [[ ":$PATH:" == *":$MANIFOLD_DIR:"* ]]; then
+  if echo ":$PATH:" | grep -q ":$MANIFOLD_DIR:" > /dev/null; then
     success_msg "\$PATH already contained $MANIFOLD_DIR. Skipping..."
-  elif [ "$PROFILE" == "" ]; then
+  elif [ "$PROFILE" = "" ]; then
     warning_msg "Unable to locate profile settings file (something like $HOME/.bashrc or $HOME/.bash_profile)"
     warning_msg "You will have to manually add the following line:"
     echo
