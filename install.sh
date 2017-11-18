@@ -96,6 +96,34 @@
     fi
   }
 
+  autocomplete() {
+    local DETECTED_PROFILE
+    AUTOCOMPLETE=''
+
+    local SHELLTYPE
+    SHELLTYPE="$(basename "/$SHELL")"
+
+    if [ "$SHELLTYPE" = "bash" ]; then
+      AUTOCOMPLETE=$(cat <<'EOF'
+        #! /bin/bash
+        _cli_bash_autocomplete() {
+          local cur opts base
+          COMPREPLY=()
+          cur="${COMP_WORDS[COMP_CWORD]}"
+          opts=$( ${COMP_WORDS[@]:0:$COMP_CWORD} --generate-bash-completion )
+          COMPREPLY=( $(compgen -W "${opts}" -- ${cur}) )
+          return 0
+        }
+        complete -F _cli_bash_autocomplete manifold
+EOF
+)
+    fi
+
+    if [ ! -z "$AUTOCOMPLETE" ]; then
+      echo "$AUTOCOMPLETE"
+    fi
+  }
+
   MACHINE_TYPE=`uname -m`
   if [ ${MACHINE_TYPE} != 'x86_64' ]; then
     error_exit "32 bits architecture is not supported"
@@ -143,8 +171,6 @@
 
   rm $FILENAME
 
-  cd $CURRENT_DIR
-
   if is_installed manifold; then
     PREVIOUS_INSTALLATION=`which manifold`
     if [ "$PREVIOUS_INSTALLATION" = "$MANIFOLD_DIR/manifold" ]; then
@@ -159,6 +185,7 @@
   fi
 
   PROFILE=`detect_profile`
+  AUTOCOMPLETE=`autocomplete`
 
   PATH_CHANGE="export PATH=\"\$PATH:$MANIFOLD_DIR\""
 
@@ -173,7 +200,11 @@
     echo $PATH_CHANGE >> $PROFILE
     success_msg "Your $PROFILE has changed to include $MANIFOLD_DIR into your PATH"
     warning_msg "Please restart or re-source your terminal session."
+    echo "$AUTOCOMPLETE" >> .manifold_completion
+    echo "source $MANIFOLD_DIR/.manifold_completion" >> $PROFILE
   fi
+
+  cd $CURRENT_DIR
 
   echo
   success_msg "All done. Happy manifold use! :)"
