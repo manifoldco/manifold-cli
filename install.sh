@@ -106,7 +106,8 @@
     if [ "$SHELLTYPE" = "bash" ]; then
       AUTOCOMPLETE=$(cat <<'EOF'
         #! /bin/bash
-        _cli_bash_autocomplete() {
+        export MANIFOLD_AUTOCOMPLETE=true
+        _manifold_bash_autocomplete() {
           local cur opts base
           COMPREPLY=()
           cur="${COMP_WORDS[COMP_CWORD]}"
@@ -114,7 +115,7 @@
           COMPREPLY=( $(compgen -W "${opts}" -- ${cur}) )
           return 0
         }
-        complete -F _cli_bash_autocomplete manifold
+        complete -F _manifold_bash_autocomplete manifold
 EOF
 )
     fi
@@ -200,7 +201,10 @@ EOF
     echo $PATH_CHANGE >> $PROFILE
     success_msg "Your $PROFILE has changed to include $MANIFOLD_DIR into your PATH"
     warning_msg "Please restart or re-source your terminal session."
-    echo "$AUTOCOMPLETE" >> .manifold_completion
+  fi
+
+  if [ "$MANIFOLD_AUTOCOMPLETE" = "" ]; then
+    echo "$AUTOCOMPLETE" > .manifold_completion
     echo "source $MANIFOLD_DIR/.manifold_completion" >> $PROFILE
   fi
 
