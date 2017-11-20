@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - `--role` flag to `teams invite`
 - `teams join` using an invitation token
 - `create` cmd has search for product, plan and region
+- `transfer` allows you to transfer resources from a team to a user and vice versa
 
 ### Fixed
 
