@@ -74,6 +74,10 @@ var ErrNoProducts = cli.NewExitError("No products found", -1)
 // command line arguments
 var ErrTooManyArgs = cli.NewExitError("You've provided too many command line arguments!", -1)
 
+// ErrTooFewArgs represents an error where a user has provided too few
+// command line arguments
+var ErrTooFewArgs = cli.NewExitError("You've provided too few command line arguments!", -1)
+
 // ErrSomethingWentHorriblyWrong represents an error that is completely out of
 // our control and unexpected (such as a 500 from the API)
 var ErrSomethingWentHorriblyWrong = cli.NewExitError("Something went horribly wrong; please try again!", -1)
