@@ -19,7 +19,7 @@ import (
 )
 
 const (
-	namePattern        = "^[a-zA-Z\\s,\\.'\\-pL]{1,64}$"
+	namePattern        = "^[a-zA-Z\\s,\\.'\\pL]{1,64}$"
 	couponPattern      = "^[0-9A-Z]{1,128}$"
 	codePattern        = "^[0-9abcdefghjkmnpqrtuvwxyz]{16}$"
 	inviteTokenPattern = "^[a-zA-Z0-9_-]{52}$"
