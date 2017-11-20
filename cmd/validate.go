@@ -59,6 +59,28 @@ func requiredName(cliCtx *cli.Context, option string) (string, error) {
 	return validateName(cliCtx, option)
 }
 
+func requiredArgName(cliCtx *cli.Context, idx int, option string) (string, error) {
+	args := cliCtx.Args()
+
+	if len(args) < idx+1 {
+		return "", errs.ErrTooFewArgs
+	}
+
+	val := args[idx]
+	name := manifold.Label(val)
+	email := manifold.Email(val)
+
+	nErr := name.Validate(nil)
+	eErr := email.Validate(nil)
+	if nErr != nil && eErr != nil {
+		return "", errs.NewUsageExitError(cliCtx, cli.NewExitError(
+			fmt.Sprintf("You've provided an invalid %s!", option), -1,
+		))
+	}
+
+	return val, nil
+}
+
 func optionalArgID(cliCtx *cli.Context, idx int, name string) (*manifold.ID, error) {
 	args := cliCtx.Args()
 
@@ -152,6 +174,17 @@ func maxOptionalArgsLength(cliCtx *cli.Context, size int) error {
 
 	if len(args) > size {
 		return errs.ErrTooManyArgs
+	}
+	return nil
+}
+
+func exactArgsLength(cliCtx *cli.Context, size int) error {
+	args := cliCtx.Args()
+
+	if len(args) > size {
+		return errs.ErrTooManyArgs
+	} else if len(args) < size {
+		return errs.ErrTooFewArgs
 	}
 
 	return nil
