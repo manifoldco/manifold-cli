@@ -41,6 +41,13 @@ Bare zip archives per release version are available on https://releases.manifold
 For instructions on Windows, [click here](./.github/WINDOWS.md).
 
 
+## Autocomplete
+
+If you have bash and bash-completion installed, you can enable automplete with:
+```
+curl -o- https://raw.githubusercontent.com/manifoldco/manifold-cli/master/autocomplete.sh | sh
+```
+
 ## Quickstart
 
 First you must create an account.
