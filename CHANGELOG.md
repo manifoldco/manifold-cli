@@ -16,6 +16,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Fixed
 
+- User display name accepts unicode letters
+
 ## [0.10.1] - 2017-11-15
 
 ### Fixed
