@@ -28,6 +28,7 @@ func main() {
 	app.Version = config.Version
 	app.Commands = append(cmds, helpCommand)
 	app.Flags = append(app.Flags, cli.HelpFlag)
+	app.EnableBashCompletion = true
 
 	app.Action = func(cliCtx *cli.Context) error {
 		// Show help if no arguments passed

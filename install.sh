@@ -143,8 +143,6 @@
 
   rm $FILENAME
 
-  cd $CURRENT_DIR
-
   if is_installed manifold; then
     PREVIOUS_INSTALLATION=`which manifold`
     if [ "$PREVIOUS_INSTALLATION" = "$MANIFOLD_DIR/manifold" ]; then
@@ -174,6 +172,8 @@
     success_msg "Your $PROFILE has changed to include $MANIFOLD_DIR into your PATH"
     warning_msg "Please restart or re-source your terminal session."
   fi
+
+  cd $CURRENT_DIR
 
   echo
   success_msg "All done. Happy manifold use! :)"
