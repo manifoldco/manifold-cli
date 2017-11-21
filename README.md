@@ -43,7 +43,7 @@ For instructions on Windows, [click here](./.github/WINDOWS.md).
 
 ## Autocomplete
 
-If you have bash and bash-completion installed, you can enable automplete with:
+If you have bash and bash-completion installed, you can enable autocomplete with:
 ```
 curl -o- https://raw.githubusercontent.com/manifoldco/manifold-cli/master/autocomplete.sh | sh
 ```
