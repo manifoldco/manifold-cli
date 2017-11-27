@@ -14,7 +14,7 @@ func init() {
 	linkCmd := cli.Command{
 		Name:     "link",
 		Usage:    "Link your an account to a third-party account",
-		Category: "USER",
+		Category: "AUTHENTICATION",
 		Flags:    githubAuthFlags(),
 		Action:   middleware.Chain(middleware.EnsureSession, link),
 	}
