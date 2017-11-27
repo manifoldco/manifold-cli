@@ -26,6 +26,7 @@ import (
 	"github.com/manifoldco/manifold-cli/generated/identity/client/user"
 	"github.com/manifoldco/manifold-cli/generated/identity/models"
 	"github.com/manifoldco/manifold-cli/prompts"
+	"github.com/manifoldco/manifold-cli/session"
 )
 
 var (
@@ -299,7 +300,7 @@ func decodeGitHubResponse(ctx context.Context, resp *http.Response) (*githubAuth
 
 // createOAuthAuth registers a new user (who is not part of Manifold), or logs a user in (with a
 // linked GitHub identity)
-func createOAuthAuth(ctx context.Context, cfg *config.Config, a *analytics.Analytics, authReq models.OAuthAuthenticationRequest) error {
+func createOAuthAuth(ctx context.Context, cfg *config.Config, _ *analytics.Analytics, authReq models.OAuthAuthenticationRequest) error {
 	apiClient, err := api.New(api.Identity)
 	if err != nil {
 		return err
@@ -314,6 +315,17 @@ func createOAuthAuth(ctx context.Context, cfg *config.Config, a *analytics.Analy
 	}
 
 	cfg.AuthToken = *resp.Payload.Body.Token
+
+	s, err := session.Retrieve(ctx, cfg)
+	if err != nil {
+		return err
+	}
+
+	a, err := analytics.New(cfg, s)
+	if err != nil {
+		return err
+	}
+
 	a.Track(ctx, "Logged In", nil)
 	return cfg.Write()
 }
