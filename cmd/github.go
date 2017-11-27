@@ -66,7 +66,7 @@ type oauthStoreFunc func(ctx context.Context, cfg *config.Config, a *analytics.A
 func githubWithCallback(ctx context.Context, cfg *config.Config, a *analytics.Analytics, store oauthStoreFunc) error {
 	authConfig := &oauth2.Config{
 		ClientID:    config.GitHubClientID,
-		Scopes:      []string{"read:user"},
+		Scopes:      []string{"user"},
 		Endpoint:    github.Endpoint,
 		RedirectURL: "http://127.0.0.1:49152/github/callback",
 	}
@@ -229,7 +229,7 @@ func githubAuthRequest(ctx context.Context, username, password, otp, token strin
 	id := genRandomString(5)
 	client := &http.Client{}
 	authReq := githubAuthorizationRequest{
-		Scopes:      []string{"read:user"},
+		Scopes:      []string{"user"},
 		Notes:       fmt.Sprintf("Manifold-%s", id),
 		Fingerprint: fmt.Sprintf("manifold-cli-%s", id),
 	}
