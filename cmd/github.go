@@ -76,7 +76,7 @@ func githubWithCallback(ctx context.Context, cfg *config.Config, a *analytics.An
 	url := authConfig.AuthCodeURL(state, oauth2.AccessTypeOffline)
 
 	// let the user auth in the browser
-	authMsg := color.Color(ansiterm.Blue,
+	authMsg := color.Color(ansiterm.Cyan,
 		"A browser window will open for authentication. Please close this browser when finished")
 	fmt.Println(authMsg)
 
