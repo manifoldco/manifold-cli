@@ -69,7 +69,7 @@ func githubWithCallback(ctx context.Context, cfg *config.Config, a *analytics.An
 		ClientID:    config.GitHubClientID,
 		Scopes:      []string{"user"},
 		Endpoint:    github.Endpoint,
-		RedirectURL: "http://127.0.0.1:49152/github/callback",
+		RedirectURL: config.GitHubCallback,
 	}
 
 	// set up the oauth client
