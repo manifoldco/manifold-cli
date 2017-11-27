@@ -118,7 +118,7 @@
   REPO="https://github.com/manifoldco/manifold-cli"
 
   if [ -z "$MANIFOLD_VERSION" ]; then
-    MANIFOLD_VERSION="0.10.1"
+    MANIFOLD_VERSION="0.11.0"
   fi
 
   if [ -z "$MANIFOLD_DIR" ]; then
