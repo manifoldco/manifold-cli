@@ -69,10 +69,10 @@
     SHELLTYPE="$(basename "/$SHELL")"
 
     if [ "$SHELLTYPE" = "bash" ]; then
-      if [ -f "$HOME/.bashrc" ]; then
-        DETECTED_PROFILE="$HOME/.bashrc"
-      elif [ -f "$HOME/.bash_profile" ]; then
+      if [ -f "$HOME/.bash_profile" ]; then
         DETECTED_PROFILE="$HOME/.bash_profile"
+      elif [ -f "$HOME/.bashrc" ]; then
+        DETECTED_PROFILE="$HOME/.bashrc"
       fi
     elif [ "$SHELLTYPE" = "zsh" ]; then
       DETECTED_PROFILE="$HOME/.zshrc"
@@ -89,6 +89,9 @@
 
     if [ ! -z "$DETECTED_PROFILE" ]; then
       echo "$DETECTED_PROFILE"
+    else
+      command touch $HOME/.bash_profile
+      echo "$HOME/.bash_profile"
     fi
   }
 
