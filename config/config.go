@@ -8,6 +8,7 @@ import (
 	"path"
 	"path/filepath"
 
+	"fmt"
 	"github.com/go-ini/ini"
 	"github.com/manifoldco/go-manifold"
 	"github.com/stripe/stripe-go"
@@ -23,7 +24,8 @@ var StripePublishableKey = "pk_live_A6qSWh1v4SrNnrWSftgDcKFQ"
 
 // GitHubClientID facilitates logins with GitHub
 var GitHubClientID = "dd71cbb5ee8cb1032c89"
-var GitHubCallback = "http://127.0.0.1:49152/github/callback"
+var GitHubCallbackHost = "127.0.0.1:49152"
+var GitHubCallback = fmt.Sprintf("http://%s/github/callback", GitHubCallbackHost)
 var GitHubHost = "https://api.github.com" // todo: might make sense in the on-file config for GH enterprise users?
 
 func init() {

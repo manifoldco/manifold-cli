@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"math/rand"
+	"net"
 	"net/http"
 	"strconv"
 	"strings"
@@ -94,7 +95,13 @@ func githubWithCallback(ctx context.Context, cfg *config.Config, a *analytics.An
 	go func() {
 		http.HandleFunc("/github/callback", githubCallback(ctx, cfg, state, store, a, done, errCh))
 
-		errCh <- http.ListenAndServe(":49152", nil)
+		_, port, err := net.SplitHostPort(config.GitHubCallbackHost)
+		if err != nil {
+			errCh <- fmt.Errorf("unable to start server: %s", err)
+			return
+		}
+
+		errCh <- http.ListenAndServe(fmt.Sprintf(":%s", port), nil)
 	}()
 
 	select {
