@@ -209,7 +209,12 @@ func inviteToTeamCmd(cliCtx *cli.Context) error {
 	role := cliCtx.String("role")
 
 	if role == "" {
-		role, err = prompts.SelectRole()
+		roles, err := rolesString(&team.ID, client)
+		if err != nil {
+			return err
+		}
+
+		role, err = prompts.SelectRole(roles)
 		if err != nil {
 			return prompts.HandleSelectError(err, "Could not select role")
 		}
@@ -614,6 +619,11 @@ func setRoleCmd(cliCtx *cli.Context) error {
 	ctx := context.Background()
 	args := cliCtx.Args()
 
+	client, err := api.New(api.Identity)
+	if err != nil {
+		return err
+	}
+
 	// Use the current context to determine the team to use
 	teamID, err := validateTeamID(cliCtx)
 	if err != nil {
@@ -641,15 +651,15 @@ func setRoleCmd(cliCtx *cli.Context) error {
 			return err
 		}
 
-		roleLabel, err = prompts.SelectRole()
+		roles, err := rolesString(teamID, client)
+		if err != nil {
+			return err
+		}
+
+		roleLabel, err = prompts.SelectRole(roles)
 		if err != nil {
 			return prompts.HandleSelectError(err, "Could not select role")
 		}
-	}
-
-	client, err := api.New(api.Identity)
-	if err != nil {
-		return err
 	}
 
 	// Ensure the supplied email is a member
@@ -698,4 +708,18 @@ func setRoleCmd(cliCtx *cli.Context) error {
 
 	fmt.Printf("%s <%s> now has the role of `%s`\n", name, email, roleLabel)
 	return nil
+}
+
+func rolesString(teamID *manifold.ID, client *api.API) ([]string, error) {
+	mRoles, err := client.Roles(teamID)
+	if err != nil {
+		return nil, cli.NewExitError(fmt.Sprintf("Could not get team roles: %s", err), -1)
+	}
+
+	roles := make([]string, len(mRoles))
+
+	for i, r := range mRoles {
+		roles[i] = string(r)
+	}
+	return roles, nil
 }
