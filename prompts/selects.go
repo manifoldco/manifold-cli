@@ -125,10 +125,10 @@ func SelectResource(list []*mModels.Resource, projects []*mModels.Project,
 }
 
 // SelectRole prompts the user to select a role from the given list.
-func SelectRole() (string, error) {
+func SelectRole(roles []string) (string, error) {
 	prompt := promptui.Select{
 		Label: "Select Role",
-		Items: []string{"read", "read-credentials", "write", "admin"},
+		Items: roles,
 	}
 	_, role, err := prompt.Run()
 	return role, err

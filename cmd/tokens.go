@@ -73,7 +73,12 @@ func createTokenCmd(cliCtx *cli.Context) error {
 		return prompts.HandleSelectError(err, "Failed to describe token")
 	}
 
-	role, err := prompts.SelectRole()
+	roles, err := rolesString(tID, client)
+	if err != nil {
+		return err
+	}
+
+	role, err := prompts.SelectRole(roles)
 	if err != nil {
 		return prompts.HandleSelectError(err, "Failed to select role")
 	}
