@@ -11,6 +11,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 - Get available roles from the server
 
+### Fixed
+
+- Change verification code validation to support numeric codes
+
 ## [0.11.0] - 2017-11-27
 
 ### Added
