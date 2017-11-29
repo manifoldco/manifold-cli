@@ -68,25 +68,6 @@ Followed by running your process with the appropriate ENV.
 $ manifold run ./bin/server
 ```
 
-## OAuth Identity
-
-Manifold gives you the ability to login to using a third-party OAuth provider such as GitHub.
-
-### GitHub Authentication
-
-To use the GitHub login, you must create an OAuth App within GitHub. To do this, go to your
-[developer settings](https://github.com/settings/developers) page, and click the "New OAuth App"
-button. Use the following configuration settings:
-
-| Name                       | Value                                  |
-|----------------------------|----------------------------------------|
-| Application Name           | Manifold CLI                           |
-| Homepage URL               | https://manifold.co                    | 
-| Application Description    | Manifold CLI GitHub Login              |
-| Authorization callback URL | http://127.0.0.1:49152/github/callback |
-
-
-The GitHub Client ID is compiled in using the `MANIFOLD_GITHUB_CLIENT_ID` environment variable.
 
 ## License
 
