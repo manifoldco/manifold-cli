@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
 
+## [0.12.0] - 2017-11-30
+
 ### Added
 
 - Get available roles from the server
