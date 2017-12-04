@@ -4,11 +4,15 @@ import (
 	"context"
 	"fmt"
 
+	"errors"
 	"github.com/manifoldco/manifold-cli/analytics"
 	"github.com/manifoldco/manifold-cli/api"
 	"github.com/manifoldco/manifold-cli/config"
-	"github.com/manifoldco/manifold-cli/middleware"
+	"github.com/manifoldco/manifold-cli/errs"
+	"github.com/manifoldco/manifold-cli/prompts"
+	"github.com/manifoldco/manifold-cli/session"
 	"github.com/urfave/cli"
+	"strings"
 )
 
 var (
@@ -18,91 +22,68 @@ var (
 func init() {
 	oauthCmd := cli.Command{
 		Name:     "oauth",
-		Usage:    "Change your account to authenticate with an OAuth provider",
+		Usage:    "Authenticate with an OAuth provider to login or link accounts",
 		Category: "AUTHENTICATION",
-		Subcommands: []cli.Command{
-			{
-				Name:   "github",
-				Usage:  "Link to a GitHub account using the OAuth 2 Web Flow",
-				Action: linkGitHubWeb,
+		Flags: append([]cli.Flag{
+			cli.BoolFlag{
+				Name:  "github",
+				Usage: "Use the web flow for GitHub authentication",
 			},
-			{
-				Name:      "github-token",
-				Usage:     "Link to a GitHub account using a GitHub Personal Access Token",
-				ArgsUsage: "[token]",
-				Action:    linkGitHubToken,
+			cli.StringFlag{
+				Name:   "github-token",
+				Usage:  "Use a Personal Access Token to authenticate with Github",
+				EnvVar: "MANIFOLD_GITHUB_TOKEN",
 			},
-			{
-				Name:   "github-basic",
-				Usage:  "Link GitHub using BASIC authentication to manage tokens",
-				Action: linkGitHubBasic,
-			},
-		},
-		Action: middleware.Chain(middleware.EnsureSession, oauth),
+		}, yesFlag()),
+		Action: oauth,
 	}
 
 	cmds = append(cmds, oauthCmd)
 }
 
 func oauth(cliCtx *cli.Context) error {
-	return cli.NewExitError("subcommands must be provided", -1)
-}
-
-func linkGitHubWeb(cliCctx *cli.Context) error {
 	ctx := context.Background()
+
+	if cliCtx.NumFlags() < 1 {
+		return errs.NewUsageExitError(cliCtx,
+			cli.NewExitError("You must provide an authentication mechanism", -1))
+	}
+
 	cfg, a, err := loadConfigAndAnaltics()
 	if err != nil {
-		return err
+		return cli.NewExitError(fmt.Sprintf("Unable to load configuration: %s", err), -1)
 	}
 
-	err = githubWithCallback(ctx, cfg, a, linkOAuthAuth)
+	s, err := session.Retrieve(ctx, cfg)
 	if err != nil {
-		return cli.NewExitError(fmt.Sprintf("Unable to link accounts: %s", err), -1)
+		cli.NewExitError(fmt.Sprintf("Could not retrieve session: %s", err), -1)
 	}
 
-	fmt.Println(linkedOK)
+	if s.Authenticated() {
+		// link
+		ok, err := prompts.Confirm("Do you wish to link your GitHub account to Manifold?")
+		if err != nil {
+			if strings.ToLower(ok) == "n" {
+				err = errors.New("user denied prompt")
+			}
+			return cli.NewExitError(fmt.Sprintf("Could not link accounts: %s", err), -1)
+		}
 
-	return nil
-}
+		err = authenticateOAuth(ctx, cliCtx, cfg, a, linkOAuthAuth)
+		if err != nil {
+			return cli.NewExitError(fmt.Sprintf("Unable to link accounts: %s", err), -1)
+		}
 
-func linkGitHubToken(cliCtx *cli.Context) error {
-	ctx := context.Background()
-	cfg, a, err := loadConfigAndAnaltics()
+		return cli.NewExitError(linkedOK, 0)
+	}
+
+	// registration + login
+	err = authenticateOAuth(ctx, cliCtx, cfg, a, createOAuthAuth)
 	if err != nil {
-		return err
+		return cli.NewExitError(fmt.Sprintf("Could not login with OAuth provider: %s", err), -1)
 	}
 
-	if cliCtx.NArg() == 0 || cliCtx.NArg() > 1 {
-		return cli.NewExitError("You must provide a token for use with login", -1)
-	}
-
-	args := cliCtx.Args()
-	token := args[0]
-
-	err = githubWithToken(ctx, cfg, a, token, linkOAuthAuth)
-	if err != nil {
-		return cli.NewExitError(fmt.Sprintf("Unable to link accounts: %s", err), -1)
-	}
-
-	fmt.Println(linkedOK)
-
-	return nil
-}
-
-func linkGitHubBasic(cliCctx *cli.Context) error {
-	ctx := context.Background()
-	cfg, a, err := loadConfigAndAnaltics()
-	if err != nil {
-		return err
-	}
-
-	err = githubWithUser(ctx, cfg, a, linkOAuthAuth)
-	if err != nil {
-		return cli.NewExitError(fmt.Sprintf("Unable to link accounts: %s", err), -1)
-	}
-
-	fmt.Println(linkedOK)
-
+	fmt.Println("You are logged in, horray!")
 	return nil
 }
 
@@ -118,4 +99,24 @@ func loadConfigAndAnaltics() (*config.Config, *analytics.Analytics, error) {
 	}
 
 	return cfg, a.Analytics, nil
+}
+
+func authenticateOAuth(ctx context.Context, cliCtx *cli.Context, cfg *config.Config,
+	a *analytics.Analytics, store oauthStoreFunc) error {
+
+	var err error
+	token := cliCtx.String("github-token")
+	if cliCtx.Bool("github") {
+		err = githubWithCallback(ctx, cfg, a, store)
+		if err != nil {
+			return err
+		}
+	} else if token != "" {
+		err = githubWithToken(ctx, cfg, a, token, store)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
 }

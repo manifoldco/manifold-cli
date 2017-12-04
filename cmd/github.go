@@ -1,7 +1,6 @@
 package main
 
 import (
-	"bytes"
 	"context"
 	"encoding/json"
 	"errors"
@@ -10,7 +9,6 @@ import (
 	"net"
 	"net/http"
 	"strconv"
-	"strings"
 	"time"
 
 	"github.com/juju/ansiterm"
@@ -26,7 +24,6 @@ import (
 	"github.com/manifoldco/manifold-cli/generated/identity/client/authentication"
 	"github.com/manifoldco/manifold-cli/generated/identity/client/user"
 	"github.com/manifoldco/manifold-cli/generated/identity/models"
-	"github.com/manifoldco/manifold-cli/prompts"
 	"github.com/manifoldco/manifold-cli/session"
 )
 
@@ -179,110 +176,6 @@ func githubWithToken(ctx context.Context, cfg *config.Config, a *analytics.Analy
 	a.Track(ctx, "Logged In", nil)
 
 	return nil
-}
-
-// githubUser is a method for authenticating with GitHub for Manifold using a user's username,
-// password, and OTP for 2FA
-func githubWithUser(ctx context.Context, cfg *config.Config, a *analytics.Analytics, store oauthStoreFunc) error {
-	username, err := prompts.Username()
-	if err != nil {
-		return err
-	}
-
-	password, err := prompts.Hidden("Password")
-	if err != nil {
-		return err
-	}
-
-	resp, err := githubAuthRequest(ctx, username, password, "", "")
-	if resp == nil && err != nil {
-		return err
-	}
-
-	otpReq := resp.Header.Get("X-GitHub-OTP")
-	if strings.Contains(otpReq, "required;") {
-		otp, err := prompts.OTP()
-		if err != nil {
-			return err
-		}
-
-		resp.Body.Close()
-		resp, err = githubAuthRequest(ctx, username, password, otp, "")
-		if err != nil {
-			return err
-		}
-	}
-
-	ghResp, err := decodeGitHubResponse(ctx, resp)
-	if err != nil {
-		return cli.NewExitError(fmt.Sprintf("Unable to decode Personal Access Token: %s", err), -1)
-	}
-
-	authReq := models.OAuthAuthenticationRequest{
-		Code:   &ghResp.Token,
-		Source: &sourceGitHubToken,
-	}
-
-	err = store(ctx, cfg, a, authReq)
-	if err != nil {
-		return cli.NewExitError(fmt.Sprintf("Unable to fetch and store GitHub authentication: %s", err), -1)
-	}
-
-	return nil
-}
-
-// githubAuthRequest authenticates with GitHub by creating a new Personal Access Token
-func githubAuthRequest(ctx context.Context, username, password, otp, token string) (*http.Response, error) {
-
-	id := genRandomString(5)
-	client := &http.Client{}
-	authReq := githubAuthorizationRequest{
-		Scopes:      []string{"user"},
-		Notes:       fmt.Sprintf("Manifold-%s", id),
-		Fingerprint: fmt.Sprintf("manifold-cli-%s", id),
-	}
-
-	auth := &bytes.Buffer{}
-	err := json.NewEncoder(auth).Encode(authReq)
-	if err != nil {
-		return nil, cli.NewExitError(fmt.Sprintf("Unable to encode authentication request: %s", err), -1)
-	}
-
-	authUrl := fmt.Sprintf("%s/authorizations", config.GitHubHost)
-	req, err := http.NewRequest(http.MethodPost, authUrl, auth)
-	if err != nil {
-		return nil, cli.NewExitError("Unable to create auth request for GitHub", -1)
-	}
-	req.Header.Set("Accept", "application/vnd.github.v3+json")
-
-	if username != "" && password != "" {
-		// auth for the API
-		req.SetBasicAuth(username, password)
-	}
-
-	if token != "" {
-		req.Header.Set("Authorization", fmt.Sprintf("token %s", token))
-	}
-
-	// set the otp if one is provided
-	if otp != "" {
-		req.Header.Set("X-GitHub-OTP", otp)
-	}
-
-	resp, err := client.Do(req)
-	if err != nil {
-		return nil, cli.NewExitError(fmt.Sprintf("Unable to send authentication request: %s", err), -1)
-	}
-
-	if resp.StatusCode != http.StatusCreated {
-		_, err := decodeGitHubResponse(ctx, resp)
-		if err != nil {
-			return nil, cli.NewExitError(fmt.Sprintf("Bad login details: %s", err), -1)
-		}
-		return resp, cli.NewExitError("Authentication code not created, bad login", -1)
-	}
-
-	return resp, nil
 }
 
 // decodeGitHubResponse decodes the response from GitHub for an authentication request
