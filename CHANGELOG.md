@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
 
+### Changed
+
+- Reference to go-manifold updated to 0.9.1 release for verification code change
+
 ## [0.12.0] - 2017-11-30
 
 ### Added
