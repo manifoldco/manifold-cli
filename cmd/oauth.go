@@ -3,6 +3,9 @@ package main
 import (
 	"context"
 	"fmt"
+	"strings"
+
+	"github.com/urfave/cli"
 
 	"errors"
 	"github.com/manifoldco/manifold-cli/analytics"
@@ -11,8 +14,7 @@ import (
 	"github.com/manifoldco/manifold-cli/errs"
 	"github.com/manifoldco/manifold-cli/prompts"
 	"github.com/manifoldco/manifold-cli/session"
-	"github.com/urfave/cli"
-	"strings"
+	"github.com/manifoldco/manifold-cli/generated/identity/models"
 )
 
 var (
@@ -69,7 +71,7 @@ func oauth(cliCtx *cli.Context) error {
 			return cli.NewExitError(fmt.Sprintf("Could not link accounts: %s", err), -1)
 		}
 
-		err = authenticateOAuth(ctx, cliCtx, cfg, a, linkOAuthAuth)
+		err = authenticateOAuth(ctx, cliCtx, cfg, a, models.OAuthAuthenticationPollTypeLink)
 		if err != nil {
 			return cli.NewExitError(fmt.Sprintf("Unable to link accounts: %s", err), -1)
 		}
@@ -78,7 +80,7 @@ func oauth(cliCtx *cli.Context) error {
 	}
 
 	// registration + login
-	err = authenticateOAuth(ctx, cliCtx, cfg, a, createOAuthAuth)
+	err = authenticateOAuth(ctx, cliCtx, cfg, a, models.OAuthAuthenticationPollTypeLogin)
 	if err != nil {
 		return cli.NewExitError(fmt.Sprintf("Could not login with OAuth provider: %s", err), -1)
 	}
@@ -102,17 +104,11 @@ func loadConfigAndAnaltics() (*config.Config, *analytics.Analytics, error) {
 }
 
 func authenticateOAuth(ctx context.Context, cliCtx *cli.Context, cfg *config.Config,
-	a *analytics.Analytics, store oauthStoreFunc) error {
+	a *analytics.Analytics, stateType string) error {
 
 	var err error
-	token := cliCtx.String("github-token")
 	if cliCtx.Bool("github") {
-		err = githubWithCallback(ctx, cfg, a, store)
-		if err != nil {
-			return err
-		}
-	} else if token != "" {
-		err = githubWithToken(ctx, cfg, a, token, store)
+		err = githubWithCallback(ctx, cfg, a, stateType)
 		if err != nil {
 			return err
 		}

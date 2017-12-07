@@ -2,13 +2,8 @@ package main
 
 import (
 	"context"
-	"encoding/json"
-	"errors"
 	"fmt"
 	"math/rand"
-	"net"
-	"net/http"
-	"strconv"
 	"time"
 
 	"github.com/juju/ansiterm"
@@ -18,60 +13,53 @@ import (
 	"golang.org/x/oauth2/github"
 
 	"github.com/manifoldco/manifold-cli/analytics"
-	"github.com/manifoldco/manifold-cli/api"
 	"github.com/manifoldco/manifold-cli/color"
 	"github.com/manifoldco/manifold-cli/config"
-	"github.com/manifoldco/manifold-cli/generated/identity/client/authentication"
-	"github.com/manifoldco/manifold-cli/generated/identity/client/user"
-	"github.com/manifoldco/manifold-cli/generated/identity/models"
 	"github.com/manifoldco/manifold-cli/session"
+	"github.com/manifoldco/manifold-cli/api"
+	"github.com/manifoldco/manifold-cli/generated/identity/client/authentication"
+	"github.com/manifoldco/manifold-cli/generated/identity/models"
+	"github.com/manifoldco/manifold-cli/generated/identity/client/user"
 )
 
 var (
-	sourceGitHub      = "github"
-	sourceGitHubToken = "github-token"
 	stateChars        = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ123456789"
 )
 
-// githubAuthorizationRequest is the request sent to GitHub for Personal Authorization Tokens
-type githubAuthorizationRequest struct {
-	Scopes      []string `json:"scopes"`
-	Notes       string   `json:"note"`
-	Fingerprint string   `json:"fingerprint"`
-}
+// stateLength is the length of the generate state for GitHub
+const stateLength = 64
+const pollingTimeout = time.Minute * 2
+const pollingTick = time.Second * 5
 
-// githubAuthorizationResponse is the response that is given for Personal Authorization Token
-// requests
-type githubAuthorizationResponse struct {
-	ID    int
-	Token string
-
-	Errors []struct {
-		Code string
+func githubWithCallback(ctx context.Context, cfg *config.Config, a *analytics.Analytics, stateType string) error {
+	// set up the oauth client
+	state := genRandomString(stateLength)
+	source := models.OAuthAuthenticationPollSourceGithub
+	_, _, pub, err := session.NewKeyMaterial(state)
+	if err != nil {
+		return cli.NewExitError(fmt.Sprintf("Could not load keys from state: %s", err), -1)
 	}
-}
 
-// githubErrors are the human readable error messages from GitHub during the Personal Authorization
-// Token flow
-var githubErrors = map[string]string{
-	"already_exists": "A Personal Authorization Token already exists for Manifold",
-}
+	identityClient, err := api.New(api.Identity)
+	if err != nil {
+		return cli.NewExitError(fmt.Sprintf("Unable to create identity client: %s", err), -1)
+	}
 
-// oauthStoreFunc is responsible for storing the OAuth authentication with Manifold, either by
-// linking accounts or logging in
-type oauthStoreFunc func(ctx context.Context, cfg *config.Config, a *analytics.Analytics, req models.OAuthAuthenticationRequest) error
+	if stateType == models.OAuthAuthenticationPollTypeLink {
+		// initialize the state authorization
+		err := startOAuthlink(ctx, identityClient, state, source, *pub)
+		if err != nil {
+			return cli.NewExitError(fmt.Sprintf("Unable to start OAuth link process: %s", err), -1)
+		}
+	}
 
-// githubWithCallback identified with GitHub via. the normal browser-based OAuth flow
-func githubWithCallback(ctx context.Context, cfg *config.Config, a *analytics.Analytics, store oauthStoreFunc) error {
 	authConfig := &oauth2.Config{
 		ClientID:    config.GitHubClientID,
 		Scopes:      []string{"user"},
 		Endpoint:    github.Endpoint,
-		RedirectURL: config.GitHubCallback,
+		RedirectURL: fmt.Sprintf("%s?cli=true&public_key=%s&type=%s", cfg.GitHubCallback, *pub, stateType),
 	}
 
-	// set up the oauth client
-	state := genRandomString(12)
 	url := authConfig.AuthCodeURL(state, oauth2.AccessTypeOffline)
 
 	// let the user auth in the browser
@@ -79,173 +67,69 @@ func githubWithCallback(ctx context.Context, cfg *config.Config, a *analytics.An
 		"A browser window will open for authentication. Please close this browser when finished")
 	fmt.Println(authMsg)
 
-	time.Sleep(time.Second * 2) // give them time to read the message
+	time.Sleep(time.Second * 2) //
+	// give them time to read the message
 
-	err := open.Start(url)
+	err = open.Start(url)
 	if err != nil {
 		return cli.NewExitError("Unable to open authorization in browser", -1)
 	}
 
-	// handle http callback
-	done := make(chan bool)
-	errCh := make(chan error)
-	go func() {
-		http.HandleFunc("/github/callback", githubCallback(ctx, cfg, state, store, a, done, errCh))
+	timeout := time.After(pollingTimeout)
+	tick := time.Tick(pollingTick)
 
-		_, port, err := net.SplitHostPort(config.GitHubCallbackHost)
-		if err != nil {
-			errCh <- fmt.Errorf("unable to start server: %s", err)
-			return
+	op := authentication.NewPostTokensOauthPollParamsWithContext(ctx)
+	op.SetBody(&models.OAuthAuthenticationPoll{
+		PublicKey: pub,
+		Source: &source,
+		State: &state,
+		Type: &stateType,
+	})
+	for {
+		select {
+		case <-timeout:
+			return cli.NewExitError("Unable to fetch authentication", -1)
+		case <-tick:
+			loginResp, linkResp, err := identityClient.Identity.Authentication.PostTokensOauthPoll(op)
+			if err != nil {
+				switch err.(type) {
+				case *authentication.PostTokensOauthPollNotFound:
+					continue
+				default:
+					return err
+				}
+			}
+
+			if loginResp != nil {
+				cfg.AuthToken = *loginResp.Payload.Body.Token
+				return cfg.Write()
+			}
+
+			if linkResp != nil {
+				return nil
+			}
 		}
-
-		errCh <- http.ListenAndServe(fmt.Sprintf(":%s", port), nil)
-	}()
-
-	select {
-	case <-done:
-		authedMsg := color.Color(ansiterm.Green, "You are now authenticated with GitHub, and can close your browser window")
-		fmt.Printf("\n%s\n", authedMsg)
-	case err := <-errCh:
-		errMsg := color.Color(ansiterm.Red, fmt.Sprintf("Error with authentication: %s", err))
-		return errors.New(errMsg)
 	}
 
 	return nil
 }
 
-// githubCallback is the OAuth callback function for the browser-based flow
-func githubCallback(ctx context.Context, cfg *config.Config, state string, store oauthStoreFunc,
-	a *analytics.Analytics, done chan bool, errCh chan error) func(w http.ResponseWriter, r *http.Request) {
+// startOAuthLink stores the state authorization to start the link request in the redirect
+func startOAuthlink(ctx context.Context, identityClient *api.API, state, source, publicKey string) error {
+	stateType := models.OAuthAuthenticationPollTypeStartLink
+	op := user.NewPostUsersLinkOauthStartParamsWithContext(ctx)
+	op.SetBody(&models.OAuthAuthenticationPoll{
+		PublicKey: &publicKey,
+		Source: &source,
+		State: &state,
+		Type: &stateType,
+	})
 
-	badRequest := func(w http.ResponseWriter, msg string, vals ...interface{}) {
-		valMsg := fmt.Sprintf(msg, vals...)
-		fmtMsg := fmt.Sprintf("<html><body><h2>Bad request</h2><p>%s</p></body>", valMsg)
-
-		w.WriteHeader(500)
-		w.Header().Set("Content-Length", strconv.Itoa(len(fmtMsg)))
-		w.Header().Set("Content-Type", "text/html; charset=utf-8")
-
-		w.Write([]byte(fmtMsg))
-
-		errCh <- errors.New(valMsg)
-	}
-
-	return func(w http.ResponseWriter, req *http.Request) {
-		code := req.URL.Query().Get("code")
-		givenState := req.URL.Query().Get("state")
-
-		if state != givenState {
-			badRequest(w, "Given state did not match provided, please try again")
-			return
-		}
-		authReq := models.OAuthAuthenticationRequest{
-			Code:   &code,
-			Source: &sourceGitHub,
-		}
-
-		err := store(ctx, cfg, a, authReq)
-		if err != nil {
-			badRequest(w, "Unable to authenticate with GitHub: %s", err)
-			return
-		}
-
-		w.WriteHeader(200)
-		fmt.Fprint(w, "🎉 You are logged in! You can now close this window")
-
-		done <- true
-	}
-}
-
-// githubWithToken is a method to log into GitHub via. a token to pass authentication to Manifold
-func githubWithToken(ctx context.Context, cfg *config.Config, a *analytics.Analytics, token string, store oauthStoreFunc) error {
-	authReq := models.OAuthAuthenticationRequest{
-		Code:   &token,
-		Source: &sourceGitHubToken,
-	}
-
-	err := store(ctx, cfg, a, authReq)
-	if err != nil {
-		return cli.NewExitError(fmt.Sprintf("Unable to save GitHub authentication: %s", err), -1)
-	}
-
-	err = cfg.Write()
-	if err != nil {
-		return cli.NewExitError(fmt.Sprintf("Unable to write config: %s", err), -1)
-	}
-
-	a.Track(ctx, "Logged In", nil)
-
-	return nil
-}
-
-// decodeGitHubResponse decodes the response from GitHub for an authentication request
-func decodeGitHubResponse(ctx context.Context, resp *http.Response) (*githubAuthorizationResponse, error) {
-	var authResp *githubAuthorizationResponse
-
-	b := []byte{}
-	resp.Body.Read(b)
-
-	err := json.NewDecoder(resp.Body).Decode(&authResp)
-	if err != nil {
-		return nil, err
-	}
-
-	if len(authResp.Errors) > 0 {
-		// fail with the first error
-		return nil, errors.New(githubErrors[authResp.Errors[0].Code])
-	}
-
-	return authResp, nil
-}
-
-// createOAuthAuth registers a new user (who is not part of Manifold), or logs a user in (with a
-// linked GitHub identity)
-func createOAuthAuth(ctx context.Context, cfg *config.Config, _ *analytics.Analytics, authReq models.OAuthAuthenticationRequest) error {
-	apiClient, err := api.New(api.Identity)
+	_, err := identityClient.Identity.User.PostUsersLinkOauthStart(op, nil)
 	if err != nil {
 		return err
 	}
 
-	op := authentication.NewPostTokensOauthParamsWithContext(ctx)
-	op.SetBody(&authReq)
-
-	resp, err := apiClient.Identity.Authentication.PostTokensOauth(op)
-	if err != nil {
-		return err
-	}
-
-	cfg.AuthToken = *resp.Payload.Body.Token
-
-	s, err := session.Retrieve(ctx, cfg)
-	if err != nil {
-		return err
-	}
-
-	a, err := analytics.New(cfg, s)
-	if err != nil {
-		return err
-	}
-
-	a.Track(ctx, "Logged In", nil)
-	return cfg.Write()
-}
-
-// linkOAuthAuth links an existing user account (defined by the session) to a GitHub identity
-func linkOAuthAuth(ctx context.Context, cfg *config.Config, a *analytics.Analytics, linkReq models.OAuthAuthenticationRequest) error {
-	apiClient, err := api.New(api.Identity)
-	if err != nil {
-		return err
-	}
-
-	op := user.NewPostUsersLinkOauthParamsWithContext(ctx)
-	op.SetBody(&linkReq)
-
-	_, err = apiClient.Identity.User.PostUsersLinkOauth(op, nil)
-	if err != nil {
-		return err
-	}
-
-	a.Track(ctx, "Link User", nil)
 	return nil
 }
 

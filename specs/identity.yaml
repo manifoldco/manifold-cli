@@ -55,30 +55,37 @@ paths:
           description: Request failed due to an internal server error.
           schema:
             $ref: '#/definitions/Error'
-  /tokens/oauth:
+  /tokens/oauth/poll:
     post:
-      summary: Exchange a user's GitHub token for an authorization token
       security: []
+      summary: Poll the exchange of a third-party OAuth 2 token for valid authentication
       parameters:
         - name: body
           in: body
           description: |
-            GitHub token authorization request
+            OAuth state information
           required: true
-          schema: { $ref: '#/definitions/OAuthAuthenticationRequest' }
+          schema:
+            $ref: '#/definitions/OAuthAuthenticationPoll'
       tags:
         - Authentication
       responses:
         201:
-          description: A login token.
+          description: A authentication token
           schema:
             $ref: '#/definitions/AuthToken'
+        204:
+          description: Polling finished successfully
         400:
-          description: Invalid token request supplied
+          description: Invalid request for authentication
+          schema:
+            $ref: '#/definitions/Error'
+        404:
+          description: Provided state information does not match any state
           schema:
             $ref: '#/definitions/Error'
         500:
-          description: Request failed due to an internal server error.
+          description: Internal server error
           schema:
             $ref: '#/definitions/Error'
         default:
@@ -401,6 +408,30 @@ paths:
           description: Unexpected error
           schema:
             $ref: '#/definitions/Error'
+  /users/link/oauth/start:
+    post:
+      tags:
+        - User
+      summary: Start the OAuth link process for a user
+      parameters:
+        - name: body
+          in: body
+          description: |
+            OAuth link account request
+          required: true
+          schema: { $ref: '#/definitions/OAuthAuthenticationPoll' }
+      responses:
+        201:
+          description: Link process started
+        400:
+          description: Validation failed for the request
+          schema: { $ref: '#/definitions/Error' }
+        500:
+          description: Internal server error
+          schema: { $ref: '#/definitions/Error' }
+        default:
+          description: Unexpected error
+          schema: { $ref: '#/definitions/Error' }
   /users/{id}:
     patch:
       summary: Update user profile
@@ -432,34 +463,6 @@ paths:
             $ref: '#/definitions/User'
         400:
           description: Validation failed for request
-          schema:
-            $ref: '#/definitions/Error'
-        500:
-          description: Request failed due to an internal server error.
-          schema:
-            $ref: '#/definitions/Error'
-        default:
-          description: Unexpected error
-          schema:
-            $ref: '#/definitions/Error'
-  /users/link/oauth:
-    post:
-      summary: Exchange a third-party OAuth token, linking the user to that account
-      parameters:
-        - name: body
-          in: body
-          description: |
-            OAuth token authorization request
-          required: true
-          schema:
-            $ref: '#/definitions/OAuthAuthenticationRequest'
-      tags:
-        - User
-      responses:
-        204:
-          description: An empty response
-        400:
-          description: Invalid token request supplied
           schema:
             $ref: '#/definitions/Error'
         500:
@@ -1579,7 +1582,34 @@ definitions:
         description: Authentication Token for service
       source:
         type: string
-        enum: ['github', 'github-token']
+        description: OAuth provider source
+        enum: ['github']
+      state:
+        type: string
+        description: State parameter for OAuth flow
+      public_key:
+        type: string
+        description: State verification public key
     required:
       - code
       - source
+  OAuthAuthenticationPoll:
+    type: object
+    properties:
+      state:
+        type: string
+        description: State information for polling
+      public_key:
+        type: string
+        description: Public key for verification
+      source:
+        type: string
+        enum: ['github']
+      type:
+        type: string
+        enum: ['link', 'login', 'start-link']
+    required:
+        - state
+        - public_key
+        - source
+        - type

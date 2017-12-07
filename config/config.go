@@ -23,10 +23,8 @@ var Version = "dev"
 var StripePublishableKey = "pk_live_A6qSWh1v4SrNnrWSftgDcKFQ"
 
 // GitHubClientID facilitates logins with GitHub
-var GitHubClientID = "dd71cbb5ee8cb1032c89"
-var GitHubCallbackHost = "127.0.0.1:49152"
-var GitHubCallback = fmt.Sprintf("http://%s/github/callback", GitHubCallbackHost)
-var GitHubHost = "https://api.github.com" // todo: might make sense in the on-file config for GH enterprise users?
+var GitHubClientID = "235dcaef59d5a0d58a6a"
+var GitHubCallback = fmt.Sprintf("https://dashboard.manifold.co/login/oauth/github")
 
 func init() {
 	stripe.LogLevel = 0
@@ -95,6 +93,7 @@ func loadConfiguration() (*Config, error) {
 		AuthToken:       "",
 		TransportScheme: defaultScheme,
 		Analytics:       defaultAnalytics,
+		GitHubCallback:  GitHubCallback,
 	}
 
 	if os.IsNotExist(err) {
@@ -160,6 +159,7 @@ type Config struct {
 	TeamTitle       string `ini:"team_title,omitempty"`
 	TeamName        string `ini:"team_name,omitempty"`
 	TeamID          string `ini:"team_id,omitempty"`
+	GitHubCallback  string `ini:"github_callback,omitempty"`
 }
 
 // IdentifyLegacyValues identifies if a user's config file is out of date
