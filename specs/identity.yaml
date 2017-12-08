@@ -1583,7 +1583,7 @@ definitions:
         enum: ['github']
       type:
         type: string
-        enum: ['link', 'login', 'start-link']
+        enum: ['link', 'login']
     required:
         - state
         - public_key
