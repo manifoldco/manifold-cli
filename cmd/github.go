@@ -19,7 +19,6 @@ import (
 	"github.com/manifoldco/manifold-cli/api"
 	"github.com/manifoldco/manifold-cli/generated/identity/client/authentication"
 	"github.com/manifoldco/manifold-cli/generated/identity/models"
-	"github.com/manifoldco/manifold-cli/generated/identity/client/user"
 )
 
 var (
@@ -45,19 +44,12 @@ func githubWithCallback(ctx context.Context, cfg *config.Config, a *analytics.An
 		return cli.NewExitError(fmt.Sprintf("Unable to create identity client: %s", err), -1)
 	}
 
-	if stateType == models.OAuthAuthenticationPollTypeLink {
-		// initialize the state authorization
-		err := startOAuthlink(ctx, identityClient, state, source, *pub)
-		if err != nil {
-			return cli.NewExitError(fmt.Sprintf("Unable to start OAuth link process: %s", err), -1)
-		}
-	}
-
+	uri := fmt.Sprintf("%s?cli=true&public_key=%s&type=%s&auth_token=%s", cfg.GitHubCallback, *pub, stateType, cfg.AuthToken)
 	authConfig := &oauth2.Config{
 		ClientID:    config.GitHubClientID,
 		Scopes:      []string{"user"},
 		Endpoint:    github.Endpoint,
-		RedirectURL: fmt.Sprintf("%s?cli=true&public_key=%s&type=%s", cfg.GitHubCallback, *pub, stateType),
+		RedirectURL: uri,
 	}
 
 	url := authConfig.AuthCodeURL(state, oauth2.AccessTypeOffline)
@@ -109,25 +101,6 @@ func githubWithCallback(ctx context.Context, cfg *config.Config, a *analytics.An
 				return nil
 			}
 		}
-	}
-
-	return nil
-}
-
-// startOAuthLink stores the state authorization to start the link request in the redirect
-func startOAuthlink(ctx context.Context, identityClient *api.API, state, source, publicKey string) error {
-	stateType := models.OAuthAuthenticationPollTypeStartLink
-	op := user.NewPostUsersLinkOauthStartParamsWithContext(ctx)
-	op.SetBody(&models.OAuthAuthenticationPoll{
-		PublicKey: &publicKey,
-		Source: &source,
-		State: &state,
-		Type: &stateType,
-	})
-
-	_, err := identityClient.Identity.User.PostUsersLinkOauthStart(op, nil)
-	if err != nil {
-		return err
 	}
 
 	return nil

@@ -408,30 +408,6 @@ paths:
           description: Unexpected error
           schema:
             $ref: '#/definitions/Error'
-  /users/link/oauth/start:
-    post:
-      tags:
-        - User
-      summary: Start the OAuth link process for a user
-      parameters:
-        - name: body
-          in: body
-          description: |
-            OAuth link account request
-          required: true
-          schema: { $ref: '#/definitions/OAuthAuthenticationPoll' }
-      responses:
-        201:
-          description: Link process started
-        400:
-          description: Validation failed for the request
-          schema: { $ref: '#/definitions/Error' }
-        500:
-          description: Internal server error
-          schema: { $ref: '#/definitions/Error' }
-        default:
-          description: Unexpected error
-          schema: { $ref: '#/definitions/Error' }
   /users/{id}:
     patch:
       summary: Update user profile

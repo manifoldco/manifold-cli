@@ -63,7 +63,7 @@ func oauth(cliCtx *cli.Context) error {
 
 	if s.Authenticated() {
 		// link
-		ok, err := prompts.Confirm("Do you wish to link your GitHub account to Manifold?")
+		ok, err := prompts.Confirm("Do you wish to link your GitHub account to Manifold")
 		if err != nil {
 			if strings.ToLower(ok) == "n" {
 				err = errors.New("user denied prompt")
