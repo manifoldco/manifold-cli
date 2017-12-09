@@ -12,9 +12,9 @@ import (
 	"github.com/manifoldco/manifold-cli/api"
 	"github.com/manifoldco/manifold-cli/config"
 	"github.com/manifoldco/manifold-cli/errs"
+	"github.com/manifoldco/manifold-cli/generated/identity/models"
 	"github.com/manifoldco/manifold-cli/prompts"
 	"github.com/manifoldco/manifold-cli/session"
-	"github.com/manifoldco/manifold-cli/generated/identity/models"
 )
 
 var (
@@ -26,17 +26,12 @@ func init() {
 		Name:     "oauth",
 		Usage:    "Authenticate with an OAuth provider to login or link accounts",
 		Category: "AUTHENTICATION",
-		Flags: append([]cli.Flag{
+		Flags: []cli.Flag{
 			cli.BoolFlag{
 				Name:  "github",
 				Usage: "Use the web flow for GitHub authentication",
 			},
-			cli.StringFlag{
-				Name:   "github-token",
-				Usage:  "Use a Personal Access Token to authenticate with Github",
-				EnvVar: "MANIFOLD_GITHUB_TOKEN",
-			},
-		}, yesFlag()),
+		},
 		Action: oauth,
 	}
 
