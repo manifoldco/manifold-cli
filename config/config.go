@@ -8,7 +8,6 @@ import (
 	"path"
 	"path/filepath"
 
-	"fmt"
 	"github.com/go-ini/ini"
 	"github.com/manifoldco/go-manifold"
 	"github.com/stripe/stripe-go"
@@ -24,7 +23,7 @@ var StripePublishableKey = "pk_live_A6qSWh1v4SrNnrWSftgDcKFQ"
 
 // GitHubClientID facilitates logins with GitHub
 var GitHubClientID = "235dcaef59d5a0d58a6a"
-var GitHubCallback = fmt.Sprintf("https://dashboard.manifold.co/login/oauth/github")
+var GitHubCallback = "https://dashboard.manifold.co/login/oauth/github"
 
 func init() {
 	stripe.LogLevel = 0
