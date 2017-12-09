@@ -1550,25 +1550,6 @@ definitions:
       - id
       - version
       - type
-  OAuthAuthenticationRequest:
-    type: object
-    properties:
-      code:
-        type: string
-        description: Authentication Token for service
-      source:
-        type: string
-        description: OAuth provider source
-        enum: ['github']
-      state:
-        type: string
-        description: State parameter for OAuth flow
-      public_key:
-        type: string
-        description: State verification public key
-    required:
-      - code
-      - source
   OAuthAuthenticationPoll:
     type: object
     properties:
