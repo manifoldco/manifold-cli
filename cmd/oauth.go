@@ -22,7 +22,7 @@ var (
 func init() {
 	oauthCmd := cli.Command{
 		Name:     "oauth",
-		Usage:    "Authenticate with an OAuth provider to login or link accounts",
+		Usage:    "Authenticate with an OAuth provider to register, login or link accounts",
 		Category: "AUTHENTICATION",
 		Flags: []cli.Flag{
 			cli.BoolFlag{

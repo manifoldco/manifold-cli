@@ -9,12 +9,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Changed
 
+- GitHub identity -- register a new account, login to or link an existing account to GitHub 
 - Reference to go-manifold updated to 0.9.1 release for verification code change
 
 ## [0.12.0] - 2017-11-30
 
 ### Added
-- GitHub login flow
 
 - Get available roles from the server
 
