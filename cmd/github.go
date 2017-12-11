@@ -3,8 +3,9 @@ package main
 import (
 	"context"
 	"fmt"
-	"math/rand"
+	"crypto/rand"
 	"time"
+	"math/big"
 
 	"github.com/juju/ansiterm"
 	"github.com/skratchdot/open-golang/open"
@@ -32,7 +33,10 @@ const pollingTick = time.Second * 5
 
 func githubWithCallback(ctx context.Context, cfg *config.Config, a *analytics.Analytics, stateType string) error {
 	// set up the oauth client
-	state := genRandomString(stateLength)
+	state, err := genRandomString(stateLength)
+	if err != nil {
+		cli.NewExitError(fmt.Sprintf("Unable to generate state: %s", err), -1)
+	}
 	source := models.OAuthAuthenticationPollSourceGithub
 	_, _, pub, err := session.NewKeyMaterial(state)
 	if err != nil {
@@ -107,14 +111,17 @@ func githubWithCallback(ctx context.Context, cfg *config.Config, a *analytics.An
 }
 
 // genRandomString generates a random string of length length, can be used for OAuth state
-func genRandomString(length int) string {
-	seed := rand.New(rand.NewSource(time.Now().UnixNano()))
-	size := int64(len(stateChars))
+func genRandomString(length int) (string, error) {
+	size := big.NewInt(int64(len(stateChars)))
 
 	b := make([]byte, length)
 	for i := range b {
-		b[i] = stateChars[seed.Int63n(size)]
+		l, err := rand.Int(rand.Reader, size)
+		if err != nil {
+			return "", err
+		}
+		b[i] = stateChars[l.Int64()]
 	}
 
-	return string(b)
+	return string(b), nil
 }
