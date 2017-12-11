@@ -71,8 +71,8 @@ func githubWithCallback(ctx context.Context, cfg *config.Config, a *analytics.An
 		"A browser window will open for authentication. Please close this browser when finished")
 	fmt.Println(authMsg)
 
-	time.Sleep(time.Second * 2) //
 	// give them time to read the message
+	time.Sleep(time.Second * 2)
 
 	err = open.Start(url)
 	if err != nil {
