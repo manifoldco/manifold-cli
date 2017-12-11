@@ -3,11 +3,9 @@ package main
 import (
 	"context"
 	"fmt"
-	"strings"
 
 	"github.com/urfave/cli"
 
-	"errors"
 	"github.com/manifoldco/manifold-cli/analytics"
 	"github.com/manifoldco/manifold-cli/api"
 	"github.com/manifoldco/manifold-cli/config"
@@ -58,11 +56,8 @@ func oauth(cliCtx *cli.Context) error {
 
 	if s.Authenticated() {
 		// link
-		ok, err := prompts.Confirm("Do you wish to link your GitHub account to Manifold")
+		_, err := prompts.Confirm("Do you wish to link your GitHub account to Manifold")
 		if err != nil {
-			if strings.ToLower(ok) == "n" {
-				err = errors.New("user denied prompt")
-			}
 			return cli.NewExitError(fmt.Sprintf("Could not link accounts: %s", err), -1)
 		}
 
