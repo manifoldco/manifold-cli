@@ -37,7 +37,6 @@ func githubWithCallback(ctx context.Context, cfg *config.Config, a *analytics.An
 	if err != nil {
 		cli.NewExitError(fmt.Sprintf("Unable to generate state: %s", err), -1)
 	}
-	source := models.OAuthAuthenticationPollSourceGithub
 	if err != nil {
 		return cli.NewExitError(fmt.Sprintf("Could not load keys from state: %s", err), -1)
 	}
@@ -81,10 +80,7 @@ func githubWithCallback(ctx context.Context, cfg *config.Config, a *analytics.An
 
 	op := authentication.NewPostTokensOauthPollParamsWithContext(ctx)
 	op.SetBody(&models.OAuthAuthenticationPoll{
-		PublicKey: pub,
-		Source: &source,
-		State: &state,
-		Type: &stateType,
+		Secret: &state,
 	})
 	for {
 		select {

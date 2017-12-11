@@ -10,7 +10,6 @@ import (
 	"github.com/manifoldco/manifold-cli/api"
 	"github.com/manifoldco/manifold-cli/config"
 	"github.com/manifoldco/manifold-cli/errs"
-	"github.com/manifoldco/manifold-cli/generated/identity/models"
 	"github.com/manifoldco/manifold-cli/prompts"
 	"github.com/manifoldco/manifold-cli/session"
 )
@@ -61,7 +60,7 @@ func oauth(cliCtx *cli.Context) error {
 			return cli.NewExitError(fmt.Sprintf("Could not link accounts: %s", err), -1)
 		}
 
-		err = authenticateOAuth(ctx, cliCtx, cfg, a, models.OAuthAuthenticationPollTypeLink)
+		err = authenticateOAuth(ctx, cliCtx, cfg, a, "link")
 		if err != nil {
 			return cli.NewExitError(fmt.Sprintf("Unable to link accounts: %s", err), -1)
 		}
@@ -70,7 +69,7 @@ func oauth(cliCtx *cli.Context) error {
 	}
 
 	// registration + login
-	err = authenticateOAuth(ctx, cliCtx, cfg, a, models.OAuthAuthenticationPollTypeLogin)
+	err = authenticateOAuth(ctx, cliCtx, cfg, a, "login")
 	if err != nil {
 		return cli.NewExitError(fmt.Sprintf("Could not login with OAuth provider: %s", err), -1)
 	}

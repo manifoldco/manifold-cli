@@ -1553,20 +1553,8 @@ definitions:
   OAuthAuthenticationPoll:
     type: object
     properties:
-      state:
+      secret:
         type: string
         description: State information for polling
-      public_key:
-        type: string
-        description: Public key for verification
-      source:
-        type: string
-        enum: ['github']
-      type:
-        type: string
-        enum: ['link', 'login']
     required:
-        - state
-        - public_key
-        - source
-        - type
+        - secret
