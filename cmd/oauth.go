@@ -46,7 +46,7 @@ func oauth(cliCtx *cli.Context) error {
 			cli.NewExitError("You must provide an authentication mechanism", -1))
 	}
 
-	cfg, a, err := loadConfigAndAnaltics()
+	cfg, a, err := loadConfigAndAnalytics()
 	if err != nil {
 		return cli.NewExitError(fmt.Sprintf("Unable to load configuration: %s", err), -1)
 	}
@@ -80,11 +80,11 @@ func oauth(cliCtx *cli.Context) error {
 		return cli.NewExitError(fmt.Sprintf("Could not login with OAuth provider: %s", err), -1)
 	}
 
-	fmt.Println("You are logged in, horray!")
+	fmt.Println("You are logged in, hooray!")
 	return nil
 }
 
-func loadConfigAndAnaltics() (*config.Config, *analytics.Analytics, error) {
+func loadConfigAndAnalytics() (*config.Config, *analytics.Analytics, error) {
 	cfg, err := config.Load()
 	if err != nil {
 		return nil, nil, cli.NewExitError(fmt.Sprintf("Unable to load config: %s", err), -1)
