@@ -6,6 +6,7 @@ import (
 	"crypto/rand"
 	"time"
 	"math/big"
+	url2 "net/url"
 
 	"github.com/juju/ansiterm"
 	"github.com/skratchdot/open-golang/open"
@@ -48,7 +49,14 @@ func githubWithCallback(ctx context.Context, cfg *config.Config, a *analytics.An
 		return cli.NewExitError(fmt.Sprintf("Unable to create identity client: %s", err), -1)
 	}
 
-	uri := fmt.Sprintf("%s?cli=true&public_key=%s&type=%s&auth_token=%s", cfg.GitHubCallback, *pub, stateType, cfg.AuthToken)
+	query := url2.Values{
+		"cli": []string{"true"},
+		"public_key": []string{*pub},
+		"type": []string{stateType},
+		"auth_token": []string{cfg.AuthToken},
+	}
+
+	uri := fmt.Sprintf("%s?%s", cfg.GitHubCallback, query.Encode())
 	authConfig := &oauth2.Config{
 		ClientID:    config.GitHubClientID,
 		Scopes:      []string{"user"},
