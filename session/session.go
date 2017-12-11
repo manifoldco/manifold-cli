@@ -290,7 +290,7 @@ func Signup(ctx context.Context, cfg *config.Config, name, email, password strin
 		return nil, err
 	}
 
-	alg, salt, pubkey, err := NewKeyMaterial(password)
+	alg, salt, pubkey, err := newKeyMaterial(password)
 	if err != nil {
 		return nil, hierr.Errorf(err,
 			"Failed to derive publickey")

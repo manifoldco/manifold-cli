@@ -15,7 +15,7 @@ const r = 8
 const p = 1
 const edSeedSize = 32
 
-func NewKeyMaterial(password string) (*string, *string, *string, error) {
+func newKeyMaterial(password string) (*string, *string, *string, error) {
 	saltBytes := make([]byte, 16)
 	_, err := rand.Read(saltBytes)
 	if err != nil {

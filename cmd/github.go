@@ -17,7 +17,6 @@ import (
 	"github.com/manifoldco/manifold-cli/analytics"
 	"github.com/manifoldco/manifold-cli/color"
 	"github.com/manifoldco/manifold-cli/config"
-	"github.com/manifoldco/manifold-cli/session"
 	"github.com/manifoldco/manifold-cli/api"
 	"github.com/manifoldco/manifold-cli/generated/identity/client/authentication"
 	"github.com/manifoldco/manifold-cli/generated/identity/models"
@@ -39,7 +38,6 @@ func githubWithCallback(ctx context.Context, cfg *config.Config, a *analytics.An
 		cli.NewExitError(fmt.Sprintf("Unable to generate state: %s", err), -1)
 	}
 	source := models.OAuthAuthenticationPollSourceGithub
-	_, _, pub, err := session.NewKeyMaterial(state)
 	if err != nil {
 		return cli.NewExitError(fmt.Sprintf("Could not load keys from state: %s", err), -1)
 	}
@@ -51,7 +49,6 @@ func githubWithCallback(ctx context.Context, cfg *config.Config, a *analytics.An
 
 	query := url2.Values{
 		"cli": []string{"true"},
-		"public_key": []string{*pub},
 		"type": []string{stateType},
 		"auth_token": []string{cfg.AuthToken},
 	}
