@@ -19,7 +19,6 @@ import (
 	"github.com/manifoldco/manifold-cli/config"
 	"github.com/manifoldco/manifold-cli/api"
 	"github.com/manifoldco/manifold-cli/generated/identity/client/authentication"
-	"github.com/manifoldco/manifold-cli/generated/identity/models"
 )
 
 var (
@@ -78,19 +77,17 @@ func githubWithCallback(ctx context.Context, cfg *config.Config, a *analytics.An
 	timeout := time.After(pollingTimeout)
 	tick := time.Tick(pollingTick)
 
-	op := authentication.NewPostTokensOauthPollParamsWithContext(ctx)
-	op.SetBody(&models.OAuthAuthenticationPoll{
-		Secret: &state,
-	})
+	op := authentication.NewGetTokensOauthPollParamsWithContext(ctx)
+	op.Secret = state
 	for {
 		select {
 		case <-timeout:
 			return cli.NewExitError("Unable to fetch authentication", -1)
 		case <-tick:
-			loginResp, linkResp, err := identityClient.Identity.Authentication.PostTokensOauthPoll(op)
+			loginResp, linkResp, err := identityClient.Identity.Authentication.GetTokensOauthPoll(op)
 			if err != nil {
 				switch err.(type) {
-				case *authentication.PostTokensOauthPollNotFound:
+				case *authentication.GetTokensOauthPollNotFound:
 					continue
 				default:
 					return err

@@ -56,17 +56,16 @@ paths:
           schema:
             $ref: '#/definitions/Error'
   /tokens/oauth/poll:
-    post:
+    get:
       security: []
       summary: Poll the exchange of a third-party OAuth 2 token for valid authentication
       parameters:
-        - name: body
-          in: body
+        - name: secret
+          in: query
           description: |
-            OAuth state information
+            The state secret to poll for authorization
+          type: string
           required: true
-          schema:
-            $ref: '#/definitions/OAuthAuthenticationPoll'
       tags:
         - Authentication
       responses:
