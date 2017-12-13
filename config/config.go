@@ -22,7 +22,7 @@ var Version = "dev"
 var StripePublishableKey = "pk_live_A6qSWh1v4SrNnrWSftgDcKFQ"
 
 // GitHubClientID facilitates logins with GitHub
-var GitHubClientID = "235dcaef59d5a0d58a6a"
+var GitHubClientID = "40ff4213256c4b253c7f"
 var GitHubCallback = "https://dashboard.manifold.co/login/oauth/github"
 
 func init() {
