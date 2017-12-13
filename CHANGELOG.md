@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Changed
 
+## [0.13.0] - 2017-12-13
+
+### Added
+
 - GitHub identity -- register a new account, login to or link an existing account to GitHub
 - GitHub identity -- update GitHub app ClientID
 - GitHub identity -- Use GET for state polling
