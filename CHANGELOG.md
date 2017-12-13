@@ -9,7 +9,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Changed
 
-- GitHub identity -- register a new account, login to or link an existing account to GitHub 
+- GitHub identity -- register a new account, login to or link an existing account to GitHub
+- GitHub identity -- update GitHub app ClientID
 - Reference to go-manifold updated to 0.9.1 release for verification code change
 
 ## [0.12.0] - 2017-11-30
