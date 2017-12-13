@@ -55,6 +55,43 @@ paths:
           description: Request failed due to an internal server error.
           schema:
             $ref: '#/definitions/Error'
+  /tokens/oauth/poll:
+    post:
+      security: []
+      summary: Poll the exchange of a third-party OAuth 2 token for valid authentication
+      parameters:
+        - name: body
+          in: body
+          description: |
+            OAuth state information
+          required: true
+          schema:
+            $ref: '#/definitions/OAuthAuthenticationPoll'
+      tags:
+        - Authentication
+      responses:
+        201:
+          description: A authentication token
+          schema:
+            $ref: '#/definitions/AuthToken'
+        204:
+          description: Polling finished successfully
+        400:
+          description: Invalid request for authentication
+          schema:
+            $ref: '#/definitions/Error'
+        404:
+          description: Provided state information does not match any state
+          schema:
+            $ref: '#/definitions/Error'
+        500:
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/Error'
+        default:
+          description: Unexpected error
+          schema:
+            $ref: '#/definitions/Error'
   /tokens/auth:
     post:
       summary: Exchange a login token for a general use auth token
@@ -1513,3 +1550,11 @@ definitions:
       - id
       - version
       - type
+  OAuthAuthenticationPoll:
+    type: object
+    properties:
+      secret:
+        type: string
+        description: State information for polling
+    required:
+        - secret

@@ -82,5 +82,8 @@ required=[
   version = "0.10.0"
 
 [[constraint]]
+  name = "golang.org/x/oauth2"
+
+[[constraint]]
   branch = "master"
   name = "github.com/chzyer/readline"
