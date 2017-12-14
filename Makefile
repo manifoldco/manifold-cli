@@ -3,9 +3,9 @@ PKG=github.com/manifoldco/manifold-cli
 
 STRIPE_PKEY=${STRIPE_PUBLISHABLE_KEY}
 
-LD_FLAGS=-w -X $(PKG)config.Version=$(VERSION)
-LD_FLAGS+=$(if $(STRIPE_PUBLISHABLE_KEY), -X $(PKG).config.StripePublishableKey=$(STRIPE_PUBLISHABLE_KEY),)
-LD_FLAGS+=$(if $(GITHUB_CLIENT_ID), -X $(PKG).config.GitHubClientID=$(MANIFOLD_GITHUB_CLIENT_ID),)
+LD_FLAGS=-w -X $(PKG)/config.Version=$(VERSION)
+LD_FLAGS+=$(if $(STRIPE_PUBLISHABLE_KEY),-X $(PKG)/config.StripePublishableKey=$(STRIPE_PUBLISHABLE_KEY),)
+LD_FLAGS+=$(if $(MANIFOLD_GITHUB_CLIENT_ID),-X $(PKG)/config.GitHubClientID=$(MANIFOLD_GITHUB_CLIENT_ID),)
 
 GO_BUILD=CGO_ENABLED=0 go build -i --ldflags="$(LD_FLAGS)"
 
