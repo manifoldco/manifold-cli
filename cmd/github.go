@@ -54,7 +54,7 @@ func githubWithCallback(ctx context.Context, cfg *config.Config, a *analytics.An
 	uri := fmt.Sprintf("%s?%s", cfg.GitHubCallback, query.Encode())
 	authConfig := &oauth2.Config{
 		ClientID:    config.GitHubClientID,
-		Scopes:      []string{"user"},
+		Scopes:      []string{"user:email"},
 		Endpoint:    github.Endpoint,
 		RedirectURL: uri,
 	}
