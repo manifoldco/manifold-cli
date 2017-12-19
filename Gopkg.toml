@@ -21,14 +21,19 @@ required=[
   name = "github.com/go-openapi/errors"
 
 [[constraint]]
+  name = "github.com/go-openapi/loads"
+
+[[constraint]]
   name = "github.com/go-openapi/runtime"
+
+[[constraint]]
+  name = "github.com/go-openapi/spec"
 
 [[constraint]]
   name = "github.com/go-openapi/strfmt"
 
 [[constraint]]
   name = "github.com/go-openapi/swag"
-  branch = "master"
 
 [[constraint]]
   name = "github.com/go-openapi/validate"
@@ -41,7 +46,7 @@ required=[
 
 [[constraint]]
   name = "github.com/manifoldco/go-manifold"
-  branch = "master"
+  revision = "e8d5195f87477900491dbd43e3d6c8818c55e316"
 
 [[constraint]]
   name = "github.com/manifoldco/promptui"
@@ -79,7 +84,7 @@ required=[
 
 [[constraint]]
   name = "github.com/go-swagger/go-swagger"
-  version = "0.10.0"
+  version = "0.11.0"
 
 [[constraint]]
   name = "golang.org/x/oauth2"

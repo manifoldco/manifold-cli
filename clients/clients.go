@@ -18,6 +18,7 @@ import (
 	iClient "github.com/manifoldco/manifold-cli/generated/identity/client"
 	mClient "github.com/manifoldco/manifold-cli/generated/marketplace/client"
 	pClient "github.com/manifoldco/manifold-cli/generated/provisioning/client"
+	aClient "github.com/manifoldco/manifold-cli/generated/activity/client"
 )
 
 const defaultUserAgent = "manifold-cli"
@@ -115,6 +116,28 @@ func NewBilling(cfg *config.Config) (*bClient.Billing, error) {
 	}
 
 	return bClient.New(transport, strfmt.Default), nil
+}
+
+// NewActivity returns a swagger generated client for Activity
+func NewActivity(cfg *config.Config) (*aClient.Activity, error) {
+	u, err := deriveURL(cfg, "activity")
+	if err != nil {
+		return nil, err
+	}
+
+	c := bClient.DefaultTransportConfig()
+	c.WithHost(u.Host)
+	c.WithBasePath(u.Path)
+	c.WithSchemes([]string{u.Scheme})
+
+	transport := httptransport.New(c.Host, c.BasePath, c.Schemes)
+
+	authToken := retrieveToken(cfg)
+	if authToken != "" {
+		transport.DefaultAuthentication = NewBearerToken(authToken)
+	}
+
+	return aClient.New(transport, strfmt.Default), nil
 }
 
 // NewProvisioning returns a swagger generated client for the Provisioning

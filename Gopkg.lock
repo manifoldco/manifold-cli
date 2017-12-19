@@ -119,7 +119,7 @@
   branch = "master"
   name = "github.com/go-openapi/spec"
   packages = ["."]
-  revision = "06b88aac7cdfc1738d6d8d08b3d5aeba5fc89d30"
+  revision = "5fb63ac17937afabc72d78cebfed3dfc9592ab47"
 
 [[projects]]
   branch = "master"
@@ -137,13 +137,13 @@
   branch = "master"
   name = "github.com/go-openapi/validate"
   packages = ["."]
-  revision = "d509235108fcf6ab4913d2dcb3a2260c0db2108e"
+  revision = "84511ace39c4be6a2500570f2e842687ef77933f"
 
 [[projects]]
   name = "github.com/go-swagger/go-swagger"
   packages = ["cmd/swagger","cmd/swagger/commands","cmd/swagger/commands/generate","cmd/swagger/commands/initcmd","generator","scan"]
-  revision = "4d1e79b5a98c6f67bbf06923643d5317ed37a058"
-  version = "0.10.0"
+  revision = "8135eb6728e43b73489e80f94426e6d387809502"
+  version = "0.11.0"
 
 [[projects]]
   branch = "master"
@@ -178,7 +178,7 @@
 [[projects]]
   branch = "master"
   name = "github.com/hashicorp/hcl"
-  packages = [".","hcl/ast","hcl/parser","hcl/scanner","hcl/strconv","hcl/token","json/parser","json/scanner","json/token"]
+  packages = [".","hcl/ast","hcl/parser","hcl/printer","hcl/scanner","hcl/strconv","hcl/token","json/parser","json/scanner","json/token"]
   revision = "23c074d0eceb2b8a5bfdbb271ab780cde70f05a8"
 
 [[projects]]
@@ -236,9 +236,8 @@
   version = "v1.0.0"
 
 [[projects]]
-  branch = "master"
   name = "github.com/manifoldco/go-manifold"
-  packages = [".","errors","idtype","names","names/data"]
+  packages = [".","errors","events","idtype","names","names/data"]
   revision = "e8d5195f87477900491dbd43e3d6c8818c55e316"
 
 [[projects]]
@@ -320,10 +319,10 @@
   version = "v1.0.0"
 
 [[projects]]
+  branch = "master"
   name = "github.com/spf13/viper"
   packages = ["."]
-  revision = "25b30aa063fc18e48662b86996252eabdcf2f0c7"
-  version = "v1.0.0"
+  revision = "1a0c4a370c3e8286b835467d2dfcdaf636c3538b"
 
 [[projects]]
   name = "github.com/stripe/stripe-go"
@@ -424,6 +423,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "003c79baf0eb18dbfaf60fc8cbfe8ddd3b9e9dcc802a294906f0e6bc239fbcd8"
+  inputs-digest = "e7c9f3684acd4b32203cf33ddb10fe72cedf7acb5561f629d45e9bdfba98778a"
   solver-name = "gps-cdcl"
   solver-version = 1
