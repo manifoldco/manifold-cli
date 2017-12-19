@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
 
+### Removed
+
+- Provision event from `create` command
+
 ### Changed
 
 ## [0.13.0] - 2017-12-13
