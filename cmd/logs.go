@@ -3,19 +3,16 @@ package main
 import (
 	"context"
 	"fmt"
-	"strings"
 
-	"github.com/manifoldco/go-manifold"
 	"github.com/urfave/cli"
 
 	"github.com/manifoldco/manifold-cli/api"
-	"github.com/manifoldco/manifold-cli/config"
-	"github.com/manifoldco/manifold-cli/errs"
 	"github.com/manifoldco/manifold-cli/middleware"
 	"github.com/manifoldco/manifold-cli/prompts"
-	"github.com/manifoldco/manifold-cli/session"
+	"github.com/manifoldco/manifold-cli/clients"
 
 	"github.com/manifoldco/manifold-cli/generated/activity/client/event"
+	models "github.com/manifoldco/manifold-cli/generated/marketplace/models"
 	aModels "github.com/manifoldco/manifold-cli/generated/activity/models"
 )
 
@@ -30,9 +27,10 @@ func init() {
 		Usage:    "Logs gets the most recent information of your activity",
 		Category: "RESOURCES",
 		ArgsUsage: "[team-name]",
-		Flags: []cli.Flag{
-			meFlag(),
-		},
+		Flags: append(teamFlags, []cli.Flag{
+			meFlags(),
+			teamFlag(),
+		}...),
 		Action: middleware.Chain(middleware.EnsureSession, logsCmd),
 	}
 
