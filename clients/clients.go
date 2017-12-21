@@ -125,7 +125,7 @@ func NewActivity(cfg *config.Config) (*aClient.Activity, error) {
 		return nil, err
 	}
 
-	c := bClient.DefaultTransportConfig()
+	c := aClient.DefaultTransportConfig()
 	c.WithHost(u.Host)
 	c.WithBasePath(u.Path)
 	c.WithSchemes([]string{u.Scheme})

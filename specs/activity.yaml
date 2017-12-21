@@ -1,18 +1,14 @@
-swagger: "2.0"
+swagger: '2.0'
 info:
   title: Activity API
-  description: |
-    Activity and audit logging
-  version: 1.0.0
+  description: Activity and audit logging
+  version: '1.0.0'
 
 # the domain of the service
 host: api.activity.manifold.co
-schemes: 
-- https
-produces:
-- application/json 
-consumes:
-- application/json
+schemes: [ https ]
+produces: [ application/json ]
+consumes: [ application/json ]
 
 basePath: /v1 # Prefixed to all paths
 
@@ -58,24 +54,19 @@ paths:
           description: List of events
           schema:
             type: array
-            items:
-              $ref: '#/definitions/Event' 
+            items: { $ref: '#/definitions/Event' }
         400:
           description: Validation failed for request.
-          schema:
-            $ref: '#/definitions/Error' 
+          schema: { $ref: '#/definitions/Error' }
         401:
           description: Authentication failed for the request.
-          schema:
-            $ref: '#/definitions/Error' 
+          schema: { $ref: '#/definitions/Error' }
         500:
           description: Request failed due to an internal server error.
-          schema:
-            $ref: '#/definitions/Error' 
+          schema: { $ref: '#/definitions/Error' }
         default:
           description: Unexpected error
-          schema:
-            $ref: '#/definitions/Error' 
+          schema: { $ref: '#/definitions/Error' }
 
   /internal/events/{id}:
     x-manifold-audience: internal
@@ -98,27 +89,22 @@ paths:
           description: |
             Event create request.
           required: true
-          schema:
-            $ref: '#/definitions/Event'
+          schema: { $ref: '#/definitions/Event' }
       responses:
         204:
           description: Empty response
         400:
           description: Validation failed for request.
-          schema:
-            $ref: '#/definitions/Error'
+          schema: { $ref: '#/definitions/Error' }
         401:
           description: Authentication failed for the request.
-          schema:
-            $ref: '#/definitions/Error'
+          schema: { $ref: '#/definitions/Error' }
         500:
           description: Request failed due to an internal server error.
-          schema:
-            $ref: '#/definitions/Error'
+          schema: { $ref: '#/definitions/Error' }
         default:
           description: Unexpected error
-          schema:
-            $ref: '#/definitions/Error'
+          schema: { $ref: '#/definitions/Error' }
 
 definitions:
   ID:
@@ -129,7 +115,7 @@ definitions:
     x-go-type:
       type: ID
       import:
-        package: github.com/manifoldco/go-manifold
+        package: 'github.com/manifoldco/go-manifold'
         alias: manifold
   OptionalID:
     type: string
@@ -140,7 +126,7 @@ definitions:
     x-go-type:
       type: ID
       import:
-        package: github.com/manifoldco/go-manifold
+        package: 'github.com/manifoldco/go-manifold'
         alias: manifold
 
   Event:
@@ -165,7 +151,8 @@ definitions:
     x-go-type:
       type: Event
       import:
-        package: github.com/manifoldco/go-manifold/events
+        package: 'github.com/manifoldco/go-manifold/events'
+
   EventBody:
     discriminator: "type"
     type: object
@@ -209,40 +196,23 @@ definitions:
           data:
             type: object
             properties:
-              operation_id:
-                $ref: '#/definitions/ID'
-              resource_id:
-                $ref: '#/definitions/ID'
-              resource:
-                $ref: '#/definitions/Resource'
-              user_id:
-                $ref: '#/definitions/OptionalID'
-              user:
-                $ref: '#/definitions/User'
-              team_id:
-                $ref: '#/definitions/OptionalID'
-              team:
-                $ref: '#/definitions/Team'
-              project_id: 
-                $ref: '#/definitions/OptionalID'
-              project: 
-                $ref: '#/definitions/Project'
-              provider_id:
-                $ref: '#/definitions/OptionalID'
-              provider:
-                $ref: '#/definitions/Provider'
-              product_id:
-                $ref: '#/definitions/OptionalID'
-              product:
-                $ref: '#/definitions/Product'
-              plan_id:
-                $ref: '#/definitions/OptionalID'
-              plan:
-                $ref: '#/definitions/Plan'
-              region_id:
-                $ref: '#/definitions/OptionalID'
-              region:
-                $ref: '#/definitions/Region'
+              operation_id: { $ref: '#/definitions/ID' }
+              resource_id: { $ref: '#/definitions/ID' }
+              resource: { $ref: '#/definitions/Resource' }
+              user_id: { $ref: '#/definitions/OptionalID' }
+              user: { $ref: '#/definitions/User' }
+              team_id: { $ref: '#/definitions/OptionalID' }
+              team: { $ref: '#/definitions/Team' }
+              project_id: { $ref: '#/definitions/OptionalID' }
+              project: { $ref: '#/definitions/Project' }
+              provider_id: { $ref: '#/definitions/OptionalID' }
+              provider: { $ref: '#/definitions/Provider' }
+              product_id: { $ref: '#/definitions/OptionalID' }
+              product: { $ref: '#/definitions/Product' }
+              plan_id: { $ref: '#/definitions/OptionalID' }
+              plan: { $ref: '#/definitions/Plan' }
+              region_id: { $ref: '#/definitions/OptionalID' }
+              region: { $ref: '#/definitions/Region' }
               source:
                 type: string
                 enum: ['catalog', 'custom']
@@ -258,14 +228,13 @@ definitions:
         x-go-type:
           type: OperationProvisioned
           import:
-            package: github.com/manifoldco/go-manifold/events
+            package: 'github.com/manifoldco/go-manifold/events'
+
   Resource:
     type: object
     properties:
-      id: 
-         $ref: '#/definitions/ID'
-      name: 
-         type: string
+      id: { $ref: '#/definitions/ID' }
+      name: { type: string }
     additionalProperties: false
     required:
       - id
@@ -273,16 +242,14 @@ definitions:
     x-go-type:
       type: Resource
       import:
-        package: github.com/manifoldco/go-manifold/events
+        package: 'github.com/manifoldco/go-manifold/events'
+
   User:
     type: object
     properties:
-      id: 
-         $ref: '#/definitions/ID'
-      name: 
-         type: string
-      email: 
-         type: string
+      id: { $ref: '#/definitions/ID' }
+      name: { type: string }
+      email: { type: string }
     additionalProperties: false
     required:
       - id
@@ -290,14 +257,13 @@ definitions:
     x-go-type:
       type: User
       import:
-        package: github.com/manifoldco/go-manifold/events
+        package: 'github.com/manifoldco/go-manifold/events'
+
   Team:
     type: object
     properties:
-      id: 
-         $ref: '#/definitions/ID' 
-      name: 
-         type: string 
+      id: { $ref: '#/definitions/ID' }
+      name: { type: string }
     additionalProperties: false
     required:
       - id
@@ -305,14 +271,13 @@ definitions:
     x-go-type:
       type: Team
       import:
-        package: github.com/manifoldco/go-manifold/events
+        package: 'github.com/manifoldco/go-manifold/events'
+
   Project:
     type: object
     properties:
-      id: 
-        $ref: '#/definitions/ID' 
-      name: 
-         type: string 
+      id: { $ref: '#/definitions/ID' }
+      name: { type: string }
     additionalProperties: false
     required:
       - id
@@ -320,14 +285,13 @@ definitions:
     x-go-type:
       type: Project
       import:
-        package: github.com/manifoldco/go-manifold/events
+        package: 'github.com/manifoldco/go-manifold/events'
+
   Provider:
     type: object
     properties:
-      id: 
-         $ref: '#/definitions/ID' 
-      name: 
-         type: string 
+      id: { $ref: '#/definitions/ID' }
+      name: { type: string }
     additionalProperties: false
     required:
       - id
@@ -335,14 +299,13 @@ definitions:
     x-go-type:
       type: Provider
       import:
-        package: github.com/manifoldco/go-manifold/events
+        package: 'github.com/manifoldco/go-manifold/events'
+
   Product:
     type: object
     properties:
-      id: 
-         $ref: '#/definitions/ID' 
-      name: 
-         type: string 
+      id: { $ref: '#/definitions/ID' }
+      name: { type: string }
     additionalProperties: false
     required:
       - id
@@ -350,17 +313,14 @@ definitions:
     x-go-type:
       type: Product
       import:
-        package: github.com/manifoldco/go-manifold/events
+        package: 'github.com/manifoldco/go-manifold/events'
+
   Plan:
     type: object
     properties:
-      id: 
-         $ref: '#/definitions/ID' 
-      name: 
-         type: string 
-      cost: 
-         type: integer
-         minimum: 0
+      id: { $ref: '#/definitions/ID' }
+      name: { type: string }
+      cost: { type: integer, minimum: 0 }
     additionalProperties: false
     required:
       - id
@@ -369,21 +329,16 @@ definitions:
     x-go-type:
       type: Plan
       import:
-        package: github.com/manifoldco/go-manifold/events
-        alias: events
+        package: 'github.com/manifoldco/go-manifold/events'
+
   Region:
     type: object
     properties:
-      id: 
-         $ref: '#/definitions/ID' 
-      name: 
-         type: string 
-      platform: 
-         type: string 
-      location: 
-         type: string 
-      region: 
-         type: string 
+      id: { $ref: '#/definitions/ID' }
+      name: { type: string }
+      platform: { type: string }
+      location: { type: string }
+      region: { type: string }
     additionalProperties: false
     required:
       - id
@@ -394,7 +349,8 @@ definitions:
     x-go-type:
       type: Region
       import:
-        package: github.com/manifoldco/go-manifold/events
+        package: 'github.com/manifoldco/go-manifold/events'
+
   Label:
     type: string
     description: A machine readable unique label, which is url safe.
@@ -402,7 +358,7 @@ definitions:
     x-go-type:
       type: Label
       import:
-        package: github.com/manifoldco/go-manifold
+        package: 'github.com/manifoldco/go-manifold'
         alias: manifold
   Name:
     type: string
@@ -411,7 +367,7 @@ definitions:
     x-go-type:
       type: Name
       import:
-        package: github.com/manifoldco/go-manifold
+        package: 'github.com/manifoldco/go-manifold'
         alias: manifold
   Error:
     type: object
@@ -428,10 +384,9 @@ definitions:
       message:
         type: array
         description: Explanation of the errors
-        items: 
-         type: string 
+        items: { type: string }
     x-go-type:
       type: Error
       import:
-        package: github.com/manifoldco/go-manifold
+        package: 'github.com/manifoldco/go-manifold'
         alias: manifold
