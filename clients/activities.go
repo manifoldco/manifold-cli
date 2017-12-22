@@ -26,24 +26,40 @@ func FetchActivities(ctx context.Context, c *aClient.Activity, teamID *manifold.
 func FetchActivitiesWithProject(ctx context.Context, m *mClient.Marketplace, c *aClient.Activity, teamID *manifold.ID, projectLabel string) ([]*events.Event, error) {
 	var project *mModels.Project
 
+	projectID := ""
+	scopeID := ""
+
+	if teamID != nil {
+		scopeID = teamID.String()
+	}
+
 	if projectLabel != "" {
 		var err error
 		project, err = FetchProjectByLabel(ctx, m, teamID, projectLabel)
 		if err != nil {
 			return nil, err
 		}
+		projectID = project.ID.String()
+	
+	}
+
+	params := &event.GetEventsParams{
+		RefID: &projectID,
+		ScopeID: &scopeID,
+		Context: ctx,
 	}
 
 	res, err := c.Event.GetEvents(
-		event.NewGetEventsParamsWithContext(ctx), nil)
+		params, nil)
 	if err != nil {
 		return nil, err
 	}
 
 	var results []*events.Event
 	for _, r := range res.Payload {
-		if (teamID == nil && r.Body.RefID == nil) ||
-			(teamID != nil && r.Body.RefID != nil && teamID.String() == r.Body.RefID().String()) {
+
+		if (teamID == nil && r.Body.ScopeID == nil) ||
+			(teamID != nil && r.Body.ScopeID != nil && teamID.String() == r.Body.ScopeID().String()) {
 			results = append(results, r)
 		}
 	}
