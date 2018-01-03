@@ -13,6 +13,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Changed
 
+- GitHub identity -- user user:email scope for login and link
+
 ## [0.13.0] - 2017-12-13
 
 ### Added
