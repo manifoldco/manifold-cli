@@ -41,10 +41,7 @@ func init() {
 				Name:      "update",
 				Usage:     "Update an existing team",
 				ArgsUsage: "[team-name]",
-				Flags: []cli.Flag{
-					titleFlag(),
-				},
-				Action: middleware.Chain(middleware.EnsureSession, updateTeamCmd),
+				Action:    middleware.Chain(middleware.EnsureSession, updateTeamCmd),
 			},
 			{
 				Name:      "remove",
@@ -108,10 +105,11 @@ func createTeamCmd(cliCtx *cli.Context) error {
 		return err
 	}
 
-	teamName, teamTitle, err := promptNameAndTitle(cliCtx, nil, "team", true, false)
+	teamName, err := promptName(cliCtx, nil, "team", false)
 	if err != nil {
 		return err
 	}
+	teamTitle := teamName
 
 	client, err := api.New(api.Identity)
 	if err != nil {
@@ -148,20 +146,17 @@ func updateTeamCmd(cliCtx *cli.Context) error {
 		return err
 	}
 
-	providedTitle := cliCtx.String("title")
-	if providedTitle == "" {
-		providedTitle = string(team.Body.Name)
-	}
-	newName, newTitle, err := createNameAndTitle(cliCtx, "team", string(team.Body.Label), providedTitle, true, false, false)
+	newName, err := promptName(cliCtx, nil, "team", false)
 	if err != nil {
 		return err
 	}
+	newTitle := newName
 
 	if err := updateTeam(ctx, team, newName, newTitle, client.Identity); err != nil {
 		return cli.NewExitError(fmt.Sprintf("Could not update team: %s", err), -1)
 	}
 
-	fmt.Printf("Your team \"%s\" has been updated\n", newTitle)
+	fmt.Printf("Your team \"%s\" has been updated\n", newName)
 	return nil
 }
 

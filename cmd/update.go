@@ -27,7 +27,6 @@ func init() {
 		Action: middleware.Chain(middleware.EnsureSession, middleware.LoadDirPrefs,
 			middleware.LoadTeamPrefs, updateResourceCmd),
 		Flags: append(teamFlags, []cli.Flag{
-			titleFlag(),
 			projectFlag(),
 		}...),
 	}
@@ -96,14 +95,11 @@ func updateResourceCmd(cliCtx *cli.Context) error {
 		resource = resources[idx]
 	}
 
-	providedTitle := cliCtx.String("title")
-	if providedTitle == "" {
-		providedTitle = string(resource.Body.Name)
-	}
-	newName, newTitle, err := createNameAndTitle(cliCtx, "resource", string(resource.Body.Label), providedTitle, true, false, false)
+	newName, err := promptName(cliCtx, nil, "resource", false)
 	if err != nil {
 		cli.NewExitError(fmt.Sprintf("Could not rename the resource: %s", err), -1)
 	}
+	newTitle := newName
 
 	prompts.SpinStart(fmt.Sprintf("Updating resource %q", resource.Body.Label))
 
