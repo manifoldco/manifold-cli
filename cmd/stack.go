@@ -16,7 +16,7 @@ func init() {
 		Subcommands: []cli.Command{
 			{
 				Name: "init",
-				Usage: "Initialize a new stack.yaml",
+				Usage: "Initialize a new stack.yml",
 				Flags: append(teamFlags, []cli.Flag{
 					cli.StringFlag{
 						Name: "project, p",
@@ -24,7 +24,7 @@ func init() {
 					},
 					cli.BoolFlag{
 						Name: "generate, g",
-						Usage: "Auto-generate a new stack.yaml based on existing resource",
+						Usage: "Auto-generate a new stack.yml based on existing resource",
 					},
 					yesFlag(),
 				}...),
