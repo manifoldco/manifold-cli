@@ -52,12 +52,12 @@ func init() {
 				},
 				Action: stackAddCmd,
 			},
-			// {
-			// 	Name:      "remove",
-			// 	ArgsUsage: "[resource-name]",
-			// 	Usage:     "Remove a resource definition from the stack.yml",
-			// 	Action: stack.RemoveResourceCMD
-			// },
+			{
+				Name:      "remove",
+				ArgsUsage: "[resource-name]",
+				Usage:     "Remove a resource definition from the stack.yml",
+				Action:    stackRemoveCmd,
+			},
 			// {
 			// 	Name:      "plan",
 			// 	Usage:     "Performs a dry run of the stack.yml, showing you the changes that will be made from an apply",
@@ -176,6 +176,53 @@ func stackAddCmd(cliCtx *cli.Context) error {
 		Plan:    planName,
 		Region:  regionName,
 	}
+
+	// Write
+	data, err = yaml.Marshal(stackFile)
+	if err != nil {
+		return cli.NewExitError(fmt.Sprintf("Unable to marshal YAML data: %s", err), -1)
+	}
+
+	err = ioutil.WriteFile("stack.yml", data, 0644)
+	if err != nil {
+		return cli.NewExitError(fmt.Sprintf("Unable to save stack.yml file"), -1)
+	}
+
+	return nil
+}
+
+func stackRemoveCmd(cliCtx *cli.Context) error {
+	if err := maxOptionalArgsLength(cliCtx, 1); err != nil {
+		return err
+	}
+
+	resourceName, err := optionalArgName(cliCtx, 0, "resource name")
+	if err != nil {
+		return err
+	}
+	if resourceName == "" {
+		return cli.NewExitError(fmt.Sprintf("Please specify a resource name to remove"), -1)
+	}
+
+	// Read
+	data, err := ioutil.ReadFile("stack.yml")
+	if err != nil {
+		return cli.NewExitError(fmt.Sprintf("Unable to read stack.yml file"), -1)
+	}
+
+	stackFile := &stack.StackYaml{}
+	err = yaml.Unmarshal(data, stackFile)
+	if err != nil {
+		return cli.NewExitError(fmt.Sprintf("Unable to unmarshal YAML data: %s", err), -1)
+	}
+
+	// Check
+	if _, ok := stackFile.Resources[resourceName]; !ok {
+		return cli.NewExitError(fmt.Sprintf("Resource definition does not exist: %s", resourceName), -1)
+	}
+
+	// Modify
+	delete(stackFile.Resources, resourceName)
 
 	// Write
 	data, err = yaml.Marshal(stackFile)
