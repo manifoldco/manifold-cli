@@ -6,7 +6,7 @@ type StackYaml struct {
 	Project string `yaml:"project"`
 
 	// Resources are the Manifold-defined resources in the stack
-	Resources map[string]StackResource `yaml:"resources,flow"`
+	Resources map[string]StackResource `yaml:"resources"`
 }
 
 // StackResource defines a single resource definition for the a stack, and defines resource
