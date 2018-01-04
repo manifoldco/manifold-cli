@@ -4,3 +4,4 @@ build
 generated/
 
 all-cover.txt
+stack.yml

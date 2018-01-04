@@ -1,12 +1,12 @@
 package stack
 
 import (
+	"fmt"
 	"io/ioutil"
 	"os"
-	"fmt"
 
-	"gopkg.in/yaml.v2"
 	"github.com/urfave/cli"
+	"gopkg.in/yaml.v2"
 
 	"github.com/manifoldco/manifold-cli/prompts"
 )
@@ -14,7 +14,7 @@ import (
 func Init(cliCtx *cli.Context) error {
 	yes := cliCtx.Bool("yes")
 
-	existing, err := ioutil.ReadFile("stack.yml");
+	existing, err := ioutil.ReadFile("stack.yml")
 	if err != nil && !os.IsNotExist(err) || err == nil && len(existing) != 0 {
 		if !yes {
 			_, err := prompts.Confirm("Overwrite stack.yml?")
