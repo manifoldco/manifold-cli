@@ -126,9 +126,11 @@ func stackAddCmd(cliCtx *cli.Context) error {
 	if err != nil {
 		return prompts.HandleSelectError(err, "Could not select product.")
 	}
+	product := products[productIdx]
+	productName = string(product.Body.Label)
 
 	if planName != "" {
-		plan, err = catalog.FetchPlanByLabel(ctx, products[productIdx].ID, planName)
+		plan, err = catalog.FetchPlanByLabel(ctx, product.ID, planName)
 		if err != nil {
 			return prompts.HandleSelectError(err, "Plan does not exist.")
 		}
@@ -144,12 +146,14 @@ func stackAddCmd(cliCtx *cli.Context) error {
 		}
 		plan = plans[planIdx]
 	}
+	planName = string(plan.Body.Label)
 
 	regions := filterRegionsForPlan(catalog.Regions(), plan.Body.Regions)
-	_, _, err = prompts.SelectRegion(regions)
+	regionIdx, _, err := prompts.SelectRegion(regions)
 	if err != nil {
 		return prompts.HandleSelectError(err, "Region does not exist.")
 	}
+	regionName = *regions[regionIdx].Body.Location
 
 	resourceName, resourceTitle, err := promptNameAndTitle(cliCtx, nil, "resource", true, false)
 	if err != nil {
