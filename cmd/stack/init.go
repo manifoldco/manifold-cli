@@ -14,12 +14,12 @@ import (
 func Init(cliCtx *cli.Context) error {
 	yes := cliCtx.Bool("yes")
 
-	existing, err := ioutil.ReadFile("stack.yaml");
+	existing, err := ioutil.ReadFile("stack.yml");
 	if err != nil && !os.IsNotExist(err) || err == nil && len(existing) != 0 {
 		if !yes {
-			_, err := prompts.Confirm("Overwrite stack.yaml?")
+			_, err := prompts.Confirm("Overwrite stack.yml?")
 			if err != nil {
-				return cli.NewExitError("Not overwriting stack.yaml", -1)
+				return cli.NewExitError("Not overwriting stack.yml", -1)
 			}
 		}
 	}
@@ -38,9 +38,9 @@ func Init(cliCtx *cli.Context) error {
 		return cli.NewExitError(fmt.Sprintf("Unable to marshal YAML data: %s", err), -1)
 	}
 
-	err = ioutil.WriteFile("stack.yaml", data, 0644)
+	err = ioutil.WriteFile("stack.yml", data, 0644)
 	if err != nil {
-		return cli.NewExitError(fmt.Sprintf("Unable to save stack.yaml file"), -1)
+		return cli.NewExitError(fmt.Sprintf("Unable to save stack.yml file"), -1)
 	}
 
 	return nil

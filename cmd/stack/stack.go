@@ -1,6 +1,6 @@
 package stack
 
-// StackYaml defines the struct definition for the decoded stack.yaml
+// StackYaml defines the struct definition for the decoded stack.yml
 type StackYaml struct {
 	// Project is a project label the defines the project that this stack belongs to
 	Project string `yaml:"project"`
