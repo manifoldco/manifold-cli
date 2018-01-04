@@ -29,7 +29,7 @@ func Init(cliCtx *cli.Context) error {
 		projectTitle = cliCtx.String("project")
 	}
 
-	projectTitle, err = prompts.ProjectTitle(projectTitle, false)
+	projectTitle, err = prompts.ProjectTitle(projectTitle, projectTitle != "")
 	if err != nil {
 		cli.NewExitError(fmt.Sprintf("Unable to save project name: %s", err), -1)
 	}
