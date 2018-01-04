@@ -8,6 +8,7 @@ import (
 	"github.com/urfave/cli"
 	"gopkg.in/yaml.v2"
 
+	"github.com/manifoldco/manifold-cli/config"
 	"github.com/manifoldco/manifold-cli/prompts"
 )
 
@@ -34,7 +35,7 @@ func Init(cliCtx *cli.Context) error {
 		cli.NewExitError(fmt.Sprintf("Unable to save project name: %s", err), -1)
 	}
 
-	stack := StackYaml{
+	stack := config.StackYaml{
 		Project: projectTitle,
 	}
 

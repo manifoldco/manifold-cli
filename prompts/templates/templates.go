@@ -95,3 +95,14 @@ var TplTeam = &promptui.SelectTemplates{
 	Inactive: inactive,
 	Selected: Selected, // Selected label can vary
 }
+
+var TplStackResource = &promptui.SelectTemplates{
+	FuncMap:  funcMap(),
+	Active:   active,
+	Inactive: inactive,
+	Selected: fmt.Sprintf(Selected, "Resource"),
+	Details: `
+Product:	{{ .Product | cyan }}
+Plan:	{{ .Plan | cyan }}
+Region:	{{ .Region | cyan }}`,
+}

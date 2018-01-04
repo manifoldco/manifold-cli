@@ -1,6 +1,8 @@
 package templates
 
 import (
+	"github.com/manifoldco/manifold-cli/config"
+
 	cModels "github.com/manifoldco/manifold-cli/generated/catalog/models"
 	iModels "github.com/manifoldco/manifold-cli/generated/identity/models"
 	mModels "github.com/manifoldco/manifold-cli/generated/marketplace/models"
@@ -50,6 +52,18 @@ type Project struct {
 type Team struct {
 	Name  string
 	Title string
+}
+
+type StackResource struct {
+	Name    string
+	Title   string
+	Product string
+	Plan    string
+	Region  string
+}
+
+func (sr StackResource) String() string {
+	return sr.Name
 }
 
 func Resources(list []*mModels.Resource, projects []*mModels.Project) []Resource {
@@ -188,4 +202,22 @@ func Regions(list []*cModels.Region) []Region {
 	}
 
 	return regions
+}
+
+func StackResources(stackResources map[string]config.StackResource) []StackResource {
+	resources := make([]StackResource, len(stackResources))
+
+	var i int = 0
+	for k, v := range stackResources {
+		resources[i] = StackResource{
+			Name:    k,
+			Title:   v.Title,
+			Product: v.Product,
+			Plan:    v.Plan,
+			Region:  v.Region,
+		}
+		i++
+	}
+
+	return resources
 }

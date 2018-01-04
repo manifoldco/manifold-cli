@@ -3,13 +3,16 @@ package prompts
 import (
 	"fmt"
 
+	"github.com/manifoldco/promptui"
+
+	"github.com/manifoldco/manifold-cli/config"
 	"github.com/manifoldco/manifold-cli/errs"
+	"github.com/manifoldco/manifold-cli/prompts/search"
+	"github.com/manifoldco/manifold-cli/prompts/templates"
+
 	cModels "github.com/manifoldco/manifold-cli/generated/catalog/models"
 	iModels "github.com/manifoldco/manifold-cli/generated/identity/models"
 	mModels "github.com/manifoldco/manifold-cli/generated/marketplace/models"
-	"github.com/manifoldco/manifold-cli/prompts/search"
-	"github.com/manifoldco/manifold-cli/prompts/templates"
-	"github.com/manifoldco/promptui"
 )
 
 // SelectProduct prompts the user to select a product from the given list.
@@ -86,11 +89,48 @@ func SelectPlan(list []*cModels.Plan, name string) (int, string, error) {
 	return prompt.Run()
 }
 
-// SelectResource promps the user to select a provisioned resource from the given list
+// SelectResource prompts the user to select a provisioned resource from the given list
 func SelectResource(list []*mModels.Resource, projects []*mModels.Project,
 	name string) (int, string, error) {
 	resources := templates.Resources(list, projects)
 	tpls := templates.TplResource
+
+	var idx int
+	if name != "" {
+		found := false
+		for i, r := range resources {
+			if r.Name == name {
+				idx = i
+				found = true
+				break
+			}
+		}
+
+		if !found {
+			msg := templates.PromptFailure("Resource", name)
+			fmt.Println(msg)
+			return 0, "", errs.ErrResourceNotFound
+		}
+
+		msg := templates.SelectSuccess(tpls, resources[idx])
+		fmt.Println(msg)
+
+		return idx, name, nil
+	}
+
+	prompt := promptui.Select{
+		Label:     "Select Resource",
+		Items:     resources,
+		Templates: tpls,
+	}
+
+	return prompt.Run()
+}
+
+// SelectStackResource prompts the user to select a resource from the stack.yml list of resources
+func SelectStackResource(stackResources map[string]config.StackResource, name string) (int, string, error) {
+	resources := templates.StackResources(stackResources)
+	tpls := templates.TplStackResource
 
 	var idx int
 	if name != "" {
