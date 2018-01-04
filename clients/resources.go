@@ -68,3 +68,16 @@ func FetchResources(ctx context.Context, c *mClient.Marketplace, teamID *manifol
 
 	return matches, nil
 }
+
+// FetchResourceHealth gets the health for a specific resource
+func FetchResourceHealth(ctx context.Context, c *mClient.Marketplace, id manifold.ID) (*mModels.HealthCheck, error) {
+	res, err := c.Resource.GetHealthResourcesID(&resource.GetHealthResourcesIDParams{
+		Context: ctx,
+		ID:      id.String(),
+	}, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return res.Payload, nil
+}

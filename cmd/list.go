@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"sort"
+	"strings"
 
 	"github.com/juju/ansiterm"
 	"github.com/manifoldco/go-manifold"
@@ -12,12 +13,15 @@ import (
 
 	"github.com/manifoldco/manifold-cli/api"
 	"github.com/manifoldco/manifold-cli/clients"
+	"github.com/manifoldco/manifold-cli/color"
 	"github.com/manifoldco/manifold-cli/config"
 	"github.com/manifoldco/manifold-cli/data/catalog"
 	"github.com/manifoldco/manifold-cli/middleware"
 	"github.com/manifoldco/manifold-cli/session"
 
+	rClient "github.com/manifoldco/manifold-cli/generated/marketplace/client/resource"
 	"github.com/manifoldco/manifold-cli/generated/marketplace/models"
+	mModels "github.com/manifoldco/manifold-cli/generated/marketplace/models"
 	pModels "github.com/manifoldco/manifold-cli/generated/provisioning/models"
 )
 
@@ -112,7 +116,7 @@ func list(cliCtx *cli.Context) error {
 		fmt.Fprintf(w, "\n")
 
 		w.SetForeground(ansiterm.Gray)
-		fmt.Fprintln(w, "Name\tTitle\tType\tStatus")
+		fmt.Fprintln(w, "Name\tTitle\tType\tStatus\tHealth")
 		w.Reset()
 
 		for _, resource := range group.resources {
@@ -149,7 +153,26 @@ func list(cliCtx *cli.Context) error {
 				status = "Ready"
 			}
 
-			fmt.Fprintf(w, "%s\t%s\t%s\t%s\n", resource.Body.Label, resource.Body.Name, rType, status)
+			health, err := clients.FetchResourceHealth(context.Background(), client.Marketplace, resource.ID)
+
+			var healthStatus string
+			cl := ansiterm.Green
+			if err != nil {
+				su, ok := err.(*rClient.GetHealthResourcesIDServiceUnavailable)
+				if !ok {
+					return cli.NewExitError(fmt.Sprintf("Error: %s", err.Error()), -1)
+				}
+				cl = ansiterm.Red
+				healthStatus = *su.Payload.Status
+				if healthStatus == mModels.HealthCheckStatusDegraded {
+					cl = ansiterm.Yellow
+				}
+			} else {
+				healthStatus = *health.Status
+			}
+
+			fmt.Fprintf(w, "%s\t%s\t%s\t%s\t%s\n", resource.Body.Label,
+				resource.Body.Name, rType, status, color.Color(cl, strings.Title(healthStatus)))
 		}
 	}
 
