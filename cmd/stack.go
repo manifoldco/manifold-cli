@@ -256,7 +256,7 @@ func apply(cliCtx *cli.Context) error {
 		return cli.NewExitError("Cannot read stack.yml", -1)
 	}
 
-	var stack stack.StackYaml
+	var stack config.StackYaml
 	err = yaml.Unmarshal(stackYaml, &stack)
 	if err != nil {
 		return cli.NewExitError(fmt.Sprintf("Cannot decode stack.yaml: %s", err), -1)
