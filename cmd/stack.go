@@ -164,14 +164,14 @@ func stackAddCmd(cliCtx *cli.Context) error {
 		return cli.NewExitError(fmt.Sprintf("Unable to read stack.yml file"), -1)
 	}
 
-	stackFile := &stack.StackYaml{}
+	stackFile := &config.StackYaml{}
 	err = yaml.Unmarshal(data, stackFile)
 	if err != nil {
 		return cli.NewExitError(fmt.Sprintf("Unable to unmarshal YAML data: %s", err), -1)
 	}
 
 	// Modify
-	stackFile.Resources[resourceName] = stack.StackResource{
+	stackFile.Resources[resourceName] = config.StackResource{
 		Title:   resourceTitle,
 		Product: productName,
 		Plan:    planName,
@@ -201,9 +201,6 @@ func stackRemoveCmd(cliCtx *cli.Context) error {
 	if err != nil {
 		return err
 	}
-	if resourceName == "" {
-		return cli.NewExitError(fmt.Sprintf("Please specify a resource name to remove"), -1)
-	}
 
 	// Read
 	data, err := ioutil.ReadFile("stack.yml")
@@ -211,10 +208,21 @@ func stackRemoveCmd(cliCtx *cli.Context) error {
 		return cli.NewExitError(fmt.Sprintf("Unable to read stack.yml file"), -1)
 	}
 
-	stackFile := &stack.StackYaml{}
+	stackFile := &config.StackYaml{}
 	err = yaml.Unmarshal(data, stackFile)
 	if err != nil {
 		return cli.NewExitError(fmt.Sprintf("Unable to unmarshal YAML data: %s", err), -1)
+	}
+
+	if len(stackFile.Resources) == 0 {
+		return cli.NewExitError(fmt.Sprintf("No resources to remove, stack.yml is empty"), -1)
+	}
+
+	if resourceName == "" {
+		_, resourceName, err = prompts.SelectStackResource(stackFile.Resources, resourceName)
+		if err != nil {
+			return cli.NewExitError(fmt.Sprintf("Failed to select resource from stack.yml file"), -1)
+		}
 	}
 
 	// Check
@@ -236,6 +244,8 @@ func stackRemoveCmd(cliCtx *cli.Context) error {
 		return cli.NewExitError(fmt.Sprintf("Unable to save stack.yml file"), -1)
 	}
 
+	fmt.Printf("\n%s has been removed from your stack.yml!\n", resourceName)
+
 	return nil
 }
 func apply(cliCtx *cli.Context) error {
@@ -246,7 +256,7 @@ func apply(cliCtx *cli.Context) error {
 		return cli.NewExitError("Cannot read stack.yml", -1)
 	}
 
-	var stack stack.StackYaml
+	var stack config.StackYaml
 	err = yaml.Unmarshal(stackYaml, &stack)
 	if err != nil {
 		return cli.NewExitError(fmt.Sprintf("Cannot decode stack.yaml: %s", err), -1)

@@ -1,4 +1,4 @@
-package stack
+package config
 
 // StackYaml defines the struct definition for the decoded stack.yml
 type StackYaml struct {
