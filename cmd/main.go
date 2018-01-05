@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"os"
-	"strings"
 
 	"github.com/urfave/cli"
 
@@ -73,20 +72,13 @@ var helpCommand = cli.Command{
 	},
 }
 
-// generateTitle makes a name capitalized and replace dashes with spaaces
-func generateTitle(name string) manifold.Name {
-	title := strings.Title(strings.Replace(name, "-", " ", -1))
-	return manifold.Name(title)
-}
-
-// promptNameAndTitle encapsulates the logic for accepting a name as the first
-// positional argument (optionally), and a title flag (optionally)
-// returning generated values accepted by the user
-func promptNameAndTitle(ctx *cli.Context, optionalID *manifold.ID, objectName string, shouldInferTitle, allowEmpty bool) (string, string, error) {
+// promptName encapsulates the logic for accepting a name as the first
+// positional argument (optionally), and returning the appropriate value
+func promptName(ctx *cli.Context, optionalID *manifold.ID, objectName string, allowEmpty bool) (string, error) {
 	// The user may supply a name value as the first positional arg
 	argName, err := optionalArgName(ctx, 0, "name")
 	if err != nil {
-		return "", "", err
+		return "", err
 	}
 	shouldAccept := true
 	if optionalID != nil {
@@ -97,41 +89,8 @@ func promptNameAndTitle(ctx *cli.Context, optionalID *manifold.ID, objectName st
 		shouldAccept = false
 	}
 
-	// The user may supply a title value from a flag, validate it
-	flagTitle := ctx.String("title")
-
-	// Create the title based on the name argument
-	return createNameAndTitle(ctx, objectName, argName, flagTitle, shouldInferTitle, shouldAccept, allowEmpty)
-}
-
-func createNameAndTitle(ctx *cli.Context, objectName, argName, flagTitle string, shouldInferTitle, shouldAccept, allowEmpty bool) (string, string, error) {
-	var name, title string
-
 	// If no name value is supplied, prompt for it
 	// otherwise validate the given value
 	shouldAcceptName := shouldAccept && argName != ""
-	nameValue, err := prompts.Name(objectName, argName, shouldAcceptName, allowEmpty)
-	if err != nil {
-		return name, title, err
-	}
-	name = nameValue
-
-	// We will automatically validate/accept a title given as flag
-	shouldAcceptTitle := shouldAccept && flagTitle != ""
-	// If we shouldn't infer the title, do not automatically accept a title value
-	if !shouldInferTitle {
-		shouldAcceptTitle = false
-	}
-	defaultTitle := flagTitle
-	if flagTitle == "" && shouldInferTitle {
-		// If no flag is present, we will infer the title from the validated name
-		defaultTitle = string(generateTitle(name))
-	}
-	titleValue, err := prompts.Title(objectName, defaultTitle, shouldAcceptTitle, allowEmpty)
-	if err != nil {
-		return name, title, err
-	}
-	title = titleValue
-
-	return name, title, nil
+	return prompts.Name(objectName, argName, shouldAcceptName, allowEmpty)
 }

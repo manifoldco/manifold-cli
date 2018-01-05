@@ -37,7 +37,7 @@ func init() {
 			{
 				Name:      "create",
 				Usage:     "Create a new project",
-				Flags:     append(teamFlags, titleFlag()),
+				Flags:     teamFlags,
 				ArgsUsage: "[project-name]",
 				Action: middleware.Chain(middleware.EnsureSession,
 					middleware.LoadTeamPrefs, createProjectCmd),
@@ -56,7 +56,7 @@ func init() {
 				Name:  "update",
 				Usage: "Update an existing project",
 				Flags: append(teamFlags, []cli.Flag{
-					titleFlag(), descriptionFlag(),
+					descriptionFlag(),
 				}...),
 				ArgsUsage: "[project-name]",
 				Action: middleware.Chain(middleware.EnsureSession, middleware.LoadTeamPrefs,
@@ -116,10 +116,11 @@ func createProjectCmd(cliCtx *cli.Context) error {
 		return errUserActionAsTeam
 	}
 
-	projectName, projectTitle, err := promptNameAndTitle(cliCtx, nil, "project", true, false)
+	projectName, err := promptName(cliCtx, nil, "project", false)
 	if err != nil {
 		return err
 	}
+	projectTitle := projectName
 
 	params := projectClient.NewPostProjectsParamsWithContext(ctx)
 	body := &mModels.CreateProjectBody{
@@ -214,14 +215,11 @@ func updateProjectCmd(cliCtx *cli.Context) error {
 		return err
 	}
 
-	providedTitle := cliCtx.String("title")
-	if providedTitle == "" {
-		providedTitle = string(p.Body.Name)
-	}
-	newName, newTitle, err := createNameAndTitle(cliCtx, "project", string(p.Body.Label), providedTitle, true, false, false)
+	newName, err := promptName(cliCtx, nil, "project", false)
 	if err != nil {
 		return err
 	}
+	newTitle := newName
 
 	projectDescription := cliCtx.String("description")
 	autoSelectDescription := projectDescription != ""
@@ -257,7 +255,7 @@ func updateProjectCmd(cliCtx *cli.Context) error {
 	}
 
 	spin.Stop()
-	fmt.Printf("\nYour project \"%s\" has been updated\n", newTitle)
+	fmt.Printf("\nYour project \"%s\" has been updated\n", newName)
 	return nil
 }
 

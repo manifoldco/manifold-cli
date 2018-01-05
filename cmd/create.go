@@ -39,7 +39,6 @@ func init() {
 			projectFlag(),
 			planFlag(),
 			regionFlag(),
-			titleFlag(),
 			cli.StringFlag{
 				Name:  "product",
 				Usage: "Create a resource for this product",
@@ -182,10 +181,11 @@ func create(cliCtx *cli.Context) error {
 		return cli.NewExitError("Could not create resource: "+err.Error(), -1)
 	}
 
-	resourceName, resourceTitle, err := promptNameAndTitle(cliCtx, &resourceID, "resource", true, true)
+	resourceName, err := promptName(cliCtx, &resourceID, "resource", true)
 	if err != nil {
 		return err
 	}
+	resourceTitle := resourceName
 
 	spin := prompts.NewSpinner(fmt.Sprintf("Creating %s", descriptor))
 	if !dontWait {

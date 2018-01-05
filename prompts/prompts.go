@@ -30,44 +30,6 @@ const NumberMask = '#'
 
 var errBad = errors.New("Bad Value")
 
-// Title prompts the user to provide a Title value
-func Title(field, defaultValue string, autoSelect, allowEmpty bool) (string, error) {
-	field = strings.Title(field)
-
-	validate := func(input string) error {
-		if allowEmpty && len(input) == 0 {
-			return nil
-		}
-
-		t := manifold.Name(input)
-		if err := t.Validate(nil); err != nil {
-			return fmt.Errorf("Please provide a valid %s title", field)
-		}
-
-		return nil
-	}
-
-	label := fmt.Sprintf("New %s Title", field)
-
-	if autoSelect {
-		err := validate(defaultValue)
-		if err != nil {
-			fmt.Println(templates.PromptFailure(label, defaultValue))
-		} else {
-			fmt.Println(templates.PromptSuccess(label, defaultValue))
-		}
-		return defaultValue, err
-	}
-
-	p := promptui.Prompt{
-		Label:    label,
-		Default:  defaultValue,
-		Validate: validate,
-	}
-
-	return p.Run()
-}
-
 // Name prompts the user to provide a Name value
 func Name(field, defaultValue string, autoSelect, allowEmpty bool) (string, error) {
 	field = strings.Title(field)
@@ -107,25 +69,9 @@ func Name(field, defaultValue string, autoSelect, allowEmpty bool) (string, erro
 	return p.Run()
 }
 
-// ResourceTitle prompts the user to provide a resource title or to accept empty
-// to let the system generate one.
-func ResourceTitle(defaultValue string, autoSelect bool) (string, error) {
-	return Title("resource", defaultValue, autoSelect, true)
-}
-
 // ResourceName prompts the user to provide a label name
 func ResourceName(defaultValue string, autoSelect bool) (string, error) {
 	return Name("resource", defaultValue, autoSelect, false)
-}
-
-// TeamTitle prompts the user to enter a new Team title
-func TeamTitle(defaultValue string, autoSelect bool) (string, error) {
-	return Title("team", defaultValue, autoSelect, false)
-}
-
-// ProjectTitle prompts the user to enter a new project title
-func ProjectTitle(defaultValue string, autoSelect bool) (string, error) {
-	return Title("project", defaultValue, autoSelect, false)
 }
 
 // TokenDescription prompts the user to enter a token description

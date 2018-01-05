@@ -10,8 +10,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ### Removed
 
 - Provision event from `create` command
-
-### Changed
+- Title prompt removed from Resource, Project and Team creation
 
 - GitHub identity -- user user:email scope for login and link
 

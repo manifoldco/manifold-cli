@@ -26,7 +26,6 @@ func init() {
 		Action: middleware.Chain(middleware.EnsureSession, middleware.LoadDirPrefs,
 			middleware.LoadTeamPrefs, aliasCredentialCmd),
 		Flags: append(teamFlags, []cli.Flag{
-			titleFlag(),
 			projectFlag(),
 		}...),
 	}
