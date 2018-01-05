@@ -69,3 +69,16 @@ func FetchProjectByLabel(ctx context.Context, c *client.Marketplace, teamID *man
 
 	return nil, fmt.Errorf("Project with label %q not found", label)
 }
+
+// FetchProjectHealth gets the health for a specific project
+func FetchProjectHealth(ctx context.Context, c *client.Marketplace, id manifold.ID) (*models.HealthCheck, error) {
+	res, err := c.Project.GetHealthProjectsID(&project.GetHealthProjectsIDParams{
+		Context: ctx,
+		ID:      id.String(),
+	}, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return res.Payload, nil
+}

@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"strings"
 
 	"time"
 
@@ -182,7 +183,26 @@ func listProjectsCmd(cliCtx *cli.Context) error {
 	fmt.Fprintf(w, "%s\n\n", color.Bold("Project"))
 
 	for _, project := range projects {
-		fmt.Fprintf(w, "%s (%s)\n", project.Body.Label, color.Faint(project.Body.Name))
+		health, err := clients.FetchProjectHealth(
+			context.Background(), client.Marketplace, project.ID)
+
+		var healthStatus string
+		cl := ansiterm.Green
+		if err != nil {
+			su, ok := err.(*projectClient.GetHealthProjectsIDServiceUnavailable)
+			if !ok {
+				return cli.NewExitError(fmt.Sprintf("Error: %s", err.Error()), -1)
+			}
+			cl = ansiterm.Red
+			healthStatus = *su.Payload.Status
+			if healthStatus == mModels.HealthCheckStatusDegraded {
+				cl = ansiterm.Yellow
+			}
+		} else {
+			healthStatus = *health.Status
+		}
+
+		fmt.Fprintf(w, "%s (%s) (%s)\n", project.Body.Label, color.Faint(project.Body.Name), color.Color(cl, strings.Title(healthStatus)))
 	}
 	return w.Flush()
 }

@@ -73,6 +73,35 @@ paths:
           schema: { $ref: "#/definitions/HealthCheck" }
         default: { $ref: "#/responses/Unexpected" }
 
+  /health/projects/{id}:
+    get:
+      summary: Retrieve the health status of a project
+      parameters:
+        - name: id
+          in: path
+          description: |
+            ID of the Project to lookup the health for, stored as a base32
+            encoded 18 byte identifier.
+          required: true
+          type: string
+          pattern: '^[0-9abcdefghjkmnpqrtuvwxyz]{29}$'
+          format: base32ID
+      tags:
+        - Project
+      responses:
+        200:
+          description: A healthy status.
+          schema: { $ref: '#/definitions/HealthCheck' }
+        404:
+          description: No project with the given ID exists.
+          schema: { $ref: '#/definitions/Error' }
+        401: { $ref: "#/responses/Unauthorized" }
+        500: { $ref: "#/responses/InternalServerError" }
+        503:
+          description: A unhealthy status.
+          schema: { $ref: "#/definitions/HealthCheck" }
+        default: { $ref: "#/responses/Unexpected" }
+
   /resources/:
     get:
       summary: List all provisioned resources
