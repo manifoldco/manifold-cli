@@ -12,15 +12,6 @@ func formatFlag(defaultValue, description string) cli.Flag {
 	return placeholder.New("format, f", "FORMAT", description, defaultValue, "MANIFOLD_FORMAT", false)
 }
 
-func titleFlag() cli.Flag {
-	return cli.StringFlag{
-		Name:   "title",
-		Usage:  "Specify a title to be used",
-		Value:  "",
-		EnvVar: "MANIFOLD_TITLE",
-	}
-}
-
 func descriptionFlag() cli.Flag {
 	return cli.StringFlag{
 		Name:   "description, d",

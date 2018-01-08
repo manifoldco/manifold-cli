@@ -11,7 +11,6 @@ import (
 	"github.com/manifoldco/go-manifold/idtype"
 	"github.com/urfave/cli"
 
-	"github.com/manifoldco/manifold-cli/analytics"
 	"github.com/manifoldco/manifold-cli/api"
 	"github.com/manifoldco/manifold-cli/clients"
 	"github.com/manifoldco/manifold-cli/config"
@@ -40,7 +39,6 @@ func init() {
 			projectFlag(),
 			planFlag(),
 			regionFlag(),
-			titleFlag(),
 			cli.StringFlag{
 				Name:  "product",
 				Usage: "Create a resource for this product",
@@ -183,10 +181,11 @@ func create(cliCtx *cli.Context) error {
 		return cli.NewExitError("Could not create resource: "+err.Error(), -1)
 	}
 
-	resourceName, resourceTitle, err := promptNameAndTitle(cliCtx, &resourceID, "resource", true, true)
+	resourceName, err := promptName(cliCtx, &resourceID, "resource", true)
 	if err != nil {
 		return err
 	}
+	resourceTitle := resourceName
 
 	spin := prompts.NewSpinner(fmt.Sprintf("Creating %s", descriptor))
 	if !dontWait {
@@ -220,11 +219,6 @@ func create(cliCtx *cli.Context) error {
 func createResource(ctx context.Context, cfg *config.Config, resourceID, teamID *manifold.ID, s session.Session,
 	pClient *provisioning.Provisioning, custom bool, product *cModels.Product, plan *cModels.Plan,
 	region *cModels.Region, project *mModels.Project, resourceName, resourceTitle string, dontWait bool) (*pModels.Operation, error) {
-
-	a, err := analytics.New(cfg, s)
-	if err != nil {
-		return nil, err
-	}
 
 	ID, err := manifold.NewID(idtype.Operation)
 	if err != nil {
@@ -302,17 +296,6 @@ func createResource(ctx context.Context, cfg *config.Config, resourceID, teamID 
 		}
 	}
 
-	params := map[string]string{"source": "custom"}
-	if !custom {
-		params = map[string]string{
-			"source":  "catalog",
-			"product": string(product.Body.Label),
-			"plan":    string(plan.Body.Label),
-			"price":   toPrice(*plan.Body.Cost),
-			"region":  string(*region.Body.Location),
-		}
-	}
-	a.Track(ctx, "Provision Operation", &params)
 	if dontWait {
 		return res.Payload, nil
 	}

@@ -7,7 +7,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
 
-### Changed
+### Removed
+
+- Provision event from `create` command
+- Title prompt removed from Resource, Project and Team creation
+
+- GitHub identity -- user user:email scope for login and link
 
 ## [0.13.0] - 2017-12-13
 
