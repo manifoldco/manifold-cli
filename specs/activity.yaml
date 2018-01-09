@@ -248,7 +248,6 @@ definitions:
             type: object
             properties:
               operation_id: { $ref: '#/definitions/ID' }
-              resource_id: { $ref: '#/definitions/ID' }
               user_id: { $ref: '#/definitions/OptionalID' }
               user: { $ref: '#/definitions/User' }
               team_id: { $ref: '#/definitions/OptionalID' }
@@ -287,8 +286,10 @@ definitions:
               provider: { $ref: '#/definitions/Provider' }
               product_id: { $ref: '#/definitions/OptionalID' }
               product: { $ref: '#/definitions/Product' }
-              plan_id: { $ref: '#/definitions/OptionalID' }
-              plan: { $ref: '#/definitions/Plan' }
+              new_plan_id: { $ref: '#/definitions/OptionalID' }
+              new_plan: { $ref: '#/definitions/Plan' }
+              old_plan_id: { $ref: '#/definitions/OptionalID' }
+              old_plan: { $ref: '#/definitions/Plan' }
               region_id: { $ref: '#/definitions/OptionalID' }
               region: { $ref: '#/definitions/Region' }
             additionalProperties: false
@@ -297,7 +298,8 @@ definitions:
               - resource_id
               - provider_id
               - product_id
-              - plan_id
+              - new_plan_id
+              - old_plan_id
               - region_id
         additionalProperties: false
         required:

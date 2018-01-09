@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"io"
 	"os"
 	"time"
 
@@ -120,44 +121,75 @@ func writeEventsList(evts []*events.Event) error {
 
 		switch body := e.Body.(type) {
 		case *events.OperationProvisioned:
-			if body.Data.Resource != nil {
-				resource := body.Data.Resource.Name
-				fmt.Fprintln(w, fmt.Sprintf("\t%s\t%s", color.Faint("Resource"), resource))
-			}
-
-			if body.Data.Source != "" {
-				source := body.Data.Source
-				fmt.Fprintln(w, fmt.Sprintf("\t%s\t%s", color.Faint("Source"), source))
-			}
-
-			if body.Data.Project != nil {
-				project := body.Data.Project.Name
-				fmt.Fprintln(w, fmt.Sprintf("\t%s\t%s", color.Faint("Project"), project))
-			}
-
-			if body.Data.User != nil {
-				user := fmt.Sprintf("%s (%s)", body.Data.User.Name, body.Data.User.Email)
-				fmt.Fprintln(w, fmt.Sprintf("\t%s\t%s", color.Faint("User"), user))
-			}
-
-			if body.Data.Team != nil {
-				team := body.Data.Team.Name
-				fmt.Fprintln(w, fmt.Sprintf("\t%s\t%s", color.Faint("Team"), team))
-			}
-
-			if body.Data.Provider != nil {
-				product := body.Data.Product.Name
-				plan := body.Data.Plan.Name
-				cost := body.Data.Plan.Cost
-				fmt.Fprintln(w, fmt.Sprintf("\t%s\t%s (%s $%d/month)",
-					color.Faint("Summary"), product, plan, cost))
-			}
-		default:
-			return fmt.Errorf("Unrecognized Event Type: %s", e.Body.Type())
+			printResource(w, body.Data.Resource)
+			printSource(w, body.Data.Source)
+			printProject(w, body.Data.Project)
+			printUser(w, body.Data.User)
+			printTeam(w, body.Data.Team)
+			printPlan(w, body.Data.Provider, body.Data.Product, body.Data.Plan, "Summary")
+		case *events.OperationDeprovisioned:
+			printUser(w, body.Data.User)
+			printTeam(w, body.Data.Team)
+		case *events.OperationResized:
+			printResource(w, body.Data.Resource)
+			printProject(w, body.Data.Project)
+			printPlan(w, body.Data.Provider, body.Data.Product, body.Data.NewPlan, "New Plan")
+			printPlan(w, body.Data.Provider, body.Data.Product, body.Data.OldPlan, "Old Plan")
 		}
 
 		w.Flush()
 	}
 
 	return nil
+}
+
+func printResource(w io.Writer, resource *events.Resource) {
+	if resource != nil {
+		fmt.Fprintln(w, fmt.Sprintf("\t%s\t%s", color.Faint("Resource"), resource.Name))
+	}
+}
+
+func printSource(w io.Writer, source string) {
+	if source != "" {
+		fmt.Fprintln(w, fmt.Sprintf("\t%s\t%s", color.Faint("Source"), source))
+	}
+}
+
+func printProject(w io.Writer, project *events.Project) {
+	if project != nil {
+		fmt.Fprintln(w, fmt.Sprintf("\t%s\t%s", color.Faint("Project"), project.Name))
+	}
+}
+
+func printUser(w io.Writer, user *events.User) {
+	if user != nil {
+		output := fmt.Sprintf("%s (%s)", user.Name, user.Email)
+		fmt.Fprintln(w, fmt.Sprintf("\t%s\t%s", color.Faint("User"), output))
+	}
+}
+
+func printTeam(w io.Writer, team *events.Team) {
+	if team != nil {
+		fmt.Fprintln(w, fmt.Sprintf("\t%s\t%s", color.Faint("Team"), team.Name))
+	}
+}
+
+func printPlan(w io.Writer, provider *events.Provider, product *events.Product,
+	plan *events.Plan, label string) {
+
+	if provider != nil {
+		product := product.Name
+		name := plan.Name
+		val := plan.Cost
+
+		var cost string
+		if val == 0 {
+			cost = "free"
+		} else {
+			cost = fmt.Sprint("$%d/month", val)
+		}
+
+		fmt.Fprintln(w, fmt.Sprintf("\t%s\t%s (%s %s)", color.Faint(label),
+			product, name, cost))
+	}
 }
