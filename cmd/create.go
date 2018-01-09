@@ -7,12 +7,14 @@ import (
 	"time"
 
 	"github.com/go-openapi/strfmt"
+	"github.com/juju/ansiterm"
 	"github.com/manifoldco/go-manifold"
 	"github.com/manifoldco/go-manifold/idtype"
 	"github.com/urfave/cli"
 
 	"github.com/manifoldco/manifold-cli/api"
 	"github.com/manifoldco/manifold-cli/clients"
+	"github.com/manifoldco/manifold-cli/color"
 	"github.com/manifoldco/manifold-cli/config"
 	"github.com/manifoldco/manifold-cli/data/catalog"
 	"github.com/manifoldco/manifold-cli/errs"
@@ -20,6 +22,7 @@ import (
 	"github.com/manifoldco/manifold-cli/prompts"
 	"github.com/manifoldco/manifold-cli/session"
 
+	"github.com/manifoldco/manifold-cli/generated/billing/client/profile"
 	cModels "github.com/manifoldco/manifold-cli/generated/catalog/models"
 	mModels "github.com/manifoldco/manifold-cli/generated/marketplace/models"
 	provisioning "github.com/manifoldco/manifold-cli/generated/provisioning/client"
@@ -136,12 +139,16 @@ func create(cliCtx *cli.Context) error {
 				return prompts.HandleSelectError(err, "Could not select plan.")
 			}
 		} else {
-			plans := filterPlansByProductID(catalog.Plans(), products[productIdx].ID)
-			planIdx, _, err := prompts.SelectPlan(plans, planName)
+			selectedPlan, err := selectPlanForCreate(ctx, teamID, catalog.Plans(), products[productIdx].ID, planName)
 			if err != nil {
-				return prompts.HandleSelectError(err, "Could not select plan.")
+				switch err {
+				case errAbortSelectPlan:
+					return err
+				default:
+					return prompts.HandleSelectError(err, "Could not select plan.")
+				}
 			}
-			plan = plans[planIdx]
+			plan = selectedPlan
 		}
 
 		regions := filterRegionsForPlan(catalog.Regions(), plan.Body.Regions)
@@ -214,6 +221,56 @@ func create(cliCtx *cli.Context) error {
 	}
 
 	return nil
+}
+
+var errAbortSelectPlan = cli.NewExitError("Resource creation aborted.", -1)
+
+func selectPlanForCreate(ctx context.Context, teamID *manifold.ID, plans []*cModels.Plan, product manifold.ID, planName string) (*cModels.Plan, error) {
+	filteredPlans := filterPlansByProductID(plans, product)
+	planIdx, _, err := prompts.SelectPlan(filteredPlans, planName)
+	if err != nil {
+		return nil, prompts.HandleSelectError(err, "Could not select plan.")
+	}
+	plan := filteredPlans[planIdx]
+
+	// If the plan is not free, check if they have a billing profile
+	if (*plan.Body.Cost) > 0 {
+		_, err := retrieveBillingProfile(ctx)
+		if err != nil {
+			switch err.(type) {
+			case *profile.GetProfilesIDNotFound:
+				fmt.Println("")
+				fmt.Println(color.Color(ansiterm.White, "You chose a plan which is not free and have not added your billing details."))
+				fmt.Println("What would you like to do?")
+				// No billing information on file, ask how they wish to proceed
+				action, err := prompts.SelectBillingProfileAction()
+				if err != nil {
+					return nil, err
+				}
+				switch action {
+				case "Add credit card":
+					userID, userIDErr := loadUserID(ctx)
+					if userIDErr != nil && userIDErr != errUserActionAsTeam {
+						return nil, userIDErr
+					}
+
+					// Prompt the user to add their payment information
+					err := createNewBillingProfile(ctx, userID, teamID)
+					if err != nil {
+						return nil, err
+					}
+				case "Select different plan":
+					return selectPlanForCreate(ctx, teamID, plans, product, planName)
+				default:
+					return nil, errAbortSelectPlan
+				}
+
+			default:
+				return nil, cli.NewExitError("Failed to retrieve billing profile: "+err.Error(), -1)
+			}
+		}
+	}
+	return plan, nil
 }
 
 func createResource(ctx context.Context, cfg *config.Config, resourceID, teamID *manifold.ID, s session.Session,
