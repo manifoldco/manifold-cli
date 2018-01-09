@@ -7,12 +7,13 @@ import (
 	"github.com/manifoldco/manifold-cli/analytics"
 	"github.com/manifoldco/manifold-cli/clients"
 	"github.com/manifoldco/manifold-cli/config"
-	bClient "github.com/manifoldco/manifold-cli/generated/billing/client"
-	cClient "github.com/manifoldco/manifold-cli/generated/catalog/client"
-	conClient "github.com/manifoldco/manifold-cli/generated/connector/client"
-	iClient "github.com/manifoldco/manifold-cli/generated/identity/client"
-	mClient "github.com/manifoldco/manifold-cli/generated/marketplace/client"
-	pClient "github.com/manifoldco/manifold-cli/generated/provisioning/client"
+	activity "github.com/manifoldco/manifold-cli/generated/activity/client"
+	billing "github.com/manifoldco/manifold-cli/generated/billing/client"
+	catalog "github.com/manifoldco/manifold-cli/generated/catalog/client"
+	connector "github.com/manifoldco/manifold-cli/generated/connector/client"
+	identity "github.com/manifoldco/manifold-cli/generated/identity/client"
+	marketplace "github.com/manifoldco/manifold-cli/generated/marketplace/client"
+	provisioning "github.com/manifoldco/manifold-cli/generated/provisioning/client"
 	"github.com/urfave/cli"
 )
 
@@ -20,27 +21,34 @@ import (
 // function to load the necessary clients for the operation.
 type API struct {
 	ctx          context.Context
+	Activity     *activity.Activity
 	Analytics    *analytics.Analytics
-	Billing      *bClient.Billing
-	Catalog      *cClient.Catalog
-	Identity     *iClient.Identity
-	Marketplace  *mClient.Marketplace
-	Provisioning *pClient.Provisioning
-	Connector    *conClient.Connector
+	Billing      *billing.Billing
+	Catalog      *catalog.Catalog
+	Identity     *identity.Identity
+	Marketplace  *marketplace.Marketplace
+	Provisioning *provisioning.Provisioning
+	Connector    *connector.Connector
 }
 
 // Client represents one of the clients generated from the spec.
 type Client int
 
 const (
+	// Activity represents the analytics client
+	Activity Client = iota
+
 	// Analytics represents the analytics client
-	Analytics Client = iota
+	Analytics
 
 	// Billing represents the billing client
 	Billing
 
 	// Catalog represents the catalog client
 	Catalog
+
+	// Connector represents the connector client
+	Connector
 
 	// Identity represents the identity client
 	Identity
@@ -50,9 +58,6 @@ const (
 
 	// Provisioning represents the provisioning client
 	Provisioning
-
-	// Connector represents the connector client
-	Connector
 )
 
 // New loads all clients passed on the list. If any of the clients fails to load
@@ -70,6 +75,8 @@ func New(list ...Client) (*API, error) {
 	for _, e := range list {
 		var err error
 		switch e {
+		case Activity:
+			api.Activity, err = clients.NewActivity(cfg)
 		case Analytics:
 			api.Analytics, err = api.loadAnalytics(cfg)
 		case Billing:
@@ -98,10 +105,16 @@ func New(list ...Client) (*API, error) {
 // String returns a string representation of the client type.
 func (c Client) String() string {
 	switch c {
+	case Activity:
+		return "Activity"
+	case Analytics:
+		return "Analytics"
 	case Billing:
 		return "Billing"
 	case Catalog:
 		return "Catalog"
+	case Connector:
+		return "Connector"
 	case Identity:
 		return "Identity"
 	case Marketplace:

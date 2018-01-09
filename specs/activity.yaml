@@ -162,12 +162,20 @@ definitions:
         description: Type of event this object represents
         enum:
           - operation.provisioned
+          - operation.deprovisioned
+          - operation.resized
       actor_id:
         $ref: '#/definitions/ID'
         description: Actor who triggered the event, can be empty for system events
+      actor:
+        type: string
+        description: String representation of the actor
       scope_id:
         $ref: '#/definitions/ID'
         description: Scope of the event
+      scope:
+        type: string
+        description: String representation of the scope
       ref_id:
         $ref: '#/definitions/ID'
       source:
@@ -222,6 +230,75 @@ definitions:
               - operation_id
               - resource_id
               - source
+        additionalProperties: false
+        required:
+          - data
+        x-go-type:
+          type: OperationProvisioned
+          import:
+            package: 'github.com/manifoldco/go-manifold/events'
+
+  operation.deprovisioned:
+    type: object
+    allOf:
+      - $ref: '#/definitions/EventBody'
+      - type: object
+        properties:
+          data:
+            type: object
+            properties:
+              operation_id: { $ref: '#/definitions/ID' }
+              resource_id: { $ref: '#/definitions/ID' }
+              user_id: { $ref: '#/definitions/OptionalID' }
+              user: { $ref: '#/definitions/User' }
+              team_id: { $ref: '#/definitions/OptionalID' }
+              team: { $ref: '#/definitions/Team' }
+            additionalProperties: false
+            required:
+              - operation_id
+              - resource_id
+        additionalProperties: false
+        required:
+          - data
+        x-go-type:
+          type: OperationDeprovisioned
+          import:
+            package: 'github.com/manifoldco/go-manifold/events'
+
+  operation.resized:
+    type: object
+    allOf:
+      - $ref: '#/definitions/EventBody'
+      - type: object
+        properties:
+          data:
+            type: object
+            properties:
+              operation_id: { $ref: '#/definitions/ID' }
+              resource_id: { $ref: '#/definitions/ID' }
+              resource: { $ref: '#/definitions/Resource' }
+              user_id: { $ref: '#/definitions/OptionalID' }
+              user: { $ref: '#/definitions/User' }
+              team_id: { $ref: '#/definitions/OptionalID' }
+              team: { $ref: '#/definitions/Team' }
+              project_id: { $ref: '#/definitions/OptionalID' }
+              project: { $ref: '#/definitions/Project' }
+              provider_id: { $ref: '#/definitions/OptionalID' }
+              provider: { $ref: '#/definitions/Provider' }
+              product_id: { $ref: '#/definitions/OptionalID' }
+              product: { $ref: '#/definitions/Product' }
+              plan_id: { $ref: '#/definitions/OptionalID' }
+              plan: { $ref: '#/definitions/Plan' }
+              region_id: { $ref: '#/definitions/OptionalID' }
+              region: { $ref: '#/definitions/Region' }
+            additionalProperties: false
+            required:
+              - operation_id
+              - resource_id
+              - provider_id
+              - product_id
+              - plan_id
+              - region_id
         additionalProperties: false
         required:
           - data
