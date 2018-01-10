@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
 
+### Added
+
+- Prompt user to create billing profile if missing during resource create
+
 ### Removed
 
 - Provision event from `create` command
