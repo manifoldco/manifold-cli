@@ -168,14 +168,12 @@ definitions:
         $ref: '#/definitions/ID'
         description: Actor who triggered the event, can be empty for system events
       actor:
-        type: string
-        description: String representation of the actor
+        $ref: '#/definitions/Actor'
       scope_id:
         $ref: '#/definitions/ID'
         description: Scope of the event
       scope:
-        type: string
-        description: String representation of the scope
+        $ref: '#/definitions/Scope'
       ref_id:
         $ref: '#/definitions/ID'
       source:
@@ -308,6 +306,34 @@ definitions:
           type: OperationProvisioned
           import:
             package: 'github.com/manifoldco/go-manifold/events'
+
+  Actor:
+    type: object
+    properties:
+      id: { $ref: '#/definitions/ID' }
+      name: { type: string }
+      email: { type: string }
+    additionalProperties: false
+    required:
+      - id
+    x-go-type:
+      type: Actor
+      import:
+        package: 'github.com/manifoldco/go-manifold/events'
+
+  Scope:
+    type: object
+    properties:
+      id: { $ref: '#/definitions/ID' }
+      name: { type: string }
+      email: { type: string }
+    additionalProperties: false
+    required:
+      - id
+    x-go-type:
+      type: Scope
+      import:
+        package: 'github.com/manifoldco/go-manifold/events'
 
   Resource:
     type: object

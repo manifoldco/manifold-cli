@@ -89,19 +89,25 @@ func writeEventsList(evts []*events.Event, limit, offset int) error {
 		fmt.Fprintln(w, fmt.Sprintf("%s\t%s", color.Faint("ID"), e.ID))
 
 		actor := e.Body.Actor()
-
 		if actor == nil {
 			fmt.Fprintln(w, fmt.Sprintf("%s\t%s", color.Faint("Actor"), e.Body.ActorID()))
 		} else {
-			fmt.Fprintln(w, fmt.Sprintf("%s\t%s", color.Faint("Actor"), actor.Name))
+			output := actor.Name
+			if actor.Email != "" {
+				output += fmt.Sprintf(" (%s)", actor.Email)
+			}
+			fmt.Fprintln(w, fmt.Sprintf("%s\t%s", color.Faint("Actor"), output))
 		}
 
 		scope := e.Body.Scope()
-
 		if scope == nil {
 			fmt.Fprintln(w, fmt.Sprintf("%s\t%s", color.Faint("Scope"), e.Body.ScopeID()))
 		} else {
-			fmt.Fprintln(w, fmt.Sprintf("%s\t%s", color.Faint("Scope"), scope.Name))
+			output := scope.Name
+			if scope.Email != "" {
+				output += fmt.Sprintf(" (%s)", scope.Email)
+			}
+			fmt.Fprintln(w, fmt.Sprintf("%s\t%s", color.Faint("Scope"), output))
 		}
 
 		source := e.Body.Source()

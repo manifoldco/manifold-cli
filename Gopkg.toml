@@ -73,7 +73,7 @@ required=[
 
 [[constraint]]
   name = "github.com/manifoldco/go-manifold"
-  branch = "master"
+  branch = "events-ownership"
 
 [[constraint]]
   name = "github.com/manifoldco/promptui"

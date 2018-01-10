@@ -235,10 +235,10 @@
   version = "v1.0.0"
 
 [[projects]]
-  branch = "master"
+  branch = "events-ownership"
   name = "github.com/manifoldco/go-manifold"
   packages = [".","errors","events","idtype","names","names/data"]
-  revision = "009b72d9d2764f93613990e018348109d4b59479"
+  revision = "4261417f87c450bb9affe8c281f1ed2f2c1e8c4e"
 
 [[projects]]
   name = "github.com/manifoldco/promptui"
@@ -422,6 +422,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "4fced5f5d9ebc1dbe006cd8b1ca1a6c709b9ab86be2e947c3f4e1be715dcdcc5"
+  inputs-digest = "34d04157e714a85708ae08c4f1a083c34295e813b00d19d67970c7b3b959390c"
   solver-name = "gps-cdcl"
   solver-version = 1
