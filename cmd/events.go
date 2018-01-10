@@ -29,7 +29,7 @@ func init() {
 				Usage: "List all events",
 				Action: middleware.Chain(middleware.LoadDirPrefs, middleware.EnsureSession,
 					middleware.LoadTeamPrefs, eventsList),
-				Flags: teamFlags,
+				Flags: append(teamFlags, limitFlag(), offsetFlag()),
 			},
 		},
 	}
@@ -68,7 +68,7 @@ func eventsList(cliCtx *cli.Context) error {
 		return cli.NewExitError("Could not retrieve events: "+err.Error(), -1)
 	}
 
-	err = writeEventsList(events)
+	err = writeEventsList(events, cliCtx.Int("limit"), cliCtx.Int("offset"))
 	if err != nil {
 		return cli.NewExitError("Could not print activity eventsList: "+err.Error(), -1)
 	}
@@ -77,10 +77,14 @@ func eventsList(cliCtx *cli.Context) error {
 }
 
 // writeEventsList prints the state of a event and returns an error if it occurs
-func writeEventsList(evts []*events.Event) error {
+func writeEventsList(evts []*events.Event, limit, offset int) error {
 	w := ansiterm.NewTabWriter(os.Stdout, 0, 0, 8, ' ', 0)
 
-	for _, e := range evts {
+	min, max := limitCollection(len(evts), limit, offset)
+
+	for i := min; i < max; i++ {
+		e := evts[i]
+
 		fmt.Fprintln(w)
 		fmt.Fprintln(w, fmt.Sprintf("%s\t%s", color.Faint("ID"), e.ID))
 
@@ -192,4 +196,26 @@ func printPlan(w io.Writer, provider *events.Provider, product *events.Product,
 		fmt.Fprintln(w, fmt.Sprintf("\t%s\t%s (%s %s)", color.Faint(label),
 			product, name, cost))
 	}
+}
+
+func limitCollection(length, limit, offset int) (int, int) {
+	min := offset
+	if min < 0 {
+		min = 0
+	}
+
+	max := limit + offset
+	if max < 0 {
+		max = 0
+	}
+
+	if min >= length {
+		return 0, 0
+	}
+
+	if max > length {
+		max = length
+	}
+
+	return min, max
 }
