@@ -238,7 +238,7 @@
   branch = "master"
   name = "github.com/manifoldco/go-manifold"
   packages = [".","errors","events","idtype","names","names/data"]
-  revision = "99d7e800db6b7cd216d84054dd354b161c1aef46"
+  revision = "baab1d9714c4ae7372281a9b6c39364b205c685a"
 
 [[projects]]
   name = "github.com/manifoldco/promptui"

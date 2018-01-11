@@ -10,7 +10,7 @@ import (
 	"github.com/juju/ansiterm"
 	"github.com/urfave/cli"
 
-	manifold "github.com/manifoldco/go-manifold"
+	"github.com/manifoldco/go-manifold"
 	"github.com/manifoldco/go-manifold/events"
 	"github.com/manifoldco/manifold-cli/api"
 	"github.com/manifoldco/manifold-cli/color"
@@ -29,7 +29,7 @@ func init() {
 				Usage: "List all events",
 				Action: middleware.Chain(middleware.LoadDirPrefs, middleware.EnsureSession,
 					middleware.LoadTeamPrefs, eventsList),
-				Flags: append(teamFlags, limitFlag(), offsetFlag()),
+				Flags: append(teamFlags, limitFlag(), offsetFlag(), verboseFlag()),
 			},
 		},
 	}
@@ -68,7 +68,7 @@ func eventsList(cliCtx *cli.Context) error {
 		return cli.NewExitError("Could not retrieve events: "+err.Error(), -1)
 	}
 
-	err = writeEventsList(events, cliCtx.Int("limit"), cliCtx.Int("offset"))
+	err = writeEventsList(cliCtx, events)
 	if err != nil {
 		return cli.NewExitError("Could not print activity eventsList: "+err.Error(), -1)
 	}
@@ -77,8 +77,12 @@ func eventsList(cliCtx *cli.Context) error {
 }
 
 // writeEventsList prints the state of a event and returns an error if it occurs
-func writeEventsList(evts []*events.Event, limit, offset int) error {
+func writeEventsList(cliCtx *cli.Context, evts []*events.Event) error {
 	w := ansiterm.NewTabWriter(os.Stdout, 0, 0, 8, ' ', 0)
+
+	limit := cliCtx.Int("limit")
+	offset := cliCtx.Int("offset")
+	verbose := cliCtx.Bool("verbose")
 
 	min, max := limitCollection(len(evts), limit, offset)
 
@@ -89,25 +93,27 @@ func writeEventsList(evts []*events.Event, limit, offset int) error {
 		fmt.Fprintln(w, fmt.Sprintf("%s\t%s", color.Faint("ID"), e.ID))
 
 		actor := e.Body.Actor()
-		if actor == nil {
-			fmt.Fprintln(w, fmt.Sprintf("%s\t%s", color.Faint("Actor"), e.Body.ActorID()))
-		} else {
+		if actor != nil {
 			output := actor.Name
 			if actor.Email != "" {
 				output += fmt.Sprintf(" (%s)", actor.Email)
 			}
 			fmt.Fprintln(w, fmt.Sprintf("%s\t%s", color.Faint("Actor"), output))
 		}
+		if verbose || actor == nil {
+			fmt.Fprintln(w, fmt.Sprintf("%s\t%s", color.Faint("ActorID"), e.Body.ActorID()))
+		}
 
 		scope := e.Body.Scope()
-		if scope == nil {
-			fmt.Fprintln(w, fmt.Sprintf("%s\t%s", color.Faint("Scope"), e.Body.ScopeID()))
-		} else {
+		if scope != nil {
 			output := scope.Name
 			if scope.Email != "" {
 				output += fmt.Sprintf(" (%s)", scope.Email)
 			}
 			fmt.Fprintln(w, fmt.Sprintf("%s\t%s", color.Faint("Scope"), output))
+		}
+		if verbose || scope == nil {
+			fmt.Fprintln(w, fmt.Sprintf("%s\t%s", color.Faint("ScopeID"), e.Body.ScopeID()))
 		}
 
 		source := e.Body.Source()
@@ -131,20 +137,21 @@ func writeEventsList(evts []*events.Event, limit, offset int) error {
 
 		switch body := e.Body.(type) {
 		case *events.OperationProvisioned:
-			printResource(w, body.Data.Resource)
+			printResource(w, body.Data.Resource, verbose)
 			printSource(w, body.Data.Source)
-			printProject(w, body.Data.Project)
-			printUser(w, body.Data.User)
-			printTeam(w, body.Data.Team)
-			printPlan(w, body.Data.Provider, body.Data.Product, body.Data.Plan, "Summary")
+			printProject(w, body.Data.Project, verbose)
+			printPlan(w, body.Data.Provider, body.Data.Product, body.Data.Plan, "Summary", verbose)
 		case *events.OperationDeprovisioned:
-			printUser(w, body.Data.User)
-			printTeam(w, body.Data.Team)
+			printResource(w, body.Data.Resource, verbose)
+			printSource(w, body.Data.Source)
+			printProject(w, body.Data.Project, verbose)
+			printPlan(w, body.Data.Provider, body.Data.Product, body.Data.Plan, "Summary", verbose)
 		case *events.OperationResized:
-			printResource(w, body.Data.Resource)
-			printProject(w, body.Data.Project)
-			printPlan(w, body.Data.Provider, body.Data.Product, body.Data.NewPlan, "New Plan")
-			printPlan(w, body.Data.Provider, body.Data.Product, body.Data.OldPlan, "Old Plan")
+			printResource(w, body.Data.Resource, verbose)
+			printSource(w, body.Data.Source)
+			printProject(w, body.Data.Project, verbose)
+			printPlan(w, body.Data.Provider, body.Data.Product, body.Data.NewPlan, "New Plan", verbose)
+			printPlan(w, body.Data.Provider, body.Data.Product, body.Data.OldPlan, "Old Plan", verbose)
 		}
 
 		w.Flush()
@@ -153,9 +160,12 @@ func writeEventsList(evts []*events.Event, limit, offset int) error {
 	return nil
 }
 
-func printResource(w io.Writer, resource *events.Resource) {
+func printResource(w io.Writer, resource *events.Resource, verbose bool) {
 	if resource != nil {
 		fmt.Fprintln(w, fmt.Sprintf("\t%s\t%s", color.Faint("Resource"), resource.Name))
+		if verbose {
+			fmt.Fprintln(w, fmt.Sprintf("\t%s\t%s", color.Faint("ResourceID"), resource.ID))
+		}
 	}
 }
 
@@ -165,27 +175,17 @@ func printSource(w io.Writer, source string) {
 	}
 }
 
-func printProject(w io.Writer, project *events.Project) {
+func printProject(w io.Writer, project *events.Project, verbose bool) {
 	if project != nil {
 		fmt.Fprintln(w, fmt.Sprintf("\t%s\t%s", color.Faint("Project"), project.Name))
-	}
-}
-
-func printUser(w io.Writer, user *events.User) {
-	if user != nil {
-		output := fmt.Sprintf("%s (%s)", user.Name, user.Email)
-		fmt.Fprintln(w, fmt.Sprintf("\t%s\t%s", color.Faint("User"), output))
-	}
-}
-
-func printTeam(w io.Writer, team *events.Team) {
-	if team != nil {
-		fmt.Fprintln(w, fmt.Sprintf("\t%s\t%s", color.Faint("Team"), team.Name))
+		if verbose {
+			fmt.Fprintln(w, fmt.Sprintf("\t%s\t%s", color.Faint("ProjectID"), project.ID))
+		}
 	}
 }
 
 func printPlan(w io.Writer, provider *events.Provider, product *events.Product,
-	plan *events.Plan, label string) {
+	plan *events.Plan, label string, verbose bool) {
 
 	if provider != nil {
 		product := product.Name
@@ -196,11 +196,17 @@ func printPlan(w io.Writer, provider *events.Provider, product *events.Product,
 		if val == 0 {
 			cost = "free"
 		} else {
-			cost = fmt.Sprint("$%d/month", val)
+			cost = fmt.Sprintf("$%d/month", val)
 		}
 
 		fmt.Fprintln(w, fmt.Sprintf("\t%s\t%s (%s %s)", color.Faint(label),
 			product, name, cost))
+	}
+
+	if verbose {
+		fmt.Fprintln(w, fmt.Sprintf("\t%s\t%s", color.Faint("ProviderID"), provider.ID))
+		fmt.Fprintln(w, fmt.Sprintf("\t%s\t%s", color.Faint("ProductID"), product.ID))
+		fmt.Fprintln(w, fmt.Sprintf("\t%s\t%s", color.Faint("PlanID"), plan.ID))
 	}
 }
 

@@ -137,3 +137,10 @@ func offsetFlag() cli.Flag {
 		Usage: "Specify a number of items to skip before displaying",
 	}
 }
+
+func verboseFlag() cli.Flag {
+	return cli.BoolFlag{
+		Name:  "verbose",
+		Usage: "Make the command more talkative",
+	}
+}
