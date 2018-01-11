@@ -122,3 +122,25 @@ func roleFlag() cli.Flag {
 		Usage: "Specify a team role to be used",
 	}
 }
+
+func limitFlag() cli.Flag {
+	return cli.IntFlag{
+		Name:  "limit",
+		Usage: "Specify a maximum number of items to be displayed",
+		Value: 10,
+	}
+}
+
+func offsetFlag() cli.Flag {
+	return cli.IntFlag{
+		Name:  "offset",
+		Usage: "Specify a number of items to skip before displaying",
+	}
+}
+
+func verboseFlag() cli.Flag {
+	return cli.BoolFlag{
+		Name:  "verbose",
+		Usage: "Make the command more talkative",
+	}
+}

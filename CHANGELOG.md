@@ -10,12 +10,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ### Added
 
 - Prompt user to create billing profile if missing during resource create
+- `events list` to list account activity events
 
 ### Removed
 
 - Provision event from `create` command
 - Title prompt removed from Resource, Project and Team creation
-
 - GitHub identity -- user user:email scope for login and link
 
 ## [0.13.0] - 2017-12-13

@@ -19,7 +19,6 @@ func (api *API) AcceptInvite(token string) error {
 }
 
 func (api *API) Roles(teamID *manifold.ID) ([]models.RoleLabel, error) {
-
 	params := role.NewGetRolesParamsWithContext(api.ctx)
 
 	if teamID != nil {
@@ -28,7 +27,6 @@ func (api *API) Roles(teamID *manifold.ID) ([]models.RoleLabel, error) {
 	}
 
 	res, err := api.Identity.Role.GetRoles(params, nil)
-
 	if err != nil {
 		return nil, err
 	}

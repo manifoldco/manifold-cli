@@ -11,6 +11,10 @@ required=[
   name = "github.com/asaskevich/govalidator"
 
 [[constraint]]
+  name = "github.com/alecthomas/gometalinter"
+  revision = "bae2f1293d092fd8167939d5108d1b025eaef9de"
+
+[[constraint]]
   name = "github.com/briandowns/spinner"
 
 [[constraint]]
@@ -18,20 +22,48 @@ required=[
   version = "1.28.0"
 
 [[constraint]]
+  name = "github.com/go-openapi/analysis"
+  revision = "d5a75b7d751ca3f11ad5d93cfe97405f2c3f6a47"
+
+[[constraint]]
   name = "github.com/go-openapi/errors"
+  revision = "fc3f73a224499b047eda7191e5d22e1e9631e86f"
+
+[[constraint]]
+  name = "github.com/go-openapi/inflect"
+  revision = "b1f6470ffb9c552dc105dd869f16e36ba86ba7d0"
+
+[[constraint]]
+  name = "github.com/go-openapi/jsonpointer"
+  revision = "779f45308c19820f1a69e9a4cd965f496e0da10f"
+
+[[constraint]]
+  name = "github.com/go-openapi/jsonreference"
+  revision = "36d33bfe519efae5632669801b180bf1a245da3b"
+
+[[constraint]]
+  name = "github.com/go-openapi/loads"
+  revision = "6bb6486231e079ea125c0f39994ed3d0c53399ed"
 
 [[constraint]]
   name = "github.com/go-openapi/runtime"
+  revision = "e66a4c4406028a04ddafd6002c378ffd3db7e52b"
+
+[[constraint]]
+  name = "github.com/go-openapi/spec"
+  revision = "48c2a7185575f9103a5a3863eff950bb776899d2"
 
 [[constraint]]
   name = "github.com/go-openapi/strfmt"
+  revision = "610b6cacdcde6852f4de68998bd20ce1dac85b22"
 
 [[constraint]]
   name = "github.com/go-openapi/swag"
-  branch = "master"
+  revision = "f3f9494671f93fcff853e3c6e9e948b3eb71e590"
 
 [[constraint]]
   name = "github.com/go-openapi/validate"
+  revision = "dc8a684882cf70c9a529887104340f44e0e138e5"
 
 [[constraint]]
   name = "github.com/juju/ansiterm"
@@ -41,7 +73,7 @@ required=[
 
 [[constraint]]
   name = "github.com/manifoldco/go-manifold"
-  version = "0.9.1"
+  branch = "master"
 
 [[constraint]]
   name = "github.com/manifoldco/promptui"
@@ -76,10 +108,11 @@ required=[
 
 [[constraint]]
   name = "gopkg.in/yaml.v2"
+  revision = "eb3733d160e74a9c7e442f435eb3bea458e1d19f"
 
 [[constraint]]
   name = "github.com/go-swagger/go-swagger"
-  version = "0.10.0"
+  revision = "fbc64c262a833b40adf3d2cdba241fc4d30664b0"
 
 [[constraint]]
   name = "golang.org/x/oauth2"

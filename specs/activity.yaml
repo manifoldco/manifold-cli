@@ -1,0 +1,497 @@
+swagger: '2.0'
+info:
+  title: Activity API
+  description: Activity and audit logging
+  version: '1.0.0'
+
+# the domain of the service
+host: api.activity.manifold.co
+schemes: [ https ]
+produces: [ application/json ]
+consumes: [ application/json ]
+
+basePath: /v1 # Prefixed to all paths
+
+securityDefinitions:
+  tokenRequired:
+    type: apiKey
+    name: Authorization
+    in: header
+  xInternalAuthRequired:
+    x-manifold-audience: internal
+    type: apiKey
+    name: X-Internal-Auth
+    in: header
+
+paths:
+  /events/:
+    get:
+      summary: Retrieves a list of events
+      tags:
+        - Event
+      security: [ tokenRequired: [] ]
+      parameters:
+        - name: scope_id
+          in: query
+          description: |
+            ID of the Scope to filter Events by, stored as a
+            base32 encoded 18 byte identifier.
+          type: string
+          pattern: '^[0-9abcdefghjkmnpqrtuvwxyz]{29}$'
+          format: base32ID
+          required: false
+        - name: ref_id
+          in: query
+          description: |
+            ID of the Reference to filter Events by, stored as a
+            base32 encoded 18 byte identifier.
+          type: string
+          pattern: '^[0-9abcdefghjkmnpqrtuvwxyz]{29}$'
+          format: base32ID
+          required: false
+      responses:
+        200:
+          description: List of events
+          schema:
+            type: array
+            items: { $ref: '#/definitions/Event' }
+        400:
+          description: Validation failed for request.
+          schema: { $ref: '#/definitions/Error' }
+        401:
+          description: Authentication failed for the request.
+          schema: { $ref: '#/definitions/Error' }
+        500:
+          description: Request failed due to an internal server error.
+          schema: { $ref: '#/definitions/Error' }
+        default:
+          description: Unexpected error
+          schema: { $ref: '#/definitions/Error' }
+
+  /internal/events/{id}:
+    x-manifold-audience: internal
+    put:
+      summary: Add a new event
+      tags:
+        - Event
+      security: [ xInternalAuthRequired: [] ]
+      parameters:
+        - name: id
+          in: path
+          description: |
+            ID of the Operation, stored as a base32 encoded 18 byte identifier.
+          required: true
+          type: string
+          pattern: '^[0-9abcdefghjkmnpqrtuvwxyz]{29}$'
+          format: base32ID
+        - name: body
+          in: body
+          description: |
+            Event create request.
+          required: true
+          schema: { $ref: '#/definitions/Event' }
+      responses:
+        204:
+          description: Empty response
+        400:
+          description: Validation failed for request.
+          schema: { $ref: '#/definitions/Error' }
+        401:
+          description: Authentication failed for the request.
+          schema: { $ref: '#/definitions/Error' }
+        500:
+          description: Request failed due to an internal server error.
+          schema: { $ref: '#/definitions/Error' }
+        default:
+          description: Unexpected error
+          schema: { $ref: '#/definitions/Error' }
+
+definitions:
+  ID:
+    type: string
+    description: A base32 encoded 18 byte identifier.
+    pattern: '^[0-9abcdefghjkmnpqrtuvwxyz]{29}$'
+    format: base32ID
+    x-go-type:
+      type: ID
+      import:
+        package: 'github.com/manifoldco/go-manifold'
+        alias: manifold
+  OptionalID:
+    type: string
+    description: A base32 encoded 18 byte identifier.
+    pattern: '^[0-9abcdefghjkmnpqrtuvwxyz]{29}$'
+    format: base32ID
+    x-nullable: true
+    x-go-type:
+      type: ID
+      import:
+        package: 'github.com/manifoldco/go-manifold'
+        alias: manifold
+
+  Event:
+    type: object
+    properties:
+      id:
+        $ref: '#/definitions/ID'
+      type:
+        type: string
+        enum: ['event']
+      version:
+        type: integer
+        enum: [1]
+      body:
+        $ref: '#/definitions/EventBody'
+    additionalProperties: false
+    required:
+      - id
+      - type
+      - version
+      - body
+    x-go-type:
+      type: Event
+      import:
+        package: 'github.com/manifoldco/go-manifold/events'
+
+  EventBody:
+    discriminator: "type"
+    type: object
+    properties:
+      type:
+        type: string
+        description: Type of event this object represents
+        enum:
+          - operation.provisioned
+          - operation.deprovisioned
+          - operation.resized
+      actor_id:
+        $ref: '#/definitions/ID'
+        description: Actor who triggered the event, can be empty for system events
+      actor:
+        $ref: '#/definitions/Actor'
+      scope_id:
+        $ref: '#/definitions/ID'
+        description: Scope of the event
+      scope:
+        $ref: '#/definitions/Scope'
+      ref_id:
+        $ref: '#/definitions/ID'
+      source:
+        type: string
+        enum: ['dashboard', 'cli', 'system']
+      ip_address:
+        type: string
+      created_at:
+        type: string
+        format: datetime
+        description: A date time string representing the time the event was created.
+    additionalProperties: false
+    required:
+      - type
+      - scope_id
+      - ref_id
+      - source
+      - created_at
+
+  operation.provisioned:
+    type: object
+    allOf:
+      - $ref: '#/definitions/EventBody'
+      - type: object
+        properties:
+          data:
+            type: object
+            properties:
+              operation_id: { $ref: '#/definitions/ID' }
+              resource_id: { $ref: '#/definitions/ID' }
+              resource: { $ref: '#/definitions/Resource' }
+              user_id: { $ref: '#/definitions/OptionalID' }
+              user: { $ref: '#/definitions/User' }
+              team_id: { $ref: '#/definitions/OptionalID' }
+              team: { $ref: '#/definitions/Team' }
+              project_id: { $ref: '#/definitions/OptionalID' }
+              project: { $ref: '#/definitions/Project' }
+              provider_id: { $ref: '#/definitions/OptionalID' }
+              provider: { $ref: '#/definitions/Provider' }
+              product_id: { $ref: '#/definitions/OptionalID' }
+              product: { $ref: '#/definitions/Product' }
+              plan_id: { $ref: '#/definitions/OptionalID' }
+              plan: { $ref: '#/definitions/Plan' }
+              region_id: { $ref: '#/definitions/OptionalID' }
+              region: { $ref: '#/definitions/Region' }
+              source:
+                type: string
+                enum: ['catalog', 'custom']
+                default: catalog
+            additionalProperties: false
+            required:
+              - operation_id
+              - resource_id
+              - source
+        additionalProperties: false
+        required:
+          - data
+        x-go-type:
+          type: OperationProvisioned
+          import:
+            package: 'github.com/manifoldco/go-manifold/events'
+
+  operation.deprovisioned:
+    type: object
+    allOf:
+      - $ref: '#/definitions/EventBody'
+      - type: object
+        properties:
+          data:
+            type: object
+            properties:
+              operation_id: { $ref: '#/definitions/ID' }
+              user_id: { $ref: '#/definitions/OptionalID' }
+              user: { $ref: '#/definitions/User' }
+              team_id: { $ref: '#/definitions/OptionalID' }
+              team: { $ref: '#/definitions/Team' }
+            additionalProperties: false
+            required:
+              - operation_id
+              - resource_id
+        additionalProperties: false
+        required:
+          - data
+        x-go-type:
+          type: OperationDeprovisioned
+          import:
+            package: 'github.com/manifoldco/go-manifold/events'
+
+  operation.resized:
+    type: object
+    allOf:
+      - $ref: '#/definitions/EventBody'
+      - type: object
+        properties:
+          data:
+            type: object
+            properties:
+              operation_id: { $ref: '#/definitions/ID' }
+              resource_id: { $ref: '#/definitions/ID' }
+              resource: { $ref: '#/definitions/Resource' }
+              user_id: { $ref: '#/definitions/OptionalID' }
+              user: { $ref: '#/definitions/User' }
+              team_id: { $ref: '#/definitions/OptionalID' }
+              team: { $ref: '#/definitions/Team' }
+              project_id: { $ref: '#/definitions/OptionalID' }
+              project: { $ref: '#/definitions/Project' }
+              provider_id: { $ref: '#/definitions/OptionalID' }
+              provider: { $ref: '#/definitions/Provider' }
+              product_id: { $ref: '#/definitions/OptionalID' }
+              product: { $ref: '#/definitions/Product' }
+              new_plan_id: { $ref: '#/definitions/OptionalID' }
+              new_plan: { $ref: '#/definitions/Plan' }
+              old_plan_id: { $ref: '#/definitions/OptionalID' }
+              old_plan: { $ref: '#/definitions/Plan' }
+              region_id: { $ref: '#/definitions/OptionalID' }
+              region: { $ref: '#/definitions/Region' }
+            additionalProperties: false
+            required:
+              - operation_id
+              - resource_id
+              - provider_id
+              - product_id
+              - new_plan_id
+              - old_plan_id
+              - region_id
+        additionalProperties: false
+        required:
+          - data
+        x-go-type:
+          type: OperationProvisioned
+          import:
+            package: 'github.com/manifoldco/go-manifold/events'
+
+  Actor:
+    type: object
+    properties:
+      id: { $ref: '#/definitions/ID' }
+      name: { type: string }
+      email: { type: string }
+    additionalProperties: false
+    required:
+      - id
+    x-go-type:
+      type: Actor
+      import:
+        package: 'github.com/manifoldco/go-manifold/events'
+
+  Scope:
+    type: object
+    properties:
+      id: { $ref: '#/definitions/ID' }
+      name: { type: string }
+      email: { type: string }
+    additionalProperties: false
+    required:
+      - id
+    x-go-type:
+      type: Scope
+      import:
+        package: 'github.com/manifoldco/go-manifold/events'
+
+  Resource:
+    type: object
+    properties:
+      id: { $ref: '#/definitions/ID' }
+      name: { type: string }
+    additionalProperties: false
+    required:
+      - id
+      - name
+    x-go-type:
+      type: Resource
+      import:
+        package: 'github.com/manifoldco/go-manifold/events'
+
+  User:
+    type: object
+    properties:
+      id: { $ref: '#/definitions/ID' }
+      name: { type: string }
+      email: { type: string }
+    additionalProperties: false
+    required:
+      - id
+      - email
+    x-go-type:
+      type: User
+      import:
+        package: 'github.com/manifoldco/go-manifold/events'
+
+  Team:
+    type: object
+    properties:
+      id: { $ref: '#/definitions/ID' }
+      name: { type: string }
+    additionalProperties: false
+    required:
+      - id
+      - name
+    x-go-type:
+      type: Team
+      import:
+        package: 'github.com/manifoldco/go-manifold/events'
+
+  Project:
+    type: object
+    properties:
+      id: { $ref: '#/definitions/ID' }
+      name: { type: string }
+    additionalProperties: false
+    required:
+      - id
+      - name
+    x-go-type:
+      type: Project
+      import:
+        package: 'github.com/manifoldco/go-manifold/events'
+
+  Provider:
+    type: object
+    properties:
+      id: { $ref: '#/definitions/ID' }
+      name: { type: string }
+    additionalProperties: false
+    required:
+      - id
+      - name
+    x-go-type:
+      type: Provider
+      import:
+        package: 'github.com/manifoldco/go-manifold/events'
+
+  Product:
+    type: object
+    properties:
+      id: { $ref: '#/definitions/ID' }
+      name: { type: string }
+    additionalProperties: false
+    required:
+      - id
+      - name
+    x-go-type:
+      type: Product
+      import:
+        package: 'github.com/manifoldco/go-manifold/events'
+
+  Plan:
+    type: object
+    properties:
+      id: { $ref: '#/definitions/ID' }
+      name: { type: string }
+      cost: { type: integer, minimum: 0 }
+    additionalProperties: false
+    required:
+      - id
+      - name
+      - cost
+    x-go-type:
+      type: Plan
+      import:
+        package: 'github.com/manifoldco/go-manifold/events'
+
+  Region:
+    type: object
+    properties:
+      id: { $ref: '#/definitions/ID' }
+      name: { type: string }
+      platform: { type: string }
+      location: { type: string }
+      region: { type: string }
+    additionalProperties: false
+    required:
+      - id
+      - name
+      - platform
+      - location
+      - region
+    x-go-type:
+      type: Region
+      import:
+        package: 'github.com/manifoldco/go-manifold/events'
+
+  Label:
+    type: string
+    description: A machine readable unique label, which is url safe.
+    pattern: '^[a-z0-9][a-z0-9\-\_]{1,128}$'
+    x-go-type:
+      type: Label
+      import:
+        package: 'github.com/manifoldco/go-manifold'
+        alias: manifold
+  Name:
+    type: string
+    description: A name of an entity which is displayed to a human.
+    pattern: '^[a-zA-Z][a-z0-9A-Z \-]{2,128}$'
+    x-go-type:
+      type: Name
+      import:
+        package: 'github.com/manifoldco/go-manifold'
+        alias: manifold
+  Error:
+    type: object
+    properties:
+      type:
+        description: The error type
+        type: string
+        enum:
+          - bad_request
+          - not_found
+          - unauthorized
+          - conflict
+          - internal
+      message:
+        type: array
+        description: Explanation of the errors
+        items: { type: string }
+    x-go-type:
+      type: Error
+      import:
+        package: 'github.com/manifoldco/go-manifold'
+        alias: manifold

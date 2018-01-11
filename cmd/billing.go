@@ -211,7 +211,7 @@ func redeemCouponCmd(cliCtx *cli.Context) error {
 	if err != nil {
 		switch e := err.(type) {
 		case *discount.PostDiscountsBadRequest:
-			msg := strings.Join(e.Payload.Messages, "\n")
+			msg := strings.Join(e.Payload.Message, "\n")
 			return cli.NewExitError("Failed to redeem coupon code: "+msg, -1)
 		case *discount.PostDiscountsConflict:
 			return cli.NewExitError("This coupon code has been used before.", -1)
