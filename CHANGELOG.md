@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Added
 
+- Prompt user to create billing profile if missing during resource create
 - `events list` to list account activity events
 
 ### Removed

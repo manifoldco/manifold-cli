@@ -354,3 +354,22 @@ func SelectCredential(creds []*mModels.Credential) (*mModels.Credential, string,
 
 	return items[idx], keyNames[idx], nil
 }
+
+// SelectBillingProfileAction allows the user to define their next action
+// when encountering a paid plan without stored payment information
+func SelectBillingProfileAction() (string, error) {
+	prompt := promptui.Select{
+		Label: "Select Action",
+		Items: []string{
+			"Add credit card",
+			"Select different plan",
+			"Abort",
+		},
+	}
+
+	_, value, err := prompt.Run()
+	if err != nil {
+		return "", err
+	}
+	return value, nil
+}

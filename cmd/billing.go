@@ -73,6 +73,15 @@ func addBillingProfileCmd(cliCtx *cli.Context) error {
 		return errUserActionAsTeam
 	}
 
+	err := createNewBillingProfile(ctx, userID, teamID)
+	if err != nil {
+		return err
+	}
+	fmt.Println("Your billing info has been saved.")
+	return nil
+}
+
+func createNewBillingProfile(ctx context.Context, userID, teamID *manifold.ID) error {
 	token, err := creditCardInput(ctx)
 	if err != nil {
 		return err
@@ -104,8 +113,6 @@ func addBillingProfileCmd(cliCtx *cli.Context) error {
 	if err != nil {
 		return cli.NewExitError("Failed to add billing profile: "+err.Error(), -1)
 	}
-
-	fmt.Println("Your billing info has been saved.")
 	return nil
 }
 
@@ -246,4 +253,26 @@ func creditCardInput(ctx context.Context) (string, error) {
 	}
 
 	return token.ID, nil
+}
+
+// retrieveBillingProfile returns the billing profile for the authenticated used
+func retrieveBillingProfile(ctx context.Context) (*bModels.BillingProfile, error) {
+	userID, err := loadUserID(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	client, err := api.New(api.Billing)
+	if err != nil {
+		return nil, err
+	}
+
+	params := profile.NewGetProfilesIDParamsWithContext(ctx)
+	params.SetID(userID.String())
+	resp, err := client.Billing.Profile.GetProfilesID(params, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return resp.Payload, nil
 }
