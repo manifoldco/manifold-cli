@@ -186,28 +186,31 @@ func indexResources(resources []*models.Resource) map[manifold.ID]*models.Resour
 }
 
 func fetchCredentials(ctx context.Context, m *mClient.Marketplace, resources []*models.Resource, customNames bool) (map[manifold.ID][]*models.Credential, error) {
-	// XXX: Reduce this into a single HTTP Call
-	//
-	// Issue: https://www.github.com/manifoldco/engineering#2536
 	cMap := make(map[manifold.ID][]*models.Credential)
+	p := credential.NewGetCredentialsParamsWithContext(ctx)
+	if customNames == false {
+		noCustomNames := "false"
+		p.SetCustomNames(&noCustomNames)
+	}
+	// Prep the credential map with the known resources, and build a list
+	// of IDs to use in the resource_id query param
+	var resourceIDs []string
 	for _, r := range resources {
-		p := credential.NewGetCredentialsParamsWithContext(ctx).WithResourceID([]string{r.ID.String()})
-		if customNames == false {
-			noCustomNames := "false"
-			p.SetCustomNames(&noCustomNames)
-		}
-		c, err := m.Credential.GetCredentials(p, nil)
-		if err != nil {
-			return nil, err
-		}
-
+		resourceIDs = append(resourceIDs, r.ID.String())
 		if _, ok := cMap[r.ID]; !ok {
 			cMap[r.ID] = []*models.Credential{}
 		}
+	}
+	p.SetResourceID(resourceIDs)
 
-		for _, credential := range c.Payload {
-			cMap[r.ID] = append(cMap[r.ID], credential)
-		}
+	// Get credentials for all the defined resources with one call
+	c, err := m.Credential.GetCredentials(p, nil)
+	if err != nil {
+		return nil, err
+	}
+	// Append credential results to the map
+	for _, credential := range c.Payload {
+		cMap[credential.Body.ResourceID] = append(cMap[credential.Body.ResourceID], credential)
 	}
 
 	return cMap, nil
