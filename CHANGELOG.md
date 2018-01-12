@@ -18,6 +18,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - Title prompt removed from Resource, Project and Team creation
 - GitHub identity -- user user:email scope for login and link
 
+## Fixed
+
+- Export now only makes one call to retrieve all credentials
+
 ## [0.13.0] - 2017-12-13
 
 ### Added
