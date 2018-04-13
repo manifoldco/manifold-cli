@@ -102,7 +102,7 @@ func export(cliCtx *cli.Context) error {
 		params["project"] = projectName
 	}
 
-	client.Analytics.Track(ctx, "Exported Credentials", &params)
+	client.Analytics.Track(ctx, "Fetch Credentials", &params)
 
 	rMap := indexResources(resources)
 	w := os.Stdout
