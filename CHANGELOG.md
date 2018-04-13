@@ -21,6 +21,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ## Fixed
 
 - Export now only makes one call to retrieve all credentials
+- Export not uses project_id for better server side credentials fetching
 
 ## [0.13.0] - 2017-12-13
 
