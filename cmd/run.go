@@ -11,9 +11,11 @@ import (
 
 	"github.com/urfave/cli"
 
+	"github.com/manifoldco/go-manifold"
 	"github.com/manifoldco/manifold-cli/api"
 	"github.com/manifoldco/manifold-cli/clients"
 	"github.com/manifoldco/manifold-cli/errs"
+	"github.com/manifoldco/manifold-cli/generated/marketplace/models"
 	"github.com/manifoldco/manifold-cli/middleware"
 	"github.com/manifoldco/manifold-cli/session"
 )
@@ -58,14 +60,28 @@ func run(cliCtx *cli.Context) error {
 		return err
 	}
 
-	rs, err := clients.FetchResources(ctx, client.Marketplace, teamID, projectName)
-	if err != nil {
-		return cli.NewExitError("Could not retrieve resources: "+err.Error(), -1)
-	}
+	cMap := make(map[manifold.ID][]*models.Credential)
 
-	cMap, err := fetchCredentials(ctx, client.Marketplace, rs, true)
-	if err != nil {
-		return cli.NewExitError("Could not retrieve credentials: "+err.Error(), -1)
+	if projectName != "" {
+		p, err := clients.FetchProjectByLabel(ctx, client.Marketplace, teamID, projectName)
+		if err != nil {
+			return cli.NewExitError(fmt.Sprintf("Could not retrieve project: %s", err), -1)
+		}
+
+		cMap, err = fetchProjectCredentials(ctx, client.Marketplace, p, true)
+		if err != nil {
+			return cli.NewExitError(fmt.Sprintf("Could not retrieve credentials: %s", err), -1)
+		}
+	} else {
+		rs, err := clients.FetchResources(ctx, client.Marketplace, teamID, projectName)
+		if err != nil {
+			return cli.NewExitError("Could not retrieve resources: "+err.Error(), -1)
+		}
+
+		cMap, err = fetchResourceCredentials(ctx, client.Marketplace, rs, true)
+		if err != nil {
+			return cli.NewExitError("Could not retrieve credentials: "+err.Error(), -1)
+		}
 	}
 
 	credentials, err := flattenCMap(cMap)

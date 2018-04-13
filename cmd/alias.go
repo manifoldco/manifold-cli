@@ -114,7 +114,7 @@ func aliasCredentialCmd(cliCtx *cli.Context) error {
 	}
 
 	prompts.SpinStart("Fetching Credentials")
-	cMap, err := fetchCredentials(ctx, client.Marketplace, []*models.Resource{selectedResource}, false)
+	cMap, err := fetchResourceCredentials(ctx, client.Marketplace, []*models.Resource{selectedResource}, false)
 	prompts.SpinStop()
 	if err != nil {
 		return cli.NewExitError("Could not retrieve credentials: "+err.Error(), -1)
