@@ -65,6 +65,7 @@ func export(cliCtx *cli.Context) error {
 		return err
 	}
 
+	// we need to fetch all the credentials for the rMap for resource naming, etc
 	prompts.SpinStart("Fetching Resources")
 	resources, err := clients.FetchResources(ctx, client.Marketplace, teamID, projectName)
 	prompts.SpinStop()
@@ -72,17 +73,26 @@ func export(cliCtx *cli.Context) error {
 		return cli.NewExitError("Could not retrieve resources: "+err.Error(), -1)
 	}
 
-	if projectName == "" {
-		resources = filterResourcesWithoutProjects(resources)
-	}
-
 	sort.Slice(resources, func(i, j int) bool {
 		return resources[i].Body.Name < resources[j].Body.Name
 	})
 
-	cMap, err := fetchCredentials(ctx, client.Marketplace, resources, true)
-	if err != nil {
-		return cli.NewExitError("Could not retrieve credentials: "+err.Error(), -1)
+	cMap := make(map[manifold.ID][]*models.Credential)
+	if projectName == "" {
+		p, err := clients.FetchProjectByLabel(ctx, client.Marketplace, teamID, projectName)
+		if err != nil {
+			return cli.NewExitError(fmt.Sprintf("Could not retrieve project: %s", err), -1)
+		}
+
+		cMap, err = fetchProjectCredentials(ctx, client.Marketplace, p, true)
+		if err != nil {
+			return cli.NewExitError(fmt.Sprintf("Could not retrieve credentials: %s", err), -1)
+		}
+	} else {
+		cMap, err = fetchResourceCredentials(ctx, client.Marketplace, resources, true)
+		if err != nil {
+			return cli.NewExitError("Could not retrieve credentials: "+err.Error(), -1)
+		}
 	}
 
 	params := map[string]string{
@@ -92,7 +102,7 @@ func export(cliCtx *cli.Context) error {
 		params["project"] = projectName
 	}
 
-	client.Analytics.Track(ctx, "Exported Credentials", &params)
+	client.Analytics.Track(ctx, "Fetch Credentials", &params)
 
 	rMap := indexResources(resources)
 	w := os.Stdout
@@ -185,8 +195,8 @@ func indexResources(resources []*models.Resource) map[manifold.ID]*models.Resour
 	return index
 }
 
-func fetchCredentials(ctx context.Context, m *mClient.Marketplace, resources []*models.Resource, customNames bool) (map[manifold.ID][]*models.Credential, error) {
-	cMap := make(map[manifold.ID][]*models.Credential)
+func fetchResourceCredentials(ctx context.Context, m *mClient.Marketplace, resources []*models.Resource, customNames bool) (map[manifold.ID][]*models.Credential, error) {
+
 	p := credential.NewGetCredentialsParamsWithContext(ctx)
 	if customNames == false {
 		noCustomNames := "false"
@@ -197,19 +207,41 @@ func fetchCredentials(ctx context.Context, m *mClient.Marketplace, resources []*
 	var resourceIDs []string
 	for _, r := range resources {
 		resourceIDs = append(resourceIDs, r.ID.String())
-		if _, ok := cMap[r.ID]; !ok {
-			cMap[r.ID] = []*models.Credential{}
-		}
 	}
 	p.SetResourceID(resourceIDs)
 
-	// Get credentials for all the defined resources with one call
-	c, err := m.Credential.GetCredentials(p, nil)
+	return fetchCredentials(m, p)
+}
+
+func fetchProjectCredentials(ctx context.Context, m *mClient.Marketplace, project *models.Project, customNames bool) (map[manifold.ID][]*models.Credential, error) {
+	_ = make(map[manifold.ID][]*models.Credential)
+	p := credential.NewGetCredentialsParamsWithContext(ctx)
+
+	if customNames == false {
+		noCustomNames := "false"
+		p.SetCustomNames(&noCustomNames)
+	}
+
+	pid := project.ID.String()
+	p.SetProjectID(&pid)
+
+	return fetchCredentials(m, p)
+}
+
+func fetchCredentials(m *mClient.Marketplace, params *credential.GetCredentialsParams) (map[manifold.ID][]*models.Credential, error) {
+	cMap := make(map[manifold.ID][]*models.Credential)
+
+	// Get credentials for all the defined resources withring(call
+	c, err := m.Credential.GetCredentials(params, nil)
 	if err != nil {
 		return nil, err
 	}
 	// Append credential results to the map
 	for _, credential := range c.Payload {
+		rid := credential.Body.ResourceID
+		if _, ok := cMap[rid]; !ok {
+			cMap[rid] = []*models.Credential{}
+		}
 		cMap[credential.Body.ResourceID] = append(cMap[credential.Body.ResourceID], credential)
 	}
 

@@ -262,10 +262,19 @@ paths:
           base32 encoded 18 byte identifier.
         collectionFormat: multi
         type: array
-        required: true
+        required: false
         items:
           format: base32ID
           type: string
+      - name: project_id
+        in: query
+        description: |
+          ID of the Project to filter Credentials by, stored as a
+          base32 encoded 18 byte identifier.
+        type: string
+        pattern: '^[0-9abcdefghjkmnpqrtuvwxyz]{29}$'
+        format: base32ID
+        required: false
       tags:
       - Credential
       responses:
