@@ -11,7 +11,9 @@ import (
 func ProductSearch(products []templates.Product) func(string, int) bool {
 	return func(input string, idx int) bool {
 		product := products[idx]
+		name := string(product.Name)
 		tags := product.Tags
+		tags = append(tags, name)
 
 		for _, tag := range tags {
 			if strings.Contains(tag, input) {
