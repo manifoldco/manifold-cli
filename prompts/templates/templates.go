@@ -30,6 +30,13 @@ func init() {
 	tplFailure = template.Must(template.New("").Funcs(funcMap()).Parse(failure))
 }
 
+var TplCategory = &promptui.SelectTemplates{
+	FuncMap:  funcMap(),
+	Active:   active,
+	Inactive: inactive,
+	Selected: fmt.Sprintf(Selected, "Category"),
+}
+
 var TplProvider = &promptui.SelectTemplates{
 	FuncMap:  funcMap(),
 	Active:   active,
