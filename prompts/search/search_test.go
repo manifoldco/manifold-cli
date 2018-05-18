@@ -46,7 +46,7 @@ func TestProductSearch(t *testing.T) {
 			name := product.Name
 
 			if match != tc.match {
-				t.Errorf("Expected %q to match %v", tc.input, productTags[name])
+				t.Errorf("Expected %q to match %v", tc.input, product.Tags)
 			}
 		})
 	}
