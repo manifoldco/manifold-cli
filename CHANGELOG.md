@@ -7,12 +7,13 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
 
-## [0.14.0] - 2018-04-13
+## [0.14.0] - 2018-05-18
 
 ### Added
 
 - Prompt user to create billing profile if missing during resource create
 - `events list` to list account activity events
+- `services categories` command added, to list products by category
 
 ### Removed
 
