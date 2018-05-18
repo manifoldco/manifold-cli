@@ -9,7 +9,7 @@ import (
 func TestProductSearch(t *testing.T) {
 	products := []templates.Product{
 		{Name: "jawsdb-mysql",
-			Tags: {"database"}},
+			Tags: []string{"database"}},
 	}
 
 	tcs := []struct {
