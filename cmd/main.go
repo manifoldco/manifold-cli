@@ -85,8 +85,8 @@ func promptName(ctx *cli.Context, optionalID *manifold.ID, objectName string, al
 		_, name := names.New(*optionalID)
 		if argName == "" {
 			argName = string(name)
+			shouldAccept = false
 		}
-		shouldAccept = false
 	}
 
 	// If no name value is supplied, prompt for it
