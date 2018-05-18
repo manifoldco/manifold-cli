@@ -43,7 +43,6 @@ func TestProductSearch(t *testing.T) {
 		t.Run(tc.scenario, func(t *testing.T) {
 			match := search(tc.input, tc.idx)
 			product := products[tc.idx]
-			name := product.Name
 
 			if match != tc.match {
 				t.Errorf("Expected %q to match %v", tc.input, product.Tags)
