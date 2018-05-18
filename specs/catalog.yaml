@@ -494,6 +494,10 @@ definitions:
             - grandfathered
           logo_url:
             $ref: '#/definitions/LogoURL'
+          tags:
+            type: array
+            items:
+              type: string
           tagline:
             description: |
               140 character sentence positioning the product.
