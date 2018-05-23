@@ -65,11 +65,9 @@ func listCategoriesCmd(cliCtx *cli.Context) error {
 
 	var products []*models.Product
 	var providers []*models.Provider
-	var categories map[string][]*models.Product
-	var providerNames map[string]*models.Provider
 
-	categories = make(map[string][]*models.Product)
-	providerNames = make(map[string]*models.Provider)
+	categories := make(map[string][]*models.Product)
+	providerNames := make(map[string]*models.Provider)
 
 	products, err = client.FetchProducts("")
 	if err != nil {
