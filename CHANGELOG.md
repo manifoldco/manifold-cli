@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
 
+### Added
+
+- Updated auto-generated names to match what we do in Marketplace
+
 ## [0.14.0] - 2018-04-13
 
 ### Added
