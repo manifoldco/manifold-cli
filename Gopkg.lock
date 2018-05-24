@@ -44,10 +44,7 @@
 
 [[projects]]
   name = "github.com/client9/misspell"
-  packages = [
-    ".",
-    "cmd/misspell"
-  ]
+  packages = [".","cmd/misspell"]
   revision = "59894abde931a32630d4e884a09c682ed20c5c7c"
   version = "v0.3.0"
 
@@ -107,23 +104,12 @@
 [[projects]]
   branch = "master"
   name = "github.com/go-openapi/loads"
-  packages = [
-    ".",
-    "fmts"
-  ]
+  packages = [".","fmts"]
   revision = "a80dea3052f00e5f032e860dd7355cd0cc67e24d"
 
 [[projects]]
   name = "github.com/go-openapi/runtime"
-  packages = [
-    ".",
-    "client",
-    "middleware",
-    "middleware/denco",
-    "middleware/header",
-    "middleware/untyped",
-    "security"
-  ]
+  packages = [".","client","middleware","middleware/denco","middleware/header","middleware/untyped","security"]
   revision = "e66a4c4406028a04ddafd6002c378ffd3db7e52b"
 
 [[projects]]
@@ -149,23 +135,13 @@
 
 [[projects]]
   name = "github.com/go-swagger/go-swagger"
-  packages = [
-    "cmd/swagger",
-    "cmd/swagger/commands",
-    "cmd/swagger/commands/generate",
-    "cmd/swagger/commands/initcmd",
-    "generator",
-    "scan"
-  ]
+  packages = ["cmd/swagger","cmd/swagger/commands","cmd/swagger/commands/generate","cmd/swagger/commands/initcmd","generator","scan"]
   revision = "fbc64c262a833b40adf3d2cdba241fc4d30664b0"
 
 [[projects]]
   branch = "master"
   name = "github.com/golang/lint"
-  packages = [
-    ".",
-    "golint"
-  ]
+  packages = [".","golint"]
   revision = "6aaf7c34af0f4c36a57e0c429bace4d706d8e931"
 
 [[projects]]
@@ -201,17 +177,7 @@
 [[projects]]
   branch = "master"
   name = "github.com/hashicorp/hcl"
-  packages = [
-    ".",
-    "hcl/ast",
-    "hcl/parser",
-    "hcl/scanner",
-    "hcl/strconv",
-    "hcl/token",
-    "json/parser",
-    "json/scanner",
-    "json/token"
-  ]
+  packages = [".","hcl/ast","hcl/parser","hcl/scanner","hcl/strconv","hcl/token","json/parser","json/scanner","json/token"]
   revision = "42e33e2d55a0ff1d6263f738896ea8c13571a8d0"
 
 [[projects]]
@@ -223,10 +189,7 @@
 [[projects]]
   branch = "master"
   name = "github.com/juju/ansiterm"
-  packages = [
-    ".",
-    "tabwriter"
-  ]
+  packages = [".","tabwriter"]
   revision = "35c59b9e0fe275705a71bf5d58ee293f27efbbc4"
 
 [[projects]]
@@ -256,11 +219,7 @@
 [[projects]]
   branch = "master"
   name = "github.com/mailru/easyjson"
-  packages = [
-    "buffer",
-    "jlexer",
-    "jwriter"
-  ]
+  packages = ["buffer","jlexer","jwriter"]
   revision = "3fd5e860b68f3cc81671ece2e226c78a6bbf54d3"
 
 [[projects]]
@@ -278,23 +237,12 @@
 [[projects]]
   branch = "master"
   name = "github.com/manifoldco/go-manifold"
-  packages = [
-    ".",
-    "errors",
-    "events",
-    "idtype",
-    "names",
-    "names/data"
-  ]
-  revision = "baab1d9714c4ae7372281a9b6c39364b205c685a"
+  packages = [".","errors","events","idtype","names","names/data"]
+  revision = "4409c632ac649d454cdcfd280fe778f524fc33c0"
 
 [[projects]]
   name = "github.com/manifoldco/promptui"
-  packages = [
-    ".",
-    "list",
-    "screenbuf"
-  ]
+  packages = [".","list","screenbuf"]
   revision = "3325f5fcbce567f6c36fe4899b67c1f597453792"
   version = "v0.2.0"
 
@@ -318,12 +266,7 @@
 
 [[projects]]
   name = "github.com/nicksnyder/go-i18n"
-  packages = [
-    "i18n",
-    "i18n/bundle",
-    "i18n/language",
-    "i18n/translation"
-  ]
+  packages = ["i18n","i18n/bundle","i18n/language","i18n/translation"]
   revision = "ca33e78c8a430e2df435b02f63a3944fa8e9ea11"
   version = "v1.9.0"
 
@@ -354,10 +297,7 @@
 [[projects]]
   branch = "master"
   name = "github.com/spf13/afero"
-  packages = [
-    ".",
-    "mem"
-  ]
+  packages = [".","mem"]
   revision = "e67d870304c4bca21331b02f414f970df13aa694"
 
 [[projects]]
@@ -386,11 +326,7 @@
 
 [[projects]]
   name = "github.com/stripe/stripe-go"
-  packages = [
-    ".",
-    "orderitem",
-    "token"
-  ]
+  packages = [".","orderitem","token"]
   revision = "924076d66af652a2a686a609dad8225f187a0f17"
   version = "v24.3.0"
 
@@ -421,32 +357,19 @@
 [[projects]]
   branch = "master"
   name = "golang.org/x/crypto"
-  packages = [
-    "ed25519",
-    "ed25519/internal/edwards25519",
-    "pbkdf2",
-    "scrypt"
-  ]
+  packages = ["ed25519","ed25519/internal/edwards25519","pbkdf2","scrypt"]
   revision = "9419663f5a44be8b34ca85f08abc5fe1be11f8a3"
 
 [[projects]]
   branch = "master"
   name = "golang.org/x/net"
-  packages = [
-    "context",
-    "context/ctxhttp",
-    "idna"
-  ]
+  packages = ["context","context/ctxhttp","idna"]
   revision = "1087133bc4af3073e18add999345c6ae75918503"
 
 [[projects]]
   branch = "master"
   name = "golang.org/x/oauth2"
-  packages = [
-    ".",
-    "github",
-    "internal"
-  ]
+  packages = [".","github","internal"]
   revision = "bb50c06baba3d0c76f9d125c0719093e315b5b44"
 
 [[projects]]
@@ -458,50 +381,18 @@
 [[projects]]
   branch = "master"
   name = "golang.org/x/text"
-  packages = [
-    "collate",
-    "collate/build",
-    "internal/colltab",
-    "internal/gen",
-    "internal/tag",
-    "internal/triegen",
-    "internal/ucd",
-    "language",
-    "secure/bidirule",
-    "transform",
-    "unicode/bidi",
-    "unicode/cldr",
-    "unicode/norm",
-    "unicode/rangetable",
-    "width"
-  ]
+  packages = ["collate","collate/build","internal/colltab","internal/gen","internal/tag","internal/triegen","internal/ucd","language","secure/bidirule","transform","unicode/bidi","unicode/cldr","unicode/norm","unicode/rangetable","width"]
   revision = "c01e4764d870b77f8abe5096ee19ad20d80e8075"
 
 [[projects]]
   branch = "master"
   name = "golang.org/x/tools"
-  packages = [
-    "go/ast/astutil",
-    "go/buildutil",
-    "go/gcexportdata",
-    "go/gcimporter15",
-    "go/loader",
-    "go/types/typeutil",
-    "imports"
-  ]
+  packages = ["go/ast/astutil","go/buildutil","go/gcexportdata","go/gcimporter15","go/loader","go/types/typeutil","imports"]
   revision = "9bd2f442688b66c5289262d70f537c2ecf81d7de"
 
 [[projects]]
   name = "google.golang.org/appengine"
-  packages = [
-    "internal",
-    "internal/base",
-    "internal/datastore",
-    "internal/log",
-    "internal/remote_api",
-    "internal/urlfetch",
-    "urlfetch"
-  ]
+  packages = ["internal","internal/base","internal/datastore","internal/log","internal/remote_api","internal/urlfetch","urlfetch"]
   revision = "150dc57a1b433e64154302bdc40b6bb8aefa313a"
   version = "v1.0.0"
 
@@ -514,10 +405,7 @@
 [[projects]]
   branch = "v2"
   name = "gopkg.in/mgo.v2"
-  packages = [
-    "bson",
-    "internal/json"
-  ]
+  packages = ["bson","internal/json"]
   revision = "3f83fa5005286a7fe593b055f0d7771a7dce4655"
 
 [[projects]]

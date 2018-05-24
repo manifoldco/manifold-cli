@@ -478,7 +478,7 @@ definitions:
   Name:
     type: string
     description: A name of an entity which is displayed to a human.
-    pattern: ^[a-zA-Z][a-z0-9A-Z \-]{2,128}$
+    pattern: ^[a-zA-Z][a-z0-9A-Z \-_]{2,128}$
     x-go-type:
       type: Name
       import:
