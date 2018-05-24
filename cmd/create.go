@@ -188,7 +188,7 @@ func create(cliCtx *cli.Context) error {
 		return cli.NewExitError("Could not create resource: "+err.Error(), -1)
 	}
 
-	resourceName, err := promptName(cliCtx, &resourceID, "resource", true)
+	resourceName, err := promptNameForResource(cliCtx, &resourceID, product.Body.Label)
 	if err != nil {
 		return err
 	}

@@ -74,6 +74,30 @@ var helpCommand = cli.Command{
 
 // promptName encapsulates the logic for accepting a name as the first
 // positional argument (optionally), and returning the appropriate value
+func promptNameForResource(ctx *cli.Context, optionalID *manifold.ID,
+	product manifold.Label) (string, error) {
+	// The user may supply a name value as the first positional arg
+	argName, err := optionalArgName(ctx, 0, "name")
+	if err != nil {
+		return "", err
+	}
+	shouldAccept := true
+	if optionalID != nil {
+		name := names.ForResource(product, *optionalID)
+		if argName == "" {
+			argName = string(name)
+			shouldAccept = false
+		}
+	}
+
+	// If no name value is supplied, prompt for it
+	// otherwise validate the given value
+	shouldAcceptName := shouldAccept && argName != ""
+	return prompts.Name("resource", argName, shouldAcceptName, true)
+}
+
+// promptName encapsulates the logic for accepting a name as the first
+// positional argument (optionally), and returning the appropriate value
 func promptName(ctx *cli.Context, optionalID *manifold.ID, objectName string, allowEmpty bool) (string, error) {
 	// The user may supply a name value as the first positional arg
 	argName, err := optionalArgName(ctx, 0, "name")
