@@ -159,6 +159,7 @@ func Products(list []*cModels.Product) []Product {
 			Name:    string(m.Body.Label),
 			Title:   string(m.Body.Name),
 			Tagline: m.Body.Tagline,
+			Tags:    m.Body.Tags,
 		}
 		for _, v := range m.Body.ValueProps {
 			p.Features = append(p.Features, v.Header)

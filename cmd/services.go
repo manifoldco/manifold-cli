@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"os"
-	"strings"
 
 	"github.com/juju/ansiterm"
 	"github.com/manifoldco/manifold-cli/api"
@@ -59,7 +58,11 @@ func listCategoriesCmd(cliCtx *cli.Context) error {
 		return err
 	}
 
-	if err := maxOptionalArgsLength(cliCtx, 0); err != nil {
+	if err := maxOptionalArgsLength(cliCtx, 1); err != nil {
+		return err
+	}
+	categoryName, err := optionalArgName(cliCtx, 0, "provider")
+	if err != nil {
 		return err
 	}
 
@@ -80,8 +83,7 @@ func listCategoriesCmd(cliCtx *cli.Context) error {
 
 	for _, p := range products {
 		for _, category := range p.Body.Tags {
-			var categoryTitled = strings.Title(category)
-			categories[categoryTitled] = append(categories[categoryTitled], p)
+			categories[category] = append(categories[category], p)
 		}
 	}
 
@@ -89,9 +91,11 @@ func listCategoriesCmd(cliCtx *cli.Context) error {
 		providerNames[p.ID.String()] = p
 	}
 
-	categoryName, err := prompts.SelectCategory(categories)
-	if err != nil {
-		return cli.NewExitError(err, -1)
+	if categoryName == "" {
+		categoryName, err = prompts.SelectCategory(categories)
+		if err != nil {
+			return cli.NewExitError(err, -1)
+		}
 	}
 
 	w := ansiterm.NewTabWriter(os.Stdout, 0, 0, 8, ' ', 0)
