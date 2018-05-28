@@ -12,13 +12,13 @@ import (
 
 	"github.com/manifoldco/manifold-cli/config"
 
+	aClient "github.com/manifoldco/manifold-cli/generated/activity/client"
 	bClient "github.com/manifoldco/manifold-cli/generated/billing/client"
 	cClient "github.com/manifoldco/manifold-cli/generated/catalog/client"
 	conClient "github.com/manifoldco/manifold-cli/generated/connector/client"
 	iClient "github.com/manifoldco/manifold-cli/generated/identity/client"
 	mClient "github.com/manifoldco/manifold-cli/generated/marketplace/client"
 	pClient "github.com/manifoldco/manifold-cli/generated/provisioning/client"
-	aClient "github.com/manifoldco/manifold-cli/generated/activity/client"
 )
 
 const defaultUserAgent = "manifold-cli"

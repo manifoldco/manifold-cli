@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ### Added
 
 - Updated auto-generated names to match what we do in Marketplace
+- `services categories` command added, to list products by category
 
 ## [0.14.0] - 2018-04-13
 

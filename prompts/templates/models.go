@@ -1,6 +1,9 @@
 package templates
 
 import (
+	"sort"
+	"strconv"
+
 	cModels "github.com/manifoldco/manifold-cli/generated/catalog/models"
 	iModels "github.com/manifoldco/manifold-cli/generated/identity/models"
 	mModels "github.com/manifoldco/manifold-cli/generated/marketplace/models"
@@ -11,11 +14,17 @@ type Provider struct {
 	Title string
 }
 
+type Category struct {
+	Name  string
+	Title string
+}
+
 type Product struct {
 	Name     string
 	Title    string
 	Tagline  string
 	Features []string
+	Tags     []string
 }
 
 type Plan struct {
@@ -50,6 +59,31 @@ type Project struct {
 type Team struct {
 	Name  string
 	Title string
+}
+
+func Categories(list map[string][]*cModels.Product) []Category {
+	var items []string
+	for item := range list {
+		items = append(items, item)
+	}
+
+	sort.Slice(items, func(i int, j int) bool {
+		a := items[i]
+		b := items[j]
+		return a < b
+	})
+
+	categories := make([]Category, len(items))
+
+	for i, m := range items {
+		p := Category{
+			Name:  m,
+			Title: strconv.Itoa(len(list[m])),
+		}
+		categories[i] = p
+	}
+
+	return categories
 }
 
 func Resources(list []*mModels.Resource, projects []*mModels.Project) []Resource {
@@ -125,6 +159,7 @@ func Products(list []*cModels.Product) []Product {
 			Name:    string(m.Body.Label),
 			Title:   string(m.Body.Name),
 			Tagline: m.Body.Tagline,
+			Tags:    m.Body.Tags,
 		}
 		for _, v := range m.Body.ValueProps {
 			p.Features = append(p.Features, v.Header)

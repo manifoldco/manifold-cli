@@ -22,6 +22,11 @@ func init() {
 		Category: "RESOURCES",
 		Subcommands: []cli.Command{
 			{
+				Name:   "categories",
+				Usage:  "List all products by category. Specify a category to see its details",
+				Action: listCategoriesCmd,
+			},
+			{
 				Name:      "providers",
 				Usage:     "List all providers",
 				ArgsUsage: "[provider-name]",
@@ -45,6 +50,69 @@ func init() {
 	}
 
 	cmds = append(cmds, appCmd)
+}
+
+func listCategoriesCmd(cliCtx *cli.Context) error {
+	client, err := api.New(api.Analytics, api.Catalog)
+	if err != nil {
+		return err
+	}
+
+	if err := maxOptionalArgsLength(cliCtx, 1); err != nil {
+		return err
+	}
+	categoryName, err := optionalArgName(cliCtx, 0, "category")
+	if err != nil {
+		return err
+	}
+
+	var products []*models.Product
+	var providers []*models.Provider
+
+	categories := make(map[string][]*models.Product)
+	providerNames := make(map[string]*models.Provider)
+
+	products, err = client.FetchProducts("")
+	if err != nil {
+		return cli.NewExitError(err, -1)
+	}
+	providers, err = client.FetchProviders()
+	if err != nil {
+		return cli.NewExitError(err, -1)
+	}
+
+	for _, p := range products {
+		for _, category := range p.Body.Tags {
+			categories[category] = append(categories[category], p)
+		}
+	}
+
+	for _, p := range providers {
+		providerNames[p.ID.String()] = p
+	}
+
+	if categoryName == "" {
+		categoryName, err = prompts.SelectCategory(categories)
+		if err != nil {
+			return cli.NewExitError(err, -1)
+		}
+	}
+
+	w := ansiterm.NewTabWriter(os.Stdout, 0, 0, 8, ' ', 0)
+
+	fmt.Fprintf(w, "%d products in %s\n", len(categories[categoryName]), categoryName)
+	fmt.Fprintf(w, "Use `manifold services categories` to view products with a specified category\n\n")
+
+	w.SetForeground(ansiterm.Gray)
+	fmt.Fprintln(w, "Name\tTitle\tProvider\tTagline")
+	w.Reset()
+
+	for _, p := range categories[categoryName] {
+		providerID := p.Body.ProviderID.String()
+		fmt.Fprintf(w, "%s\t%s\t%s\t%s\n", p.Body.Label, p.Body.Name, providerNames[providerID].Body.Name, p.Body.Tagline)
+	}
+
+	return w.Flush()
 }
 
 func listProvidersCmd(cliCtx *cli.Context) error {

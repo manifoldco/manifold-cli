@@ -275,6 +275,23 @@ func selectTeam(list []*iModels.Team, label, name string, userTuple *[]string) (
 	return teamIdx, tname, err
 }
 
+func SelectCategory(list map[string][]*cModels.Product) (string, error) {
+	categories := templates.Categories(list)
+
+	prompt := promptui.Select{
+		Label:     "Select Category",
+		Items:     categories,
+		Templates: templates.TplCategory,
+	}
+
+	idx, _, err := prompt.Run()
+	if err != nil {
+		return "", err
+	}
+
+	return categories[idx].Name, nil
+}
+
 // SelectProvider prompts the user to select a provider resource from the given
 // list.
 func SelectProvider(list []*cModels.Provider) (*cModels.Provider, error) {

@@ -8,7 +8,8 @@ import (
 
 func TestProductSearch(t *testing.T) {
 	products := []templates.Product{
-		{Name: "jawsdb-mysql"},
+		{Name: "jawsdb-mysql",
+			Tags: []string{"database"}},
 	}
 
 	tcs := []struct {
@@ -43,10 +44,10 @@ func TestProductSearch(t *testing.T) {
 		t.Run(tc.scenario, func(t *testing.T) {
 			match := search(tc.input, tc.idx)
 			product := products[tc.idx]
-			name := product.Name
+			productTags := product.Tags
 
 			if match != tc.match {
-				t.Errorf("Expected %q to match %v", tc.input, productTags[name])
+				t.Errorf("Expected %q to match %v", tc.input, productTags)
 			}
 		})
 	}
