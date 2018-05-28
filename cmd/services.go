@@ -61,7 +61,7 @@ func listCategoriesCmd(cliCtx *cli.Context) error {
 	if err := maxOptionalArgsLength(cliCtx, 1); err != nil {
 		return err
 	}
-	categoryName, err := optionalArgName(cliCtx, 0, "provider")
+	categoryName, err := optionalArgName(cliCtx, 0, "category")
 	if err != nil {
 		return err
 	}
