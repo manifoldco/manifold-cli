@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
 
+## [0.15.0] - 2018-07-18
+
 ### Added
 
 - Updated auto-generated names to match what we do in Marketplace
