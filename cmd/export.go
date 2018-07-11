@@ -78,7 +78,7 @@ func export(cliCtx *cli.Context) error {
 	})
 
 	cMap := make(map[manifold.ID][]*models.Credential)
-	if projectName == "" {
+	if projectName != "" {
 		p, err := clients.FetchProjectByLabel(ctx, client.Marketplace, teamID, projectName)
 		if err != nil {
 			return cli.NewExitError(fmt.Sprintf("Could not retrieve project: %s", err), -1)
@@ -89,6 +89,7 @@ func export(cliCtx *cli.Context) error {
 			return cli.NewExitError(fmt.Sprintf("Could not retrieve credentials: %s", err), -1)
 		}
 	} else {
+		resources = filterResourcesWithoutProjects(resources)
 		cMap, err = fetchResourceCredentials(ctx, client.Marketplace, resources, true)
 		if err != nil {
 			return cli.NewExitError("Could not retrieve credentials: "+err.Error(), -1)
