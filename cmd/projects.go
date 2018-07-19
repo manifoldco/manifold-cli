@@ -417,16 +417,6 @@ func addProjectCmd(cliCtx *cli.Context) error {
 		fmt.Printf("Moving %s to %s\n", r.Body.Label, p.Body.Label)
 	}
 
-	params := map[string]string{
-		"resource_id":    r.ID.String(),
-		"resource_name":  string(r.Body.Name),
-		"resource_label": string(r.Body.Label),
-		"project_id":     p.ID.String(),
-		"project_name":   string(p.Body.Name),
-		"project_label":  string(p.Body.Label),
-	}
-	client.Analytics.Track(ctx, "Added a Resource to a Project", &params)
-
 	return nil
 }
 
@@ -493,13 +483,6 @@ func removeProjectCmd(cliCtx *cli.Context) error {
 	}
 
 	fmt.Printf("Removed %s from project\n", r.Body.Label)
-
-	params := map[string]string{
-		"resource_id":    r.ID.String(),
-		"resource_name":  string(r.Body.Name),
-		"resource_label": string(r.Body.Label),
-	}
-	client.Analytics.Track(ctx, "Removed a Resource from a Project", &params)
 
 	return nil
 }
