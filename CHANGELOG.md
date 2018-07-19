@@ -12,6 +12,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - Panic when creating a custom resource
 - Using `--me` flag when a team is already set in `.manifold.yaml`
 
+## Removed
+
+- Moved Transfer and Move analytics to the backend
+
 ## [0.15.0] - 2018-07-18
 
 ### Added
