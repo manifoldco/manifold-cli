@@ -188,7 +188,13 @@ func create(cliCtx *cli.Context) error {
 		return cli.NewExitError("Could not create resource: "+err.Error(), -1)
 	}
 
-	resourceName, err := promptNameForResource(cliCtx, &resourceID, product.Body.Label)
+	prefix := manifold.Label("custom")
+
+	if product != nil {
+		prefix = product.Body.Label
+	}
+
+	resourceName, err := promptNameForResource(cliCtx, &resourceID, prefix)
 	if err != nil {
 		return err
 	}
