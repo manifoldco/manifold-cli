@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
 
+### Fixed
+
+- Using `--me` flag when a team is already set in `.manifold.yaml`
+
 ## [0.15.0] - 2018-07-18
 
 ### Added
