@@ -82,11 +82,6 @@ func loadConfiguration() (*Config, error) {
 		return nil, err
 	}
 
-	err = checkPermissions(rcpath)
-	if err != nil && !os.IsNotExist(err) {
-		return nil, err
-	}
-
 	cfg := &Config{
 		Hostname:        defaultHostname,
 		AuthToken:       "",
@@ -95,9 +90,16 @@ func loadConfiguration() (*Config, error) {
 		GitHubCallback:  GitHubCallback,
 	}
 
-	if os.IsNotExist(err) {
+	f, err := os.OpenFile(rcpath, os.O_RDONLY, requiredPermissions)
+	switch {
+	case err == nil: // ok
+	case os.IsNotExist(err):
 		return cfg, nil
+	default:
+		return nil, err
 	}
+
+	f.Close()
 
 	err = ini.MapTo(cfg, rcpath)
 	if err != nil {
@@ -119,23 +121,6 @@ func loadConfigurationCheckLegacy() (*Config, error) {
 	}
 
 	return cfg, nil
-}
-
-func checkPermissions(path string) error {
-	src, err := os.Stat(path)
-	if err != nil {
-		return err
-	}
-
-	if src.IsDir() {
-		return ErrExpectedFile
-	}
-
-	if fMode := src.Mode(); fMode.Perm() != requiredPermissions {
-		return ErrWrongConfigPermissions
-	}
-
-	return nil
 }
 
 // RCPath returns the absolute path to the ~/.manifoldrc file
@@ -187,11 +172,6 @@ func (c *Config) IdentifyLegacyValues() error {
 func (c *Config) Write() error {
 	rcpath, err := RCPath()
 	if err != nil {
-		return err
-	}
-
-	err = checkPermissions(rcpath)
-	if err != nil && !os.IsNotExist(err) {
 		return err
 	}
 

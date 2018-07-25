@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 - Panic when creating a custom resource
 - Using `--me` flag when a team is already set in `.manifold.yaml`
+- `.manifoldrc` permission check for Windows
 
 ## Removed
 
