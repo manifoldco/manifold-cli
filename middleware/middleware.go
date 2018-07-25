@@ -164,7 +164,7 @@ func reflectArgs(ctx *cli.Context, i interface{}, tagName string) error {
 	flags := make(map[string]bool)
 	for _, flagName := range ctx.FlagNames() {
 		// This value is already set via arguments or env vars. skip it.
-		if isSet(ctx, flagName) {
+		if isSet(ctx, flagName) || (ctx.IsSet("me") && flagName == "team") {
 			continue
 		}
 
