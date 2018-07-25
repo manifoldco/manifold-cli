@@ -36,7 +36,6 @@ const (
 	defaultScheme       = "https"
 	defaultAnalytics    = true
 	rcFilename          = ".manifoldrc"
-	rootPathLength      = 1
 	// YamlFilename is where dirprefs are stored
 	YamlFilename = ".manifold.yml"
 )
@@ -280,11 +279,13 @@ func LoadYaml(recurse bool) (*ManifoldYaml, error) {
 	for {
 		f, err = os.Open(filepath.Join(path, YamlFilename))
 		if err != nil {
-			if isSystemRoot(path) || !recurse {
+			newPath := filepath.Dir(path)
+
+			if path == newPath || !recurse {
 				return prefs, nil
 			}
 
-			path = filepath.Dir(path)
+			path = newPath
 			continue
 		}
 
@@ -304,16 +305,6 @@ func LoadYaml(recurse bool) (*ManifoldYaml, error) {
 
 	prefs.Path = f.Name()
 	return prefs, nil
-}
-
-// isSystemRoot validates if the given path is the root of the system for the
-// OS the application is running on.
-func isSystemRoot(path string) bool {
-	if len(path) != rootPathLength {
-		return false
-	}
-
-	return os.PathSeparator == path[rootPathLength-1]
 }
 
 func UserHome() (string, error) {

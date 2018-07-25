@@ -10,8 +10,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ### Fixed
 
 - Panic when creating a custom resource
-- Using `--me` flag when a team is already set in `.manifold.yaml`
+- Using `--me` flag when a team is already set in `.manifold.yml`
 - `.manifoldrc` permission check for Windows
+- Root detection on Windows when trying to find `.manifold.yml`
 
 ## Removed
 
