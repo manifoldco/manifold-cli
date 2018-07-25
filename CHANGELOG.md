@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
 
+### Fixed
+
+- Panic when creating a custom resource
+
 ## [0.15.0] - 2018-07-18
 
 ### Added
