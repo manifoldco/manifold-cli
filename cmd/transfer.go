@@ -214,8 +214,6 @@ func transferResource(ctx context.Context, client *api.API,
 		}
 	}
 
-	client.Analytics.Track(ctx, "Transfer Operation", &map[string]string{})
-
 	if dontWait {
 		return nil
 	}
