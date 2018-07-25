@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
 
+## [0.15.0] - 2018-07-25
+
 ### Fixed
 
 - Panic when creating a custom resource
@@ -14,7 +16,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - `.manifoldrc` permission check for Windows
 - Root detection on Windows when trying to find `.manifold.yml`
 
-## Removed
+### Removed
 
 - Moved Transfer and Move analytics to the backend
 
