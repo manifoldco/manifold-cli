@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
 
-## [0.15.0] - 2018-07-25
+## [0.15.1] - 2018-07-25
 
 ### Fixed
 
@@ -19,6 +19,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ### Removed
 
 - Moved Transfer and Move analytics to the backend
+
+### Updated
+
+- `promptui` to `v0.3.1`
 
 ## [0.15.0] - 2018-07-18
 
