@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
 
+### Added
+
+- Support for `XDG_CONFIG_HOME` will take precedence over `~/.manifoldrc` for
+  reading and writing the config file
+
 ## [0.15.1] - 2018-07-25
 
 ### Fixed
