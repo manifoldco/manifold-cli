@@ -35,7 +35,7 @@ const (
 	defaultHostname     = "manifold.co"
 	defaultScheme       = "https"
 	defaultAnalytics    = true
-	rcFilename          = ".manifoldrc"
+	rcFilename          = "manifoldrc"
 	// YamlFilename is where dirprefs are stored
 	YamlFilename = ".manifold.yml"
 )
@@ -122,13 +122,24 @@ func loadConfigurationCheckLegacy() (*Config, error) {
 	return cfg, nil
 }
 
-// RCPath returns the absolute path to the ~/.manifoldrc file
+// RCPath returns the absolute path to the manifoldrc file. If XDG_CONFIG_HOME
+// is defined returns $XDG_CONFIG_HOME/manifold/manifoldrc othewise it returns
+// $HOME/.manifoldrc
 func RCPath() (string, error) {
+	home := os.Getenv("XDG_CONFIG_HOME")
+	if home != "" {
+		err := os.MkdirAll(path.Join(home, "manifold"), 0700)
+		if err != nil {
+			return "", err
+		}
+		return path.Join(home, "manifold", rcFilename), nil
+	}
+
 	home, err := UserHome()
 	if err != nil {
 		return "", err
 	}
-	return path.Join(home, rcFilename), nil
+	return path.Join(home, "."+rcFilename), nil
 }
 
 // Config represents the configuration which is stored inside a ~/.manifoldrc
