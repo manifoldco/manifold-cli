@@ -1,0 +1,23 @@
+{
+  "name": "@manifoldco/cli",
+  "version": "0.15.1-rc.0",
+  "description": "Manage your services and config from the command line",
+  "files": [
+    "bin"
+  ],
+  "bin": "./bin/manifold",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/manifoldco/manifold-cli.git"
+  },
+  "keywords": [
+    "manifold",
+    "cli"
+  ],
+  "author": "manifoldco",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/manifoldco/manifold-cli/issues"
+  },
+  "homepage": "https://github.com/manifoldco/manifold-cli#readme"
+}
